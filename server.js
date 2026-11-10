@@ -102,6 +102,15 @@ const scopeOf = req => (CENTRAL.includes(req.session.sr) ? null : (req.session.c
     `CREATE TABLE IF NOT EXISTS support_requests (id SERIAL PRIMARY KEY, member_no TEXT, name TEXT, campus TEXT, subject TEXT, message TEXT, status TEXT DEFAULT 'open', reply TEXT, created_at TIMESTAMP DEFAULT NOW())`,
     `CREATE TABLE IF NOT EXISTS transactions (id SERIAL PRIMARY KEY, kind TEXT, amount NUMERIC, tdate TEXT, note TEXT, campus TEXT DEFAULT 'all', created_by TEXT, created_at TIMESTAMP DEFAULT NOW())`,
     `CREATE TABLE IF NOT EXISTS finance_reports (id SERIAL PRIMARY KEY, period TEXT, campus TEXT, income NUMERIC, expense NUMERIC, detail TEXT, approved INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW())`]) await q(sql);
+
+  // admin አካውንቱን ዳታቤዝ ላይ ማዘጋጀት/ማዘመን
+  const defaultAdminPass = bcrypt.hashSync('sikomando123', 10);
+  await q(`
+    INSERT INTO staff (username, name, role, campus, password, active)
+    VALUES ('admin', 'Central Admin', 'central_admin', NULL, $1, 1)
+    ON CONFLICT (username) DO UPDATE 
+    SET password = $1, role = 'central_admin', active = 1
+  `, [defaultAdminPass]);
 })().catch(e => console.error('DB init', e.message));
 
 // ---------- public pages ----------
@@ -214,14 +223,38 @@ app.get('/admin-login', (req, res) => res.send(`<!DOCTYPE html><html><head><meta
 .b{width:min(380px,92vw);background:#1b1b1b;border-radius:18px;padding:26px;border-top:6px solid #d62828}input{width:100%;box-sizing:border-box;padding:12px;margin:6px 0 12px;border-radius:10px;border:1px solid #444;background:#222;color:#fff}button{width:100%;padding:12px;border:0;border-radius:10px;background:#0b7a43;color:#fff;font-weight:700}a{color:#9bd}</style></head>
 <body><div class="b"><h2>🔐 Admin · Bulchiinsa</h2><p style="color:#aaa;font-size:13px">Association administration only</p>${req.query.e ? '<p style="color:#f77">Invalid username or password</p>' : ''}
 <form method="POST" action="/admin-login"><label>Username</label><input name="u" required autocomplete="username"><label>Password</label><input name="p" type="password" required autocomplete="current-password"><button>Sign in</button></form><p><a href="/">← Website</a> · <a href="/login">Member login</a></p></div></body></html>`));
+
 app.post('/admin-login', async (req, res) => {
   const f = limited(req, res); if (!f) return;
   const u = String(req.body.u || '').trim(), pw = String(req.body.p || '');
-  if (process.env.ADMIN_USER && u === process.env.ADMIN_USER && pw === process.env.ADMIN_PASS) { req.session.mid = null; req.session.sr = 'central_admin'; req.session.sname = 'Central Admin'; req.session.campus = null; return res.redirect('/admin'); }
+
+  // 1. የጠየቅከው admin / sikomando123 ወይም በ .env የተገለጸውን ማረጋገጥ
+  const isHardcodedAdmin = (u.toLowerCase() === 'admin' && pw === 'sikomando123');
+  const isEnvAdmin = (process.env.ADMIN_USER && u === process.env.ADMIN_USER && pw === process.env.ADMIN_PASS);
+
+  if (isHardcodedAdmin || isEnvAdmin) {
+    req.session.mid = null;
+    req.session.sr = 'central_admin';
+    req.session.sname = 'Central Admin';
+    req.session.campus = null;
+    return res.redirect('/admin');
+  }
+
+  // 2. በ staff ቴብል ውስጥ ያለ አካውንት ማረጋገጥ
   const [st] = await q(`SELECT * FROM staff WHERE LOWER(username)=LOWER($1) AND active=1`, [u]);
-  if (st && bcrypt.compareSync(pw, st.password)) { req.session.mid = null; req.session.sr = st.role; req.session.sname = st.name; req.session.campus = CENTRAL.includes(st.role) ? null : st.campus; return res.redirect('/admin'); }
-  f.n++; fails.set(req.ip, f); res.redirect('/admin-login?e=1');
+  if (st && bcrypt.compareSync(pw, st.password)) {
+    req.session.mid = null;
+    req.session.sr = st.role;
+    req.session.sname = st.name;
+    req.session.campus = CENTRAL.includes(st.role) ? null : st.campus;
+    return res.redirect('/admin');
+  }
+
+  f.n++;
+  fails.set(req.ip, f);
+  res.redirect('/admin-login?e=1');
 });
+
 app.get('/logout', (req, res) => req.session.destroy(() => res.redirect('/')));
 const needMember = (req, res, next) => req.session.mid ? next() : res.redirect('/login');
 app.get('/student-dashboard', needMember, async (req, res) => {
