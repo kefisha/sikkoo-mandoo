@@ -101,26 +101,27 @@ const L = req => (['en', 'am', 'om'].includes(req.session.lang) ? req.session.la
 const tr = (req, k) => (T[L(req)] && T[L(req)][k]) || (T.en[k] || k);
 const campusName = (req, cKey) => { const c = CAMPUS[cKey]; if (!c) return cKey; return c[L(req)] || c.n; };
 
-// ---------- ULTRA HIGH-END CSS (Glassmorphism & Neon Accents) ----------
+// ---------- ULTRA HIGH-END LIGHT CSS (Premium Modern Look) ----------
 const CSS = `
 :root {
   --primary: #10b981;
   --primary-dark: #059669;
   --accent: #ef4444;
-  --dark-header: rgba(15, 23, 42, 0.75);
-  --bg-color: #0f172a;
-  --text: #f8fafc;
-  --text-muted: #94a3b8;
-  --card-bg: rgba(255, 255, 255, 0.04);
-  --border-color: rgba(255, 255, 255, 0.1);
+  --header-bg: rgba(255, 255, 255, 0.85);
+  --bg-color: #f8fafc;
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --card-bg: rgba(255, 255, 255, 0.7);
+  --border-color: rgba(15, 23, 42, 0.08);
+  --input-bg: rgba(255, 255, 255, 0.9);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: 'Poppins', system-ui, sans-serif;
-  background: var(--bg-color);
+  background-color: var(--bg-color);
   background-image: 
-    radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.15) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.08) 0px, transparent 50%);
   background-attachment: fixed;
   color: var(--text);
   line-height: 1.6;
@@ -129,16 +130,17 @@ body {
   flex-direction: column;
 }
 a { color: var(--primary); text-decoration: none; transition: all 0.3s ease; }
-a:hover { color: #34d399; }
+a:hover { color: var(--primary-dark); }
 
 /* Header - Sleek & Sticky */
 header {
-  background: var(--dark-header);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: var(--header-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-color);
   position: sticky; top: 0; z-index: 50;
   padding: 16px 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
 }
 .in { max-width: 1100px; margin: auto; padding: 0 20px; width: 100%; }
 .header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
@@ -146,57 +148,57 @@ header {
 .logo-icon {
   width: 50px; height: 50px; border-radius: 14px; 
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  display: grid; place-items: center; font-size: 24px;
+  display: grid; place-items: center; font-size: 24px; color: white;
   box-shadow: 0 10px 20px -10px var(--primary);
 }
-.logo-text h1 { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
-.logo-text p { font-size: 13px; color: var(--text-muted); }
+.logo-text h1 { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; color: #0f172a; }
+.logo-text p { font-size: 13px; color: var(--text-muted); font-weight: 500;}
 
 /* Language Switcher */
 .nav-group { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
-.lang-box { display: flex; gap: 6px; background: rgba(0,0,0,0.3); padding: 6px; border-radius: 99px; border: 1px solid var(--border-color); }
+.lang-box { display: flex; gap: 6px; background: rgba(0,0,0,0.04); padding: 6px; border-radius: 99px; border: 1px solid var(--border-color); }
 .lang-btn {
   padding: 6px 16px; font-size: 13px; font-weight: 600; border-radius: 99px;
   color: var(--text-muted); cursor: pointer; transition: all 0.3s;
 }
-.lang-btn:hover { color: #fff; }
-.lang-btn.active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }
+.lang-btn:hover { color: var(--text); }
+.lang-btn.active { background: #fff; color: var(--text); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
 
 /* Auth Buttons */
 .ext-nav { display: flex; gap: 12px; }
 .ext-btn {
   padding: 10px 20px; font-size: 14px; font-weight: 600; border-radius: 12px;
-  background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--border-color);
-  transition: all 0.3s ease;
+  background: #fff; color: var(--text); border: 1px solid var(--border-color);
+  transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.02);
 }
-.ext-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
-.ext-btn.login-btn { background: var(--primary); border: none; box-shadow: 0 8px 16px -8px var(--primary); }
-.ext-btn.login-btn:hover { background: var(--primary-dark); }
+.ext-btn:hover { background: #f1f5f9; transform: translateY(-2px); }
+.ext-btn.login-btn { background: var(--primary); color: #fff; border: none; box-shadow: 0 8px 16px -8px var(--primary); }
+.ext-btn.login-btn:hover { background: var(--primary-dark); color: #fff; }
 
 /* High-End Glass Cards */
 .card, .glass-card {
   background: var(--card-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border-color);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.8);
   border-radius: 24px;
   padding: 32px;
   margin: 24px 0;
-  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+  box-shadow: 0 20px 40px -15px rgba(0,0,0,0.05);
 }
 
 /* Forms */
 label { display: block; font-weight: 600; font-size: 14px; margin: 16px 0 8px; color: var(--text-muted); }
 input, select, textarea { 
   width: 100%; padding: 14px 16px; 
-  background: rgba(0,0,0,0.3); 
+  background: var(--input-bg); 
   border: 1px solid var(--border-color); 
-  border-radius: 12px; font: inherit; color: #fff; 
+  border-radius: 12px; font: inherit; color: var(--text); 
   transition: all 0.3s ease;
 }
 input:focus, select:focus, textarea:focus {
-  outline: none; border-color: var(--primary); background: rgba(0,0,0,0.5);
-  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+  outline: none; border-color: var(--primary); background: #fff;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
 }
 
 /* Main Premium Buttons */
@@ -207,52 +209,54 @@ input:focus, select:focus, textarea:focus {
   font-weight: 600; cursor: pointer; font-size: 15px; transition: all 0.3s ease;
   box-shadow: 0 10px 20px -10px var(--primary);
 }
-.btn:hover { transform: translateY(-3px); box-shadow: 0 15px 25px -10px var(--primary); }
-.btn.secondary { background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); box-shadow: none; color: #fff; }
-.btn.secondary:hover { background: rgba(255,255,255,0.1); }
+.btn:hover { transform: translateY(-3px); box-shadow: 0 15px 25px -10px var(--primary); color: #fff; }
+.btn.secondary { background: #fff; border: 1px solid var(--border-color); box-shadow: 0 4px 10px rgba(0,0,0,0.03); color: var(--text); }
+.btn.secondary:hover { background: #f1f5f9; color: var(--text); }
 .btn.danger { background: var(--accent); box-shadow: 0 10px 20px -10px var(--accent); }
 .btn.danger:hover { background: #dc2626; box-shadow: 0 15px 25px -10px var(--accent); }
 
 /* Portal Menu */
 .portal-menu {
-  background: rgba(0,0,0,0.25); border-radius: 20px; padding: 24px;
-  display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0; border: 1px solid var(--border-color);
+  background: rgba(255,255,255,0.6); border-radius: 20px; padding: 20px;
+  display: flex; flex-wrap: wrap; gap: 12px; margin: 24px 0; border: 1px solid rgba(255,255,255,0.8);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.02);
 }
 .portal-btn {
-  background: rgba(255,255,255,0.05); color: #fff;
+  background: #fff; color: var(--text);
   border-radius: 12px; padding: 12px 20px; font-size: 14px; font-weight: 600;
-  display: inline-flex; align-items: center; gap: 8px; border: 1px solid transparent; transition: all 0.3s ease;
+  display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border-color); 
+  transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
-.portal-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--border-color); transform: translateY(-2px); }
-.portal-btn.active { background: var(--primary); color: #fff; box-shadow: 0 8px 16px -8px var(--primary); }
+.portal-btn:hover { border-color: var(--primary); transform: translateY(-2px); }
+.portal-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 8px 16px -8px var(--primary); }
 
 /* Utility & Layout */
 main { flex: 1; display: flex; flex-direction: column; }
 table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
 th, td { padding: 16px; border-bottom: 1px solid var(--border-color); text-align: left; }
-th { background: rgba(0,0,0,0.3); font-weight: 600; color: var(--text-muted); }
+th { background: rgba(0,0,0,0.02); font-weight: 600; color: var(--text-muted); }
 th:first-child { border-top-left-radius: 12px; } th:last-child { border-top-right-radius: 12px; }
-.tw { overflow-x: auto; background: rgba(0,0,0,0.15); border-radius: 12px; border: 1px solid var(--border-color); }
+.tw { overflow-x: auto; background: #fff; border-radius: 12px; border: 1px solid var(--border-color); }
 
-.badge { display: inline-block; padding: 6px 14px; border-radius: 99px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.1); }
-.badge.official { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
-.badge.pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-.badge.rejected { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+.badge { display: inline-block; padding: 6px 14px; border-radius: 99px; font-size: 12px; font-weight: 600; background: rgba(0,0,0,0.05); }
+.badge.official { background: rgba(16, 185, 129, 0.15); color: #059669; }
+.badge.pending { background: rgba(245, 158, 11, 0.15); color: #d97706; }
+.badge.rejected { background: rgba(239, 68, 68, 0.15); color: #dc2626; }
 
-.err { background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent); color: #fca5a5; padding: 16px; border-radius: 12px; margin: 16px 0; }
-.msgok { background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--primary); color: #6ee7b7; padding: 16px; border-radius: 12px; margin: 16px 0; }
+.err { background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--accent); color: #b91c1c; padding: 16px; border-radius: 12px; margin: 16px 0; font-weight: 500; }
+.msgok { background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--primary); color: #047857; padding: 16px; border-radius: 12px; margin: 16px 0; font-weight: 500; }
 
-.id { border: 1px solid var(--border-color); border-radius: 24px; max-width: 400px; margin: 24px auto; background: rgba(0,0,0,0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.4); overflow: hidden; backdrop-filter: blur(12px); }
-.id .hd { background: rgba(0,0,0,0.5); padding: 16px 20px; font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+.id { border: 1px solid rgba(255,255,255,0.8); border-radius: 24px; max-width: 400px; margin: 24px auto; background: rgba(255,255,255,0.85); box-shadow: 0 20px 40px rgba(0,0,0,0.08); overflow: hidden; backdrop-filter: blur(12px); }
+.id .hd { background: var(--primary); color: #fff; padding: 16px 20px; font-weight: 600; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
 .id .bd { display: flex; gap: 20px; padding: 24px; align-items: center; }
-.id img { width: 100px; height: 125px; border-radius: 12px; object-fit: cover; border: 2px solid var(--border-color); box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
+.id img { width: 100px; height: 125px; border-radius: 12px; object-fit: cover; border: 2px solid #e2e8f0; box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
 
-footer { text-align: center; padding: 32px; color: var(--text-muted); font-size: 14px; margin-top: auto; border-top: 1px solid var(--border-color); background: rgba(15,23,42,0.4); }
+footer { text-align: center; padding: 32px; color: var(--text-muted); font-size: 14px; margin-top: auto; border-top: 1px solid var(--border-color); background: rgba(255,255,255,0.5); }
 
 /* Fancy Animations for Landing */
 @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
-.floating-icon { display: inline-block; animation: float 4s ease-in-out infinite; font-size: 75px; margin-bottom: 16px; text-shadow: 0 20px 30px rgba(0,0,0,0.6); }
-.gradient-text { background: -webkit-linear-gradient(45deg, #34d399, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.floating-icon { display: inline-block; animation: float 4s ease-in-out infinite; font-size: 75px; margin-bottom: 16px; text-shadow: 0 20px 30px rgba(16,185,129,0.2); }
+.gradient-text { background: -webkit-linear-gradient(45deg, #059669, #2563eb); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 `;
 
 function page(req, title, body) {
@@ -345,8 +349,8 @@ function postCard(req, p) {
     <small style="color:var(--text-muted);font-weight:600">${h(p.campus === 'all' ? 'All Campuses' : campusName(req, p.campus))} · ${h(p.event_date || '')}</small>
     <h3 style="margin:8px 0 16px; font-size:20px">${h(postT(req, p, 'title'))}</h3>
     ${p.image_id ? `<img style="width:100%;max-height:350px;object-fit:cover;border-radius:12px;margin-bottom:16px;border:1px solid var(--border-color)" src="/photo/${p.image_id}" alt="">` : ''}
-    <div style="color:#cbd5e1">${h(postT(req, p, 'body')).replace(/\n/g, '<br>')}</div>
-    ${p.file_id ? `<p style="margin-top:20px"><a class="btn" style="padding:10px 20px;font-size:14px" href="/photo/${p.file_id}?dl=1">⬇ Download File</a></p>` : ''}
+    <div style="color:var(--text)">${h(postT(req, p, 'body')).replace(/\n/g, '<br>')}</div>
+    ${p.file_id ? `<p style="margin-top:20px"><a class="btn secondary" style="padding:10px 20px;font-size:14px" href="/photo/${p.file_id}?dl=1">⬇ Download File</a></p>` : ''}
   </div>`;
 }
 
@@ -397,7 +401,7 @@ app.get('/', (req, res) => {
   
   const html = `
     <div style="min-height: 70vh; display: flex; align-items: center; justify-content: center;">
-      <div class="glass-card" style="text-align: center; max-width: 700px; width: 100%; padding: 60px 40px; margin:0">
+      <div class="glass-card" style="text-align: center; max-width: 700px; width: 100%; padding: 60px 40px; margin:0; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.08);">
         <div class="floating-icon">🌳</div>
         <h2 class="gradient-text" style="font-size: 2.8rem; font-weight: 800; margin: 0 0 16px 0; line-height: 1.2;">
           ${h(tr(req, 'site'))}
@@ -432,8 +436,8 @@ function limited(req, res) {
 app.get('/login', (req, res) => {
   if (req.session.mid) return res.redirect('/student-dashboard');
   res.send(page(req, tr(req, 'login'), `
-    <div class="glass-card" style="max-width:440px;margin:40px auto">
-      <h2 style="margin-top:0; font-size:24px; margin-bottom: 24px">🔑 ${h(tr(req, 'login'))}</h2>
+    <div class="glass-card" style="max-width:440px;margin:40px auto; padding: 40px">
+      <h2 style="margin-top:0; font-size:24px; margin-bottom: 24px; color:var(--text)">🔑 ${h(tr(req, 'login'))}</h2>
       ${req.query.e ? `<div class="err">${h(tr(req, 'bad'))}</div>` : ''}
       <form method="POST" action="/login">
         <label>${h(tr(req, 'no'))} / ID</label>
@@ -461,11 +465,11 @@ function regForm(req, err, v) {
   v = v || {};
   const s = (k, o) => o.map(x => `<option value="${x[0]}"${v[k] === x[0] ? ' selected' : ''}>${h(x[1])}</option>`).join('');
   return page(req, tr(req, 'reg'), `
-    <div class="glass-card" style="max-width:600px;margin:40px auto">
-      <h2 style="margin-top:0; font-size: 26px; margin-bottom:24px">📝 ${h(tr(req, 'reg'))}</h2>
+    <div class="glass-card" style="max-width:650px;margin:40px auto; padding:40px">
+      <h2 style="margin-top:0; font-size: 26px; margin-bottom:24px; color:var(--text)">📝 ${h(tr(req, 'reg'))}</h2>
       ${err ? `<div class="err">${h(err)}</div>` : ''}
       <form method="POST" action="/sikkoo-mandoo-register" enctype="multipart/form-data">
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
           <div><label>${h(tr(req, 'name'))}</label><input name="name" required value="${h(v.name)}"></div>
           <div><label>${h(tr(req, 'gender'))}</label><select name="gender">${s('gender', [['M', tr(req, 'male')], ['F', tr(req, 'female')]])}</select></div>
           <div><label>${h(tr(req, 'campus'))}</label><select name="campus" required>${s('campus', Object.keys(CAMPUS).map(k => [k, campusName(req, k)]))}</select></div>
@@ -478,8 +482,9 @@ function regForm(req, err, v) {
         <label>${h(tr(req, 'photo'))}</label><input name="photo" type="file" accept="image/jpeg,image/png,image/webp">
         <label>${h(tr(req, 'pass'))} (6+)</label><input name="password" type="password" minlength="6" required>
         
-        <label style="display:flex;align-items:center;gap:12px;margin-top:24px; padding:16px; background:rgba(0,0,0,0.2); border-radius:12px; border:1px solid var(--border-color); color:#fff">
-          <input type="checkbox" name="want" value="1" style="width:24px; height:24px"> ${h(tr(req, 'want'))}
+        <label style="display:flex;align-items:center;gap:12px;margin-top:24px; padding:16px; background:rgba(255,255,255,0.5); border-radius:12px; border:1px solid var(--border-color); color:var(--text)">
+          <input type="checkbox" name="want" value="1" style="width:24px; height:24px; flex-shrink:0;"> 
+          <span style="font-weight:500">${h(tr(req, 'want'))}</span>
         </label>
         
         <p style="margin-top:32px"><button class="btn" style="width:100%; font-size:16px; padding:16px">${h(tr(req, 'send'))}</button></p>
@@ -527,15 +532,15 @@ app.get('/student-dashboard', needMember, async (req, res) => {
       <div class="bd">
         <img src="${m.photo_id ? '/photo/' + m.photo_id : 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27/%3E'}" alt="">
         <div>
-          <b style="font-size:18px">${h(m.name)}</b><br>
+          <b style="font-size:18px;color:var(--text)">${h(m.name)}</b><br>
           <small style="color:var(--text-muted)">${h(tr(req, 'no'))}</small><br>
-          <b style="color:var(--primary);font-size:16px">${h(m.member_no)}</b><br>
-          <small style="color:#e2e8f0;font-weight:600">${h(campusName(req, m.campus))} · ${h(m.department)} · Y${h(m.year)}</small>
+          <b style="color:var(--primary-dark);font-size:16px">${h(m.member_no)}</b><br>
+          <small style="color:var(--text-muted);font-weight:600">${h(campusName(req, m.campus))} · ${h(m.department)} · Y${h(m.year)}</small>
         </div>
       </div>
       <div style="padding:0 24px 24px;display:flex;justify-content:space-between;align-items:flex-end">
-        <small style="font-weight:600; color:var(--text-muted)">ID: <span style="color:#fff">${h(m.student_id)}</span></small>
-        <div id="qr" style="background:#fff; padding:6px; border-radius:8px"></div>
+        <small style="font-weight:600; color:var(--text-muted)">ID: <span style="color:var(--text)">${h(m.student_id)}</span></small>
+        <div id="qr" style="background:#fff; padding:6px; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,0.1)"></div>
       </div>
     </div>
     <div style="text-align:center;margin-top:32px">
@@ -568,7 +573,7 @@ app.get('/portal/leadership', needMember, async (req, res) => {
   const ls = await q(`SELECT * FROM leaders ORDER BY (level='central') DESC, ord, id`);
   const grp = (t, list) => list.length ? `<h3 style="margin:32px 0 16px; color:var(--primary)">${h(t)}</h3>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px">
-    ${list.map(x => `<div class="glass-card" style="text-align:center;margin:0;padding:24px"><img style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid var(--primary);margin:auto;box-shadow:0 8px 16px rgba(0,0,0,0.3)" src="${x.photo_id ? '/photo/' + x.photo_id : ''}"><h4 style="margin:16px 0 6px;font-size:18px">${h(x.name)}</h4><small style="color:var(--text-muted);font-weight:600">${h(L(req) === 'om' ? (x.position_om || x.position_en) : (L(req) === 'am' ? (x.position_am || x.position_en || x.position_om) : (x.position_en || x.position_om)))}</small></div>`).join('')}
+    ${list.map(x => `<div class="glass-card" style="text-align:center;margin:0;padding:24px"><img style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid var(--primary);margin:auto;box-shadow:0 8px 16px rgba(0,0,0,0.1)" src="${x.photo_id ? '/photo/' + x.photo_id : ''}"><h4 style="margin:16px 0 6px;font-size:18px;color:var(--text)">${h(x.name)}</h4><small style="color:var(--text-muted);font-weight:600">${h(L(req) === 'om' ? (x.position_om || x.position_en) : (L(req) === 'am' ? (x.position_am || x.position_en || x.position_om) : (x.position_en || x.position_om)))}</small></div>`).join('')}
     </div>` : '';
   const html = portalMenu('/portal/leadership') + grp('Central Leadership', ls.filter(x => x.level === 'central')) + Object.keys(CAMPUS).map(k => grp(campusName(req, k), ls.filter(x => x.level !== 'central' && x.campus === k))).join('');
   res.send(page(req, tr(req, 'leadership'), html || `<div class="glass-card">${h(tr(req, 'none'))}</div>`));
@@ -578,7 +583,7 @@ app.get('/portal/finance', needMember, async (req, res) => {
   const rs = await q(`SELECT * FROM finance_reports WHERE approved=1 ORDER BY period DESC, id DESC LIMIT 36`);
   const html = portalMenu('/portal/finance') + rs.map(r => {
     const d = JSON.parse(r.detail || '{}');
-    return `<div class="glass-card" style="padding:32px"><h3 style="margin-top:0;font-size:20px;margin-bottom:24px">${h(r.period)} · ${h(r.campus === 'all' ? 'All' : campusName(req, r.campus))}</h3><div style="display:flex;gap:24px;margin-bottom:24px;flex-wrap:wrap"><div><b style="color:var(--primary);font-size:28px">${Number(r.income).toLocaleString()}</b><br><small style="color:var(--text-muted)">Income</small></div><div><b style="color:var(--accent);font-size:28px">${Number(r.expense).toLocaleString()}</b><br><small style="color:var(--text-muted)">Expense</small></div><div><b style="font-size:28px;color:#fff">${(r.income - r.expense).toLocaleString()}</b><br><small style="color:var(--text-muted)">Balance</small></div></div><p style="font-size:14px;color:#cbd5e1;background:rgba(0,0,0,0.2);padding:16px;border-radius:12px;border:1px solid var(--border-color)">${Object.keys(d).map(k => `<b>${h(k)}</b>: ${Number(d[k]).toLocaleString()}`).join(' &nbsp;•&nbsp; ')}</p></div>`;
+    return `<div class="glass-card" style="padding:32px"><h3 style="margin-top:0;font-size:20px;margin-bottom:24px">${h(r.period)} · ${h(r.campus === 'all' ? 'All' : campusName(req, r.campus))}</h3><div style="display:flex;gap:24px;margin-bottom:24px;flex-wrap:wrap"><div><b style="color:var(--primary);font-size:28px">${Number(r.income).toLocaleString()}</b><br><small style="color:var(--text-muted)">Income</small></div><div><b style="color:var(--accent);font-size:28px">${Number(r.expense).toLocaleString()}</b><br><small style="color:var(--text-muted)">Expense</small></div><div><b style="font-size:28px;color:var(--text)">${(r.income - r.expense).toLocaleString()}</b><br><small style="color:var(--text-muted)">Balance</small></div></div><p style="font-size:14px;color:var(--text);background:rgba(255,255,255,0.6);padding:16px;border-radius:12px;border:1px solid var(--border-color)">${Object.keys(d).map(k => `<b>${h(k)}</b>: ${Number(d[k]).toLocaleString()}`).join(' &nbsp;•&nbsp; ')}</p></div>`;
   }).join('');
   res.send(page(req, tr(req, 'finance'), html || `<div class="glass-card" style="text-align:center">${h(tr(req, 'none'))}</div>`));
 });
@@ -598,12 +603,12 @@ app.get('/photo/:id', async (req, res) => {
 
 app.get('/verify/:no', async (req, res) => {
   const [m] = await q(`SELECT name,member_no,campus,department,year,status,photo_id FROM members WHERE UPPER(member_no)=UPPER($1)`, [req.params.no]);
-  res.send(page(req, tr(req, 'verify'), m ? `<div class="glass-card" style="max-width:400px;margin:40px auto;text-align:center"><h2 style="color:var(--primary);margin-bottom:24px">${h(tr(req, 'valid'))}</h2><img style="width:120px;height:150px;border-radius:16px;object-fit:cover;border:2px solid var(--border-color);box-shadow:0 10px 20px rgba(0,0,0,0.3)" src="${m.photo_id ? '/photo/' + m.photo_id : ''}"><h3 style="margin:16px 0 8px;font-size:20px">${h(m.name)}</h3><p style="color:var(--primary);font-weight:700;font-size:16px">${h(m.member_no)}</p><p style="color:var(--text-muted);margin:8px 0 16px">${h(campusName(req, m.campus))} · ${h(m.department)}</p><span class="badge ${m.status}">${h(tr(req, m.status))}</span></div>` : `<div class="glass-card" style="max-width:400px;margin:40px auto;text-align:center"><h2 style="color:var(--accent)">${h(tr(req, 'invalid'))}</h2></div>`));
+  res.send(page(req, tr(req, 'verify'), m ? `<div class="glass-card" style="max-width:400px;margin:40px auto;text-align:center"><h2 style="color:var(--primary);margin-bottom:24px">${h(tr(req, 'valid'))}</h2><img style="width:120px;height:150px;border-radius:16px;object-fit:cover;border:2px solid var(--border-color);box-shadow:0 10px 20px rgba(0,0,0,0.1)" src="${m.photo_id ? '/photo/' + m.photo_id : ''}"><h3 style="margin:16px 0 8px;font-size:20px;color:var(--text)">${h(m.name)}</h3><p style="color:var(--primary-dark);font-weight:700;font-size:16px">${h(m.member_no)}</p><p style="color:var(--text-muted);margin:8px 0 16px">${h(campusName(req, m.campus))} · ${h(m.department)}</p><span class="badge ${m.status}">${h(tr(req, m.status))}</span></div>` : `<div class="glass-card" style="max-width:400px;margin:40px auto;text-align:center"><h2 style="color:var(--accent)">${h(tr(req, 'invalid'))}</h2></div>`));
 });
 
 // ---------- ADMIN PORTAL ----------
 app.get('/admin-login', (req, res) => {
-  res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Portal</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0f172a;font-family:'Poppins',sans-serif;color:#f8fafc}.glass-card{width:min(420px,92vw);background:rgba(255,255,255,0.03);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:40px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.3)}input{width:100%;box-sizing:border-box;padding:14px;margin:8px 0 20px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.2);color:#fff;transition:0.3s}input:focus{outline:none;border-color:#10b981;box-shadow:0 0 0 4px rgba(16,185,129,0.1)}button{width:100%;padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:600;font-size:15px;cursor:pointer;box-shadow:0 10px 20px -10px #10b981}a{color:#34d399;text-decoration:none}</style></head><body><div class="glass-card"><h2 style="margin:0 0 8px;font-size:24px">🔐 Admin Access</h2><p style="color:#94a3b8;font-size:14px;margin:0 0 24px">Authorized Personnel Only</p>${req.query.e ? '<p style="color:#f87171;background:rgba(239,68,68,0.1);padding:12px;border-radius:8px;border:1px solid rgba(239,68,68,0.2)">Invalid credentials</p>' : ''}<form method="POST" action="/admin-login"><label style="display:block;font-size:13px;color:#94a3b8;margin-bottom:6px">Username</label><input name="u" required><label style="display:block;font-size:13px;color:#94a3b8;margin-bottom:6px">Password</label><input name="p" type="password" required><button>Sign In</button></form><p style="text-align:center;margin-top:32px;font-size:14px"><a href="/">← Return Home</a></p></div></body></html>`);
+  res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Portal</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f8fafc;background-image:radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.08) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.08) 0px, transparent 50%);font-family:'Poppins',sans-serif;color:#1e293b}.glass-card{width:min(420px,92vw);background:rgba(255,255,255,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(0,0,0,0.08);border-radius:24px;padding:40px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.1)}input{width:100%;box-sizing:border-box;padding:14px;margin:8px 0 20px;border-radius:12px;border:1px solid rgba(15,23,42,0.1);background:rgba(255,255,255,0.9);color:#1e293b;transition:0.3s}input:focus{outline:none;border-color:#10b981;box-shadow:0 0 0 4px rgba(16,185,129,0.15)}button{width:100%;padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-weight:600;font-size:15px;cursor:pointer;box-shadow:0 10px 20px -10px #10b981}a{color:#059669;text-decoration:none}</style></head><body><div class="glass-card"><h2 style="margin:0 0 8px;font-size:24px;color:#0f172a">🔐 Admin Access</h2><p style="color:#64748b;font-size:14px;margin:0 0 24px">Authorized Personnel Only</p>${req.query.e ? '<p style="color:#b91c1c;background:rgba(239,68,68,0.1);padding:12px;border-radius:8px;border:1px solid rgba(239,68,68,0.2)">Invalid credentials</p>' : ''}<form method="POST" action="/admin-login"><label style="display:block;font-size:13px;color:#64748b;margin-bottom:6px;font-weight:600">Username</label><input name="u" required><label style="display:block;font-size:13px;color:#64748b;margin-bottom:6px;font-weight:600">Password</label><input name="p" type="password" required><button>Sign In</button></form><p style="text-align:center;margin-top:32px;font-size:14px"><a href="/">← Return Home</a></p></div></body></html>`);
 });
 
 app.post('/admin-login', async (req, res) => {
@@ -776,7 +781,7 @@ app.get('/admin/support', guard('support'), async (req, res) => {
     <div class="glass-card" style="padding:24px">
       <small style="color:var(--text-muted)">${h(r.member_no)} · ${h(r.name)} · ${h(r.campus)}</small>
       <h3 style="margin:8px 0">${h(r.subject)} <span class="badge ${r.status === 'closed' ? 'official' : 'pending'}">${h(r.status)}</span></h3>
-      <p style="color:#cbd5e1">${h(r.message)}</p>
+      <p style="color:var(--text)">${h(r.message)}</p>
       <form method="POST" action="/admin/support/${r.id}/reply" style="margin-top:16px">
         <textarea name="reply" rows="3" placeholder="Write reply...">${h(r.reply || '')}</textarea>
         <p style="margin-top:12px"><button class="btn">Reply & Close</button></p>
@@ -812,7 +817,7 @@ app.get('/admin/finance', guard('finance'), async (req, res) => {
       <div class="tw" style="margin-top:24px">
         <table>
           <tr><th>Period</th><th>Campus</th><th>Income</th><th>Expense</th><th>Status</th><th>Actions</th></tr>
-          ${rp.map(r => `<tr><td>${h(r.period)}</td><td>${h(r.campus)}</td><td style="color:#34d399">${Number(r.income).toLocaleString()}</td><td style="color:#f87171">${Number(r.expense).toLocaleString()}</td><td>${r.approved ? '✔ Published' : 'Draft'}</td><td>${can(req, 'approve') ? `<form method="POST" action="/admin/finance/report/${r.id}/${r.approved ? 'hide' : 'approve'}"><button class="btn ${r.approved ? 'secondary' : 'g'}" style="padding:6px 12px;font-size:12px;box-shadow:none">${r.approved ? 'Hide' : 'Publish'}</button></form>` : ''}</td></tr>`).join('')}
+          ${rp.map(r => `<tr><td>${h(r.period)}</td><td>${h(r.campus)}</td><td style="color:var(--primary-dark)">${Number(r.income).toLocaleString()}</td><td style="color:var(--accent)">${Number(r.expense).toLocaleString()}</td><td>${r.approved ? '✔ Published' : 'Draft'}</td><td>${can(req, 'approve') ? `<form method="POST" action="/admin/finance/report/${r.id}/${r.approved ? 'hide' : 'approve'}"><button class="btn ${r.approved ? 'secondary' : 'g'}" style="padding:6px 12px;font-size:12px;box-shadow:none">${r.approved ? 'Hide' : 'Publish'}</button></form>` : ''}</td></tr>`).join('')}
         </table>
       </div>
     </div>
@@ -880,5 +885,5 @@ app.get('/admin/backup', guard('staff'), async (req, res) => {
 });
 
 app.listen(process.env.PORT || 3000, () => {
-  console.log('Sikkoo-Mandoo Ultra Premium Portal Running.');
+  console.log('Sikkoo-Mandoo Ultra Premium Light Portal Running.');
 });
