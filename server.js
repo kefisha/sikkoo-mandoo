@@ -106,7 +106,7 @@ const campusName = (req, cKey) => {
   return c[l] || c.n;
 };
 
-// ---------- CSS Styling (Image A & B Replicated) ----------
+// ---------- CSS Styling ----------
 const CSS = `
 :root {
   --primary: #0b7a43;
@@ -122,7 +122,7 @@ const CSS = `
 body{margin:0;font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
 a{color:var(--primary);text-decoration:none}
 
-/* Header & Image A Styling */
+/* Header Styling */
 header {
   background: var(--dark-header);
   color: #fff;
@@ -149,7 +149,7 @@ header {
 }
 .lang-btn.active { background: #10ac84; color: #fff; border-color: #10ac84; }
 
-/* Image A: External Navigation Buttons */
+/* External Navigation Buttons */
 .ext-nav {
   display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
 }
@@ -162,14 +162,6 @@ header {
 .ext-btn.login-btn { background: var(--accent); color: #fff; }
 .ext-btn.login-btn:hover { background: #c23616; }
 
-/* Image A: Stats Cards */
-.stat-card {
-  background: #fff; border-radius: 12px; padding: 20px; text-align: center;
-  margin-bottom: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-  border-bottom: 4px solid var(--accent);
-}
-.stat-card.green-num b { color: var(--primary); font-size: 2.2rem; display: block; line-height: 1; margin-bottom: 6px; }
-
 /* Generic Forms & Cards */
 .card { background: #fff; border-radius: 16px; padding: 24px; margin: 20px 0; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
 label { display: block; font-weight: 600; font-size: 14px; margin: 12px 0 6px; }
@@ -181,7 +173,7 @@ input, select, textarea { width: 100%; padding: 12px; border: 2px solid #dfe4ea;
 }
 .btn.g { background: var(--primary); }
 
-/* Image B: Internal Portal Navigation (Big buttons) */
+/* Internal Portal Navigation (Big buttons) */
 .portal-menu {
   background: var(--dark-panel);
   border-radius: 16px;
@@ -233,7 +225,7 @@ function page(req, title, body, isPortal = false) {
   const isMemberLoggedIn = !!req.session.mid;
   const isAdminLoggedIn = !!req.session.sr;
 
-  // Language Switcher exactly like Image A
+  // Language Switcher
   const langSwitcher = `
     <div class="lang-box">
       <a class="lang-btn ${l === 'om' ? 'active' : ''}" href="/lang/om">Oromo</a>
@@ -242,7 +234,7 @@ function page(req, title, body, isPortal = false) {
     </div>
   `;
 
-  // External Nav exactly like Image A
+  // Only Login & Register on public view. No About, No Contact, No Home.
   let extNav = '';
   if (isMemberLoggedIn) {
     extNav = `
@@ -259,15 +251,11 @@ function page(req, title, body, isPortal = false) {
   } else {
     extNav = `
       <div class="ext-nav">
-        <a class="ext-btn" href="/">Home</a>
-        <a class="ext-btn" href="/about">About</a>
-        <a class="ext-btn" href="/contact">Contact</a>
         <a class="ext-btn login-btn" href="/login">🔑 Login</a>
         <a class="ext-btn" href="/sikkoo-mandoo-register">📝 Register</a>
       </div>`;
   }
 
-  // Header exactly like Image A
   return `<!DOCTYPE html>
 <html lang="${l}">
 <head>
@@ -305,7 +293,7 @@ function page(req, title, body, isPortal = false) {
 </html>`;
 }
 
-// Sub-Navigation for Portal (Image B exactly)
+// Sub-Navigation for Portal (Internal view)
 function portalMenu(activePath) {
   const items = [
     { p: '/student-dashboard', i: '🪪', t: 'Membership Card' },
@@ -389,63 +377,25 @@ app.get('/lang/:l', (req, res) => {
   res.redirect(req.get('referer') || '/');
 });
 
-// ---------- PUBLIC PAGES ----------
-app.get('/', async (req, res) => {
+// ---------- PUBLIC PAGES (Clean UI: No Stats, Only Welcome) ----------
+app.get('/', (req, res) => {
   if (req.session.mid) return res.redirect('/student-dashboard');
   if (req.session.sr) return res.redirect('/admin');
 
-  try {
-    const st = await q(`SELECT campus, COUNT(*)::int AS n, SUM(CASE WHEN status='official' THEN 1 ELSE 0 END)::int AS o FROM members GROUP BY campus`);
-    const total = st.reduce((a, r) => a + r.n, 0), off = st.reduce((a, r) => a + r.o, 0);
-
-    // Image A layout for stats
-    const html = `
-      <div class="stat-card green-num">
-        <b>${total}</b>
-        <span>${h(tr(req, 'registered'))}</span>
+  // A very clean, minimal welcome center since stats and other items are removed.
+  const html = `
+    <div style="text-align:center; padding: 60px 20px; background: #fff; border-radius: 16px; margin-top: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+      <div style="font-size: 60px; margin-bottom: 20px;">🌳</div>
+      <h2 style="color: var(--primary); margin-bottom: 10px;">${h(tr(req, 'site'))}</h2>
+      <p style="color: #a4b0be; margin-bottom: 30px;">${h(tr(req, 'uni'))}</p>
+      
+      <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+        <a href="/login" class="btn">🔑 ${h(tr(req, 'login'))}</a>
+        <a href="/sikkoo-mandoo-register" class="btn g">📝 ${h(tr(req, 'reg'))}</a>
       </div>
-      <div class="stat-card green-num">
-        <b>${off}</b>
-        <span>${h(tr(req, 'official'))}</span>
-      </div>
-      ${Object.keys(CAMPUS).map(k => {
-        const count = (st.find(r => r.campus === k) || { n: 0 }).n;
-        return `
-          <div class="stat-card green-num">
-            <b>${count}</b>
-            <span>${campusName(req, k)}</span>
-          </div>
-        `;
-      }).join('')}
-    `;
-    res.send(page(req, tr(req, 'home'), html));
-  } catch (e) {
-    res.status(500).send('Error');
-  }
-});
-
-app.get('/about', (req, res) => {
-  res.send(page(req, tr(req, 'about'), `<div class="card"><h2>${h(tr(req, 'about'))}</h2><p>The Siikkoo-Mandoo Students Association of Madda Walabu University unites students on the Robe, Goba and Shashamane campuses and strengthens their education and solidarity.</p></div>`));
-});
-
-app.get('/contact', (req, res) => {
-  res.send(page(req, tr(req, 'contact'), `
-    <div class="card">
-      <h2>${h(tr(req, 'contact'))}</h2>
-      ${req.query.ok ? `<div class="msgok">✔ Message sent successfully!</div>` : ''}
-      <form method="POST" action="/contact">
-        <label>${h(tr(req, 'name'))}</label><input name="name" required>
-        <label>${h(tr(req, 'message'))}</label><textarea name="message" rows="4" required></textarea>
-        <p><button class="btn">${h(tr(req, 'send'))}</button></p>
-      </form>
     </div>
-  `));
-});
-
-app.post('/contact', async (req, res) => {
-  const n = String(req.body.name || '').slice(0, 80), m = String(req.body.message || '').slice(0, 2000);
-  if (n && m) await q(`INSERT INTO support_requests (member_no,name,campus,subject,message) VALUES ('PUBLIC',$1,'all','Contact form',$2)`, [n, m]);
-  res.redirect('/contact?ok=1');
+  `;
+  res.send(page(req, tr(req, 'home'), html));
 });
 
 // ---------- AUTHENTICATION ----------
@@ -685,9 +635,18 @@ app.get('/admin', needStaff, async (req, res) => {
   const [m] = await q(`SELECT COUNT(*)::int n, SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END)::int p, SUM(CASE WHEN status='official' THEN 1 ELSE 0 END)::int o FROM members${w}`, pr);
   res.send(A(req, 'Admin Dashboard', `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:20px">
-      <div class="stat-card green-num"><b>${m.n}</b><span>Members</span></div>
-      <div class="stat-card green-num"><b>${m.o || 0}</b><span>Official</span></div>
-      <div class="stat-card green-num"><b>${m.p || 0}</b><span>Pending</span></div>
+      <div class="card" style="text-align:center;border-bottom:4px solid var(--accent)">
+        <b style="color:var(--primary);font-size:2.2rem;display:block">${m.n}</b>
+        <span>Members</span>
+      </div>
+      <div class="card" style="text-align:center;border-bottom:4px solid var(--accent)">
+        <b style="color:var(--primary);font-size:2.2rem;display:block">${m.o || 0}</b>
+        <span>Official</span>
+      </div>
+      <div class="card" style="text-align:center;border-bottom:4px solid var(--accent)">
+        <b style="color:var(--primary);font-size:2.2rem;display:block">${m.p || 0}</b>
+        <span>Pending</span>
+      </div>
     </div>
   `));
 });
