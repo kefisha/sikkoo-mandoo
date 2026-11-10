@@ -172,8 +172,9 @@ input, select, textarea { width: 100%; padding: 12px; border: 2px solid #dfe4ea;
   font-weight: 600; cursor: pointer; font-size: 15px;
 }
 .btn.g { background: var(--primary); }
+.btn.k { background: #2d3436; }
 
-/* Internal Portal Navigation (Big buttons) */
+/* Internal Portal Navigation */
 .portal-menu {
   background: var(--dark-panel);
   border-radius: 16px;
@@ -225,7 +226,6 @@ function page(req, title, body, isPortal = false) {
   const isMemberLoggedIn = !!req.session.mid;
   const isAdminLoggedIn = !!req.session.sr;
 
-  // Language Switcher
   const langSwitcher = `
     <div class="lang-box">
       <a class="lang-btn ${l === 'om' ? 'active' : ''}" href="/lang/om">Oromo</a>
@@ -293,7 +293,6 @@ function page(req, title, body, isPortal = false) {
 </html>`;
 }
 
-// Sub-Navigation for Portal (Internal view)
 function portalMenu(activePath) {
   const items = [
     { p: '/student-dashboard', i: '🪪', t: 'Membership Card' },
@@ -314,7 +313,6 @@ function portalMenu(activePath) {
   `;
 }
 
-// Translations logic
 function postT(req, p, f) {
   const l = L(req);
   if (l === 'am') return p[f + '_am'] || p[f + '_om'] || p[f + '_en'] || '';
@@ -377,12 +375,10 @@ app.get('/lang/:l', (req, res) => {
   res.redirect(req.get('referer') || '/');
 });
 
-// ---------- PUBLIC PAGES (Clean UI: No Stats, Only Welcome) ----------
+// ---------- PUBLIC PAGE ----------
 app.get('/', (req, res) => {
   if (req.session.mid) return res.redirect('/student-dashboard');
   if (req.session.sr) return res.redirect('/admin');
-
-  // A very clean, minimal welcome center since stats and other items are removed.
   const html = `
     <div style="text-align:center; padding: 60px 20px; background: #fff; border-radius: 16px; margin-top: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
       <div style="font-size: 60px; margin-bottom: 20px;">🌳</div>
@@ -486,7 +482,7 @@ app.post('/sikkoo-mandoo-register', upload.single('photo'), async (req, res) => 
   } catch (e) { res.status(500).send('Error'); }
 });
 
-// ---------- INTERNAL MEMBER PORTAL (Image B) ----------
+// ---------- INTERNAL MEMBER PORTAL ----------
 app.get('/student-dashboard', needMember, async (req, res) => {
   const [m] = await q(`SELECT * FROM members WHERE member_no=$1`, [req.session.mid]);
   if (!m) return res.redirect('/logout');
@@ -572,7 +568,6 @@ app.get('/photo/:id', async (req, res) => {
   res.send(f.data);
 });
 
-// Verify Link
 app.get('/verify/:no', async (req, res) => {
   const [m] = await q(`SELECT name,member_no,campus,department,year,status,photo_id FROM members WHERE UPPER(member_no)=UPPER($1)`, [req.params.no]);
   res.send(page(req, tr(req, 'verify'), m ? `<div class="card" style="max-width:400px;margin:auto;text-align:center"><h2 style="color:var(--primary)">${h(tr(req, 'valid'))}</h2><img style="width:100px;height:120px;border-radius:8px;object-fit:cover" src="${m.photo_id ? '/photo/' + m.photo_id : ''}"><h3>${h(m.name)}</h3><p style="color:var(--accent);font-weight:700">${h(m.member_no)}</p><p>${h(campusName(req, m.campus))} · ${h(m.department)}</p><span class="badge ${m.status}">${h(tr(req, m.status))}</span></div>` : `<div class="card" style="max-width:400px;margin:auto;text-align:center"><h2 style="color:var(--accent)">${h(tr(req, 'invalid'))}</h2></div>`));
@@ -636,16 +631,13 @@ app.get('/admin', needStaff, async (req, res) => {
   res.send(A(req, 'Admin Dashboard', `
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:20px">
       <div class="card" style="text-align:center;border-bottom:4px solid var(--accent)">
-        <b style="color:var(--primary);font-size:2.2rem;display:block">${m.n}</b>
-        <span>Members</span>
+        <b style="color:var(--primary);font-size:2.2rem;display:block">${m.n}</b><span>Members</span>
       </div>
       <div class="card" style="text-align:center;border-bottom:4px solid var(--accent)">
-        <b style="color:var(--primary);font-size:2.2rem;display:block">${m.o || 0}</b>
-        <span>Official</span>
+        <b style="color:var(--primary);font-size:2.2rem;display:block">${m.o || 0}</b><span>Official</span>
       </div>
       <div class="card" style="text-align:center;border-bottom:4px solid var(--accent)">
-        <b style="color:var(--primary);font-size:2.2rem;display:block">${m.p || 0}</b>
-        <span>Pending</span>
+        <b style="color:var(--primary);font-size:2.2rem;display:block">${m.p || 0}</b><span>Pending</span>
       </div>
     </div>
   `));
@@ -720,24 +712,163 @@ app.post('/admin/content/:type', guard('content'), files6([{ name: 'image', maxC
   }
   res.redirect('/admin/content/' + tp);
 });
+
 app.post('/admin/content/:type/:id/delete', guard('content'), async (req, res) => {
   await q(`DELETE FROM posts WHERE id=$1`, [parseInt(req.params.id, 10) || 0]); res.redirect('/admin/content/' + req.params.type);
 });
 
+// Admin Leadership 
 app.get('/admin/leaders', guard('leaders'), async (req, res) => {
-  res.send(A(req, 'Leadership', `<div class="card"><p>Manage leadership here...</p></div>`));
+  const sc = scopeOf(req), ls = await q(`SELECT * FROM leaders ${sc ? 'WHERE campus=$1' : ''} ORDER BY (level='central') DESC, ord, id`, sc ? [sc] : []);
+  res.send(A(req, 'Leadership', `
+    <div class="card">
+      <form method="POST" action="/admin/leaders" enctype="multipart/form-data">
+        <label>Name</label><input name="name" required>
+        <label>Position (Oromo)</label><input name="position_om">
+        <label>Position (Amharic)</label><input name="position_am">
+        <label>Position (English)</label><input name="position_en">
+        <label>Level</label>${sel('level', sc ? [['campus', 'Campus']] : [['central', 'Central'], ['campus', 'Campus']])}
+        <label>Campus</label>${sel('campus', campusOpts(sc, false))}
+        <label>Order</label><input name="ord" type="number" value="1">
+        <label>Photo</label><input name="photo" type="file" accept="image/*">
+        <p style="margin-top:16px"><button class="btn g">Add Leader</button></p>
+      </form>
+    </div>
+    <div class="card">
+      ${ls.map(x => `<div style="display:flex;justify-content:space-between;border-bottom:1px solid #f1f2f6;padding:8px 0"><span>${h(x.name)} · ${h(x.position_en || x.position_am || x.position_om)}</span><form method="POST" action="/admin/leaders/${x.id}/delete"><button class="btn" style="padding:4px 10px;font-size:12px">Delete</button></form></div>`).join('') || h(tr(req, 'none'))}
+    </div>
+  `));
 });
+app.post('/admin/leaders', guard('leaders'), files6([{ name: 'photo', maxCount: 1 }]), async (req, res) => {
+  const b = req.body, sc = scopeOf(req), pid = await saveFile(((req.files || {}).photo || [])[0]), lvl = sc ? 'campus' : (b.level === 'campus' ? 'campus' : 'central');
+  if (b.name) await q(`INSERT INTO leaders (name,position_om,position_en,position_am,level,campus,photo_id,ord) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`, [String(b.name).slice(0, 80), String(b.position_om || '').slice(0, 100), String(b.position_en || '').slice(0, 100), String(b.position_am || '').slice(0, 100), lvl, lvl === 'central' ? 'all' : (sc || (CAMPUS[b.campus] ? b.campus : 'robe')), pid, parseInt(b.ord, 10) || 0]);
+  res.redirect('/admin/leaders');
+});
+app.post('/admin/leaders/:id/delete', guard('leaders'), async (req, res) => { await q(`DELETE FROM leaders WHERE id=$1`, [parseInt(req.params.id, 10) || 0]); res.redirect('/admin/leaders'); });
+
+// Admin Support 
 app.get('/admin/support', guard('support'), async (req, res) => {
-  res.send(A(req, 'Support', `<div class="card"><p>Manage support tickets here...</p></div>`));
+  const sc = scopeOf(req), rs = await q(`SELECT * FROM support_requests ${sc ? "WHERE campus IN ($1,'all')" : ''} ORDER BY (status='open') DESC, id DESC LIMIT 100`, sc ? [sc] : []);
+  res.send(A(req, 'Support', rs.map(r => `
+    <div class="card">
+      <small style="color:#a4b0be">${h(r.member_no)} · ${h(r.name)} · ${h(r.campus)}</small>
+      <h3 style="margin:6px 0">${h(r.subject)} <span class="badge ${r.status === 'closed' ? 'official' : 'pending'}">${h(r.status)}</span></h3>
+      <p>${h(r.message)}</p>
+      <form method="POST" action="/admin/support/${r.id}/reply">
+        <textarea name="reply" rows="2" placeholder="Write reply...">${h(r.reply || '')}</textarea>
+        <p><button class="btn g" style="margin-top:6px">Reply & Close</button></p>
+      </form>
+    </div>
+  `).join('') || `<div class="card">${h(tr(req, 'none'))}</div>`));
 });
+app.post('/admin/support/:id/reply', guard('support'), async (req, res) => {
+  await q(`UPDATE support_requests SET reply=$1, status='closed' WHERE id=$2`, [String(req.body.reply || '').slice(0, 2000), parseInt(req.params.id, 10) || 0]);
+  res.redirect('/admin/support');
+});
+
+// Admin Finance 
+const KINDS = [['contribution', 'Membership contribution'], ['donation', 'Donation'], ['fundraising', 'Fundraising'], ['income', 'Other income'], ['expense', 'Expense']];
 app.get('/admin/finance', guard('finance'), async (req, res) => {
-  res.send(A(req, 'Finance', `<div class="card"><p>Manage finance here...</p></div>`));
+  const sc = scopeOf(req), w = sc ? 'WHERE campus=$1' : '', pr = sc ? [sc] : [];
+  const tx = await q(`SELECT * FROM transactions ${w} ORDER BY id DESC LIMIT 80`, pr);
+  const rp = await q(`SELECT * FROM finance_reports ${sc ? 'WHERE campus=$1' : ''} ORDER BY id DESC LIMIT 24`, pr);
+  res.send(A(req, 'Finance', `
+    <div class="card">
+      <h3>Record Transaction</h3>
+      <form method="POST" action="/admin/finance/tx">
+        <label>Type</label>${sel('kind', KINDS)}
+        <label>Amount</label><input name="amount" type="number" step="0.01" min="0" required>
+        <label>Date</label><input name="tdate" type="date" required>
+        <label>Campus</label>${sel('campus', campusOpts(sc, true))}
+        <label>Note</label><input name="note">
+        <p><button class="btn g">Save Transaction</button></p>
+      </form>
+    </div>
+    <div class="card">
+      <h3>Generate Report</h3>
+      <form method="POST" action="/admin/finance/report" style="display:flex;gap:8px;flex-wrap:wrap">
+        <input name="period" placeholder="2026-11 or 2026" required style="max-width:160px">
+        ${sel('campus', campusOpts(sc, true))}
+        <button class="btn">Create Report</button>
+      </form>
+      <div class="tw" style="margin-top:14px">
+        <table>
+          <tr><th>Period</th><th>Campus</th><th>Income</th><th>Expense</th><th>Status</th><th>Actions</th></tr>
+          ${rp.map(r => `<tr><td>${h(r.period)}</td><td>${h(r.campus)}</td><td>${Number(r.income).toLocaleString()}</td><td>${Number(r.expense).toLocaleString()}</td><td>${r.approved ? '✔ Published' : 'Draft'}</td><td>${can(req, 'approve') ? `<form method="POST" action="/admin/finance/report/${r.id}/${r.approved ? 'hide' : 'approve'}" style="display:inline"><button class="btn ${r.approved ? 'k' : 'g'}" style="padding:4px 10px;font-size:12px">${r.approved ? 'Hide' : 'Publish'}</button></form>` : ''}</td></tr>`).join('')}
+        </table>
+      </div>
+    </div>
+  `));
 });
+app.post('/admin/finance/tx', guard('finance'), async (req, res) => {
+  const b = req.body, sc = scopeOf(req), amt = num(b.amount);
+  if (KINDS.some(k => k[0] === b.kind) && amt > 0 && /^\d{4}-\d{2}-\d{2}$/.test(b.tdate || '')) {
+    await q(`INSERT INTO transactions (kind,amount,tdate,note,campus,created_by) VALUES ($1,$2,$3,$4,$5,$6)`, [b.kind, amt, b.tdate, String(b.note || '').slice(0, 200), sc || (CAMPUS[b.campus] ? b.campus : 'all'), req.session.sname || '']);
+  }
+  res.redirect('/admin/finance');
+});
+app.post('/admin/finance/report', guard('finance'), async (req, res) => {
+  const per = String(req.body.period || '').trim(), sc = scopeOf(req), cmp = sc || (CAMPUS[req.body.campus] ? req.body.campus : 'all');
+  if (/^\d{4}(-\d{2})?$/.test(per)) {
+    const rows = await q(`SELECT kind, SUM(amount) a FROM transactions WHERE tdate LIKE $1 ${cmp === 'all' ? '' : 'AND campus=$2'} GROUP BY kind`, cmp === 'all' ? [per + '%'] : [per + '%', cmp]);
+    let inc = 0, exp = 0; const d = {}; rows.forEach(r => { d[r.kind] = Number(r.a); if (r.kind === 'expense') exp += Number(r.a); else inc += Number(r.a); });
+    await q(`INSERT INTO finance_reports (period,campus,income,expense,detail) VALUES ($1,$2,$3,$4,$5)`, [per, cmp, inc, exp, JSON.stringify(d)]);
+  }
+  res.redirect('/admin/finance');
+});
+app.post('/admin/finance/report/:id/:a', guard('approve'), async (req, res) => {
+  await q(`UPDATE finance_reports SET approved=$1 WHERE id=$2`, [req.params.a === 'approve' ? 1 : 0, parseInt(req.params.id, 10) || 0]);
+  res.redirect('/admin/finance');
+});
+
+// Admin Staff 
 app.get('/admin/staff', guard('staff'), async (req, res) => {
-  res.send(A(req, 'Staff', `<div class="card"><p>Manage staff here...</p></div>`));
+  const st = await q(`SELECT id,username,name,role,campus,active FROM staff ORDER BY id`);
+  res.send(A(req, 'Staff Accounts', `
+    <div class="card">
+      <form method="POST" action="/admin/staff">
+        <label>Name</label><input name="name" required>
+        <label>Username</label><input name="username" required>
+        <label>Role</label>${sel('role', ROLES.map(r => [r, r]))}
+        <label>Campus</label>${sel('campus', campusOpts(null))}
+        <label>Password (8+)</label><input name="password" type="password" minlength="8" required>
+        <p><button class="btn g">Create Account</button></p>
+      </form>
+    </div>
+    <div class="card">
+      <div class="tw">
+        <table>
+          <tr><th>Name</th><th>Username</th><th>Role</th><th>Campus</th><th>Status</th></tr>
+          ${st.map(x => `<tr><td>${h(x.name)}</td><td>${h(x.username)}</td><td>${h(x.role)}</td><td>${h(x.campus || 'All')}</td><td><form method="POST" action="/admin/staff/${x.id}/toggle"><button class="btn ${x.active ? 'k' : 'g'}" style="padding:4px 10px;font-size:12px">${x.active ? 'Disable' : 'Enable'}</button></form></td></tr>`).join('')}
+        </table>
+      </div>
+    </div>
+  `));
 });
+app.post('/admin/staff', guard('staff'), async (req, res) => {
+  const b = req.body;
+  if (ROLES.includes(b.role) && b.name && b.username && String(b.password || '').length >= 8) {
+    try { await q(`INSERT INTO staff (username,name,role,campus,password) VALUES ($1,$2,$3,$4,$5)`, [String(b.username).trim().slice(0, 40), String(b.name).slice(0, 80), b.role, CAMPUS[b.campus] ? b.campus : null, bcrypt.hashSync(String(b.password), 10)]); } catch (e) {}
+  }
+  res.redirect('/admin/staff');
+});
+app.post('/admin/staff/:id/toggle', guard('staff'), async (req, res) => {
+  await q(`UPDATE staff SET active=1-active WHERE id=$1`, [parseInt(req.params.id, 10) || 0]);
+  res.redirect('/admin/staff');
+});
+
+// Admin Backup
 app.get('/admin/backup', guard('staff'), async (req, res) => {
-  res.send(A(req, 'Backup', `<div class="card"><p>Database Backup</p></div>`));
+  if (!req.query.go) return res.send(A(req, 'Backup', `
+    <div class="card">
+      <h3>Database Backup</h3>
+      <p>Export all tables and metadata as a downloadable JSON file.</p>
+      <a class="btn g" href="/admin/backup?go=1">⬇ Download Backup</a>
+    </div>
+  `));
+  const out = { exported: new Date().toISOString() };
+  for (const t of ['members', 'posts', 'leaders', 'support_requests', 'transactions', 'finance_reports', 'staff']) { out[t] = await q(`SELECT * FROM ${t}`); }
+  res.set('Content-Type', 'application/json').set('Content-Disposition', `attachment; filename="sikkoo-mandoo-backup-${new Date().toISOString().slice(0, 10)}.json"`).send(JSON.stringify(out));
 });
 
 app.listen(process.env.PORT || 3000, () => {
