@@ -460,6 +460,7 @@ function page(req, title, body) {
 </html>`;
 }
 
+// FIXED portalMenu - no nested template literals (this was the SyntaxError cause)
 function portalMenu(activePath) {
   const items = [
     { p: '/student-dashboard', i: '🪪', t: 'Membership Card' },
@@ -473,7 +474,14 @@ function portalMenu(activePath) {
     { p: '/portal/leadership', i: '👥', t: 'Leadership' },
     { p: '/portal/finance', i: '💰', t: 'Finance' }
   ];
-  return `<div class="portal-menu">\( {items.map(x => `<a href=" \){x.p}" class="portal-btn \( {activePath === x.p ? 'active' : ''}"> \){x.i} ${x.t}</a>`).join('')}</div>`;
+
+  let html = '<div class="portal-menu">';
+  items.forEach(x => {
+    const activeClass = activePath === x.p ? ' active' : '';
+    html += '<a href="' + x.p + '" class="portal-btn' + activeClass + '">' + x.i + ' ' + x.t + '</a>';
+  });
+  html += '</div>';
+  return html;
 }
 
 function postT(req, p, f) {
@@ -487,9 +495,9 @@ function postCard(req, p) {
   return `<div class="glass-card" style="margin-bottom:18px; padding:24px">
     <small style="color:var(--text-muted);font-weight:600;font-size:12.5px">${h(p.campus === 'all' ? 'All Campuses' : campusName(req, p.campus))} · ${h(p.event_date || '')}</small>
     <h3 style="margin:8px 0 14px; font-size:1.2rem; font-weight:700; letter-spacing:-0.2px">${h(postT(req, p, 'title'))}</h3>
-    \( {p.image_id ? `<img style="width:100%;max-height:340px;object-fit:cover;border-radius:14px;margin-bottom:14px;border:1px solid var(--border)" src="/photo/ \){p.image_id}" alt="">` : ''}
+    ${p.image_id ? `<img style="width:100%;max-height:340px;object-fit:cover;border-radius:14px;margin-bottom:14px;border:1px solid var(--border)" src="/photo/${p.image_id}" alt="">` : ''}
     <div style="color:var(--text-2);font-size:14.5px;line-height:1.65">${h(postT(req, p, 'body')).replace(/\n/g, '<br>')}</div>
-    \( {p.file_id ? `<p style="margin-top:18px"><a class="btn secondary" style="padding:9px 18px;font-size:13.5px" href="/photo/ \){p.file_id}?dl=1">⬇ Download File</a></p>` : ''}
+    ${p.file_id ? `<p style="margin-top:18px"><a class="btn secondary" style="padding:9px 18px;font-size:13.5px" href="/photo/${p.file_id}?dl=1">⬇ Download File</a></p>` : ''}
   </div>`;
 }
 
@@ -578,7 +586,7 @@ app.get('/login', (req, res) => {
     <div class="glass-card" style="max-width:420px;margin:36px auto; padding: 36px 32px">
       <h2 style="margin-top:0; font-size:1.45rem; margin-bottom: 6px; font-weight:750; letter-spacing:-0.3px">🔑 ${h(tr(req, 'login'))}</h2>
       <p style="color:var(--text-muted);font-size:13.5px;margin-bottom:22px">Enter your membership number or student ID</p>
-      \( {req.query.e ? `<div class="err"> \){h(tr(req, 'bad'))}</div>` : ''}
+      ${req.query.e ? `<div class="err">${h(tr(req, 'bad'))}</div>` : ''}
       <form method="POST" action="/login">
         <label>${h(tr(req, 'no'))} / ID</label>
         <input name="u" required placeholder="SM-ROB-2026-0001" autocomplete="username">
@@ -603,22 +611,22 @@ app.post('/login', async (req, res) => {
 
 function regForm(req, err, v) {
   v = v || {};
-  const s = (k, o) => o.map(x => `<option value="\( {x[0]}" \){v[k] === x[0] ? ' selected' : ''}>${h(x[1])}</option>`).join('');
+  const s = (k, o) => o.map(x => `<option value="${x[0]}"${v[k] === x[0] ? ' selected' : ''}>${h(x[1])}</option>`).join('');
   return page(req, tr(req, 'reg'), `
     <div class="glass-card" style="max-width:680px;margin:28px auto; padding:36px 32px">
       <h2 style="margin-top:0; font-size: 1.5rem; margin-bottom:6px; font-weight:750; letter-spacing:-0.3px">📝 ${h(tr(req, 'reg'))}</h2>
       <p style="color:var(--text-muted);font-size:13.5px;margin-bottom:22px">Create your membership account</p>
-      \( {err ? `<div class="err"> \){h(err)}</div>` : ''}
+      ${err ? `<div class="err">${h(err)}</div>` : ''}
       <form method="POST" action="/sikkoo-mandoo-register" enctype="multipart/form-data">
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 6px 18px;">
-          <div><label>\( {h(tr(req, 'name'))}</label><input name="name" required value=" \){h(v.name)}"></div>
-          <div><label>\( {h(tr(req, 'gender'))}</label><select name="gender"> \){s('gender', [['M', tr(req, 'male')], ['F', tr(req, 'female')]])}</select></div>
-          <div><label>\( {h(tr(req, 'campus'))}</label><select name="campus" required> \){s('campus', Object.keys(CAMPUS).map(k => [k, campusName(req, k)]))}</select></div>
-          <div><label>\( {h(tr(req, 'dept'))}</label><input name="department" required value=" \){h(v.department)}"></div>
-          <div><label>\( {h(tr(req, 'year'))}</label><select name="year"> \){s('year', [1, 2, 3, 4, 5, 6].map(x => [String(x), String(x)]))}</select></div>
-          <div><label>\( {h(tr(req, 'sid'))}</label><input name="student_id" required value=" \){h(v.student_id)}" placeholder="UGRR/12345/15"></div>
-          <div><label>\( {h(tr(req, 'phone'))}</label><input name="phone" required type="tel" value=" \){h(v.phone)}"></div>
-          <div><label>\( {h(tr(req, 'email'))}</label><input name="email" type="email" value=" \){h(v.email)}"></div>
+          <div><label>${h(tr(req, 'name'))}</label><input name="name" required value="${h(v.name)}"></div>
+          <div><label>${h(tr(req, 'gender'))}</label><select name="gender">${s('gender', [['M', tr(req, 'male')], ['F', tr(req, 'female')]])}</select></div>
+          <div><label>${h(tr(req, 'campus'))}</label><select name="campus" required>${s('campus', Object.keys(CAMPUS).map(k => [k, campusName(req, k)]))}</select></div>
+          <div><label>${h(tr(req, 'dept'))}</label><input name="department" required value="${h(v.department)}"></div>
+          <div><label>${h(tr(req, 'year'))}</label><select name="year">${s('year', [1, 2, 3, 4, 5, 6].map(x => [String(x), String(x)]))}</select></div>
+          <div><label>${h(tr(req, 'sid'))}</label><input name="student_id" required value="${h(v.student_id)}" placeholder="UGRR/12345/15"></div>
+          <div><label>${h(tr(req, 'phone'))}</label><input name="phone" required type="tel" value="${h(v.phone)}"></div>
+          <div><label>${h(tr(req, 'email'))}</label><input name="email" type="email" value="${h(v.email)}"></div>
         </div>
         <label>${h(tr(req, 'photo'))}</label><input name="photo" type="file" accept="image/jpeg,image/png,image/webp">
         <label>${h(tr(req, 'pass'))} (6+)</label><input name="password" type="password" minlength="6" required>
@@ -645,7 +653,7 @@ app.post('/sikkoo-mandoo-register', upload.single('photo'), async (req, res) => 
     const hash = bcrypt.hashSync(String(b.password), 10), yr = new Date().getFullYear();
     for (let i = 0; i < 6; i++) {
       const [{ n }] = await q(`SELECT COUNT(*)::int AS n FROM members WHERE campus=$1`, [b.campus]);
-      const no = `SM-\( {c.c}- \){yr}-${String(n + 1 + i).padStart(4, '0')}`;
+      const no = `SM-${c.c}-${yr}-${String(n + 1 + i).padStart(4, '0')}`;
       try {
         await q(`INSERT INTO members (member_no,name,gender,phone,email,campus,department,year,student_id,photo_id,password,status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
           [no, b.name.trim().slice(0, 80), b.gender === 'F' ? 'F' : 'M', b.phone.trim().slice(0, 30), (b.email || '').slice(0, 80), b.campus, b.department.trim().slice(0, 80), String(b.year || '1'), b.student_id.trim().slice(0, 40), pid, hash, b.want ? 'pending' : 'registered']);
@@ -668,7 +676,7 @@ app.get('/student-dashboard', needMember, async (req, res) => {
     <div class="id">
       <div class="hd">
         <span>${h(tr(req, 'site'))}</span>
-        <span class="badge \( {m.status}"> \){h(tr(req, m.status))}</span>
+        <span class="badge ${m.status}">${h(tr(req, m.status))}</span>
       </div>
       <div class="bd">
         <img src="${m.photo_id ? '/photo/' + m.photo_id : 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27/%3E'}" alt="">
@@ -676,7 +684,7 @@ app.get('/student-dashboard', needMember, async (req, res) => {
           <b style="font-size:17px;color:var(--text);font-weight:700">${h(m.name)}</b><br>
           <small style="color:var(--text-muted);font-size:12.5px">${h(tr(req, 'no'))}</small><br>
           <b style="color:var(--primary-dark);font-size:15.5px;letter-spacing:0.3px">${h(m.member_no)}</b><br>
-          <small style="color:var(--text-muted);font-weight:600;font-size:12.5px">${h(campusName(req, m.campus))} · \( {h(m.department)} · Y \){h(m.year)}</small>
+          <small style="color:var(--text-muted);font-weight:600;font-size:12.5px">${h(campusName(req, m.campus))} · ${h(m.department)} · Y${h(m.year)}</small>
         </div>
       </div>
       <div style="padding:0 22px 20px;display:flex;justify-content:space-between;align-items:flex-end">
@@ -686,7 +694,7 @@ app.get('/student-dashboard', needMember, async (req, res) => {
     </div>
     <div style="text-align:center;margin-top:28px">
       <button onclick="print()" class="btn secondary">🖨️ ${h(tr(req, 'print'))}</button>
-      \( {m.status === 'registered' ? `<form method="POST" action="/student/upgrade" style="display:inline; margin-left:10px"><button class="btn"> \){h(tr(req, 'upgrade'))}</button></form>` : ''}
+      ${m.status === 'registered' ? `<form method="POST" action="/student/upgrade" style="display:inline; margin-left:10px"><button class="btn">${h(tr(req, 'upgrade'))}</button></form>` : ''}
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>new QRCode(document.getElementById('qr'),{text:${JSON.stringify(base)},width:68,height:68,colorDark:"#0f172a",colorLight:"#ffffff"});</script>
@@ -700,7 +708,7 @@ TYPES.forEach(tp => {
     let content = '';
     if (tp === 'gallery') {
       content = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px">
-        \( {rows.map(p => `<div class="glass-card" style="padding:14px;margin:0"><img style="width:100%;height:210px;object-fit:cover;border-radius:12px;margin-bottom:10px;border:1px solid var(--border)" src="/photo/ \){p.image_id}"><p style="margin:0;font-weight:650;font-size:15px">${h(postT(req, p, 'title'))}</p></div>`).join('')}
+        ${rows.map(p => `<div class="glass-card" style="padding:14px;margin:0"><img style="width:100%;height:210px;object-fit:cover;border-radius:12px;margin-bottom:10px;border:1px solid var(--border)" src="/photo/${p.image_id}"><p style="margin:0;font-weight:650;font-size:15px">${h(postT(req, p, 'title'))}</p></div>`).join('')}
       </div>`;
     } else {
       content = rows.map(p => postCard(req, p)).join('');
@@ -714,7 +722,7 @@ app.get('/portal/leadership', needMember, async (req, res) => {
   const ls = await q(`SELECT * FROM leaders ORDER BY (level='central') DESC, ord, id`);
   const grp = (t, list) => list.length ? `<h3 style="margin:28px 0 14px; color:var(--primary-dark);font-size:1.15rem;font-weight:700">${h(t)}</h3>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px">
-    \( {list.map(x => `<div class="glass-card" style="text-align:center;margin:0;padding:22px"><img style="width:104px;height:104px;border-radius:50%;object-fit:cover;border:3px solid var(--primary-light);margin:auto;box-shadow:0 8px 20px rgba(5,150,105,0.2)" src=" \){x.photo_id ? '/photo/' + x.photo_id : ''}"><h4 style="margin:14px 0 4px;font-size:16px;font-weight:700;color:var(--text)">\( {h(x.name)}</h4><small style="color:var(--text-muted);font-weight:600;font-size:12.5px"> \){h(L(req) === 'om' ? (x.position_om || x.position_en) : (L(req) === 'am' ? (x.position_am || x.position_en || x.position_om) : (x.position_en || x.position_om)))}</small></div>`).join('')}
+    ${list.map(x => `<div class="glass-card" style="text-align:center;margin:0;padding:22px"><img style="width:104px;height:104px;border-radius:50%;object-fit:cover;border:3px solid var(--primary-light);margin:auto;box-shadow:0 8px 20px rgba(5,150,105,0.2)" src="${x.photo_id ? '/photo/' + x.photo_id : ''}"><h4 style="margin:14px 0 4px;font-size:16px;font-weight:700;color:var(--text)">${h(x.name)}</h4><small style="color:var(--text-muted);font-weight:600;font-size:12.5px">${h(L(req) === 'om' ? (x.position_om || x.position_en) : (L(req) === 'am' ? (x.position_am || x.position_en || x.position_om) : (x.position_en || x.position_om)))}</small></div>`).join('')}
     </div>` : '';
   const html = portalMenu('/portal/leadership') + grp('Central Leadership', ls.filter(x => x.level === 'central')) + Object.keys(CAMPUS).map(k => grp(campusName(req, k), ls.filter(x => x.level !== 'central' && x.campus === k))).join('');
   res.send(page(req, tr(req, 'leadership'), html || `<div class="glass-card" style="text-align:center;padding:48px">${h(tr(req, 'none'))}</div>`));
@@ -730,7 +738,7 @@ app.get('/portal/finance', needMember, async (req, res) => {
       <div><b style="color:var(--accent);font-size:1.7rem;font-weight:800">${Number(r.expense).toLocaleString()}</b><br><small style="color:var(--text-muted);font-weight:600">Expense</small></div>
       <div><b style="font-size:1.7rem;font-weight:800;color:var(--text)">${(r.income - r.expense).toLocaleString()}</b><br><small style="color:var(--text-muted);font-weight:600">Balance</small></div>
     </div>
-    <p style="font-size:13.5px;color:var(--text-2);background:rgba(255,255,255,0.7);padding:14px;border-radius:12px;border:1px solid var(--border)">\( {Object.keys(d).map(k => `<b> \){h(k)}</b>: ${Number(d[k]).toLocaleString()}`).join(' &nbsp;•&nbsp; ')}</p></div>`;
+    <p style="font-size:13.5px;color:var(--text-2);background:rgba(255,255,255,0.7);padding:14px;border-radius:12px;border:1px solid var(--border)">${Object.keys(d).map(k => `<b>${h(k)}</b>: ${Number(d[k]).toLocaleString()}`).join(' &nbsp;•&nbsp; ')}</p></div>`;
   }).join('');
   res.send(page(req, tr(req, 'finance'), html || `<div class="glass-card" style="text-align:center;padding:48px">${h(tr(req, 'none'))}</div>`));
 });
@@ -756,7 +764,7 @@ app.get('/verify/:no', async (req, res) => {
     <h3 style="margin:16px 0 6px;font-size:1.2rem;font-weight:700;color:var(--text)">${h(m.name)}</h3>
     <p style="color:var(--primary-dark);font-weight:700;font-size:15px">${h(m.member_no)}</p>
     <p style="color:var(--text-muted);margin:6px 0 14px;font-size:13.5px">${h(campusName(req, m.campus))} · ${h(m.department)}</p>
-    <span class="badge \( {m.status}"> \){h(tr(req, m.status))}</span>
+    <span class="badge ${m.status}">${h(tr(req, m.status))}</span>
   </div>` : `<div class="glass-card" style="max-width:400px;margin:36px auto;text-align:center;padding:40px"><h2 style="color:var(--accent)">${h(tr(req, 'invalid'))}</h2></div>`));
 });
 
@@ -821,7 +829,7 @@ const A = (req, title, body) => {
 
   return page(req, title, `
     <div class="portal-menu" style="margin-top:0;margin-bottom:22px">
-      \( {links.map(x => `<a href=" \){x[0]}" class="portal-btn \( {req.path === x[0] || (x[0] !== '/admin' && req.path.startsWith(x[0])) ? 'active' : ''}"> \){x[1]}</a>`).join('')}
+      ${links.map(x => `<a href="${x[0]}" class="portal-btn ${req.path === x[0] || (x[0] !== '/admin' && req.path.startsWith(x[0])) ? 'active' : ''}">${x[1]}</a>`).join('')}
     </div>
     ${body}
   `);
@@ -835,7 +843,7 @@ async function saveFile(f) {
   return (await q(`INSERT INTO files (mime,data,name) VALUES ($1,$2,$3) RETURNING id`, [f.mimetype, f.buffer, String(f.originalname || 'file').slice(0, 100)]))[0].id;
 }
 const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
-const sel = (name, opts, cur) => `<select name="\( {name}"> \){opts.map(o => `<option value="\( {o[0]}" \){cur === o[0] ? ' selected' : ''}>${h(o[1])}</option>`).join('')}</select>`;
+const sel = (name, opts, cur) => `<select name="${name}">${opts.map(o => `<option value="${o[0]}"${cur === o[0] ? ' selected' : ''}>${h(o[1])}</option>`).join('')}</select>`;
 const campusOpts = (sc, all) => (sc ? [[sc, CAMPUS[sc].n]] : (all ? [['all', 'All campuses']] : []).concat(Object.keys(CAMPUS).map(k => [k, CAMPUS[k].n])));
 
 app.get('/admin', needStaff, async (req, res) => {
@@ -868,10 +876,10 @@ async function guardMember(req, res, id) {
 
 app.get('/admin/members', guard('members'), async (req, res) => {
   const sc = scopeOf(req), cf = sc || (CAMPUS[req.query.campus] ? req.query.campus : ''), qs = String(req.query.q || '').trim().slice(0, 50), pr = [], c = [];
-  if (cf) { pr.push(cf); c.push(`campus=\[ {pr.length}`); }
-  if (qs) { pr.push('%' + qs + '%'); c.push(`(name ILIKE \]{pr.length} OR member_no ILIKE \[ {pr.length} OR student_id ILIKE \]{pr.length} OR phone ILIKE $${pr.length})`); }
+  if (cf) { pr.push(cf); c.push(`campus=$${pr.length}`); }
+  if (qs) { pr.push('%' + qs + '%'); c.push(`(name ILIKE $${pr.length} OR member_no ILIKE $${pr.length} OR student_id ILIKE $${pr.length} OR phone ILIKE $${pr.length})`); }
   const ms = await q(`SELECT * FROM members ${c.length ? 'WHERE ' + c.join(' AND ') : ''} ORDER BY id DESC LIMIT 400`, pr);
-  const act = (id, a, t, cls) => `<form method="POST" action="/admin/members/\( {id}/ \){a}" style="display:inline"><button class="btn \( {cls || ''}" style="padding:6px 12px;font-size:12px;box-shadow:none"> \){t}</button></form>`;
+  const act = (id, a, t, cls) => `<form method="POST" action="/admin/members/${id}/${a}" style="display:inline"><button class="btn ${cls || ''}" style="padding:6px 12px;font-size:12px;box-shadow:none">${t}</button></form>`;
 
   res.send(A(req, 'Members', `
     <div class="glass-card" style="padding:24px">
@@ -887,7 +895,7 @@ app.get('/admin/members', guard('members'), async (req, res) => {
             <td style="font-weight:600;font-size:13px">${h(m.member_no)}</td>
             <td>${h(m.name)}</td>
             <td>${h(campusName(req, m.campus))}</td>
-            <td><span class="badge \( {m.status}"> \){h(m.status)}</span></td>
+            <td><span class="badge ${m.status}">${h(m.status)}</span></td>
             <td style="white-space:nowrap">${m.status !== 'official' ? act(m.id, 'approve', 'Approve', 'g') : ''} ${m.status === 'pending' ? act(m.id, 'reject', 'Reject', 'danger') : ''} ${m.status === 'official' ? act(m.id, 'revoke', 'Revoke', 'secondary') : ''}</td>
           </tr>`).join('')}
         </table>
@@ -920,7 +928,7 @@ app.get('/admin/content/:type', guard('content'), async (req, res) => {
     </div>
     <div class="glass-card" style="padding:24px">
       <h3 style="margin-bottom:14px;font-size:1.05rem;font-weight:700">Published</h3>
-      \( {ps.map(p => `<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding:11px 0"><span style="font-weight:550"> \){h(p.title_en || p.title_om || p.title_am)}</span><form method="POST" action="/admin/content/\( {tp}/ \){p.id}/delete"><button class="btn danger" style="padding:5px 12px;font-size:12px">Delete</button></form></div>`).join('') || `<p style="color:var(--text-muted)">No content yet.</p>`}
+      ${ps.map(p => `<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding:11px 0"><span style="font-weight:550">${h(p.title_en || p.title_om || p.title_am)}</span><form method="POST" action="/admin/content/${tp}/${p.id}/delete"><button class="btn danger" style="padding:5px 12px;font-size:12px">Delete</button></form></div>`).join('') || `<p style="color:var(--text-muted)">No content yet.</p>`}
     </div>
   `));
 });
@@ -953,7 +961,7 @@ app.get('/admin/leaders', guard('leaders'), async (req, res) => {
       </form>
     </div>
     <div class="glass-card" style="padding:24px">
-      \( {ls.map(x => `<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding:11px 0"><span style="font-weight:550"> \){h(x.name)} · \( {h(x.position_en || x.position_am || x.position_om)}</span><form method="POST" action="/admin/leaders/ \){x.id}/delete"><button class="btn danger" style="padding:5px 12px;font-size:12px;box-shadow:none">Delete</button></form></div>`).join('') || `<p style="color:var(--text-muted)">No leaders added yet.</p>`}
+      ${ls.map(x => `<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding:11px 0"><span style="font-weight:550">${h(x.name)} · ${h(x.position_en || x.position_am || x.position_om)}</span><form method="POST" action="/admin/leaders/${x.id}/delete"><button class="btn danger" style="padding:5px 12px;font-size:12px;box-shadow:none">Delete</button></form></div>`).join('') || `<p style="color:var(--text-muted)">No leaders added yet.</p>`}
     </div>
   `));
 });
@@ -969,7 +977,7 @@ app.get('/admin/support', guard('support'), async (req, res) => {
   res.send(A(req, 'Support', rs.map(r => `
     <div class="glass-card" style="padding:22px">
       <small style="color:var(--text-muted);font-size:12.5px">${h(r.member_no)} · ${h(r.name)} · ${h(r.campus)}</small>
-      <h3 style="margin:6px 0 8px;font-size:1.05rem;font-weight:700">${h(r.subject)} <span class="badge \( {r.status === 'closed' ? 'official' : 'pending'}"> \){h(r.status)}</span></h3>
+      <h3 style="margin:6px 0 8px;font-size:1.05rem;font-weight:700">${h(r.subject)} <span class="badge ${r.status === 'closed' ? 'official' : 'pending'}">${h(r.status)}</span></h3>
       <p style="color:var(--text-2);font-size:14px">${h(r.message)}</p>
       <form method="POST" action="/admin/support/${r.id}/reply" style="margin-top:14px">
         <textarea name="reply" rows="3" placeholder="Write reply...">${h(r.reply || '')}</textarea>
@@ -1007,11 +1015,11 @@ app.get('/admin/finance', guard('finance'), async (req, res) => {
         <table>
           <tr><th>Period</th><th>Campus</th><th>Income</th><th>Expense</th><th>Status</th><th>Actions</th></tr>
           ${rp.map(r => `<tr>
-            <td>\( {h(r.period)}</td><td> \){h(r.campus)}</td>
+            <td>${h(r.period)}</td><td>${h(r.campus)}</td>
             <td style="color:var(--primary-dark);font-weight:600">${Number(r.income).toLocaleString()}</td>
             <td style="color:var(--accent);font-weight:600">${Number(r.expense).toLocaleString()}</td>
             <td>${r.approved ? '✔ Published' : 'Draft'}</td>
-            <td>\( {can(req, 'approve') ? `<form method="POST" action="/admin/finance/report/ \){r.id}/${r.approved ? 'hide' : 'approve'}"><button class="btn \( {r.approved ? 'secondary' : 'g'}" style="padding:5px 12px;font-size:12px;box-shadow:none"> \){r.approved ? 'Hide' : 'Publish'}</button></form>` : ''}</td>
+            <td>${can(req, 'approve') ? `<form method="POST" action="/admin/finance/report/${r.id}/${r.approved ? 'hide' : 'approve'}"><button class="btn ${r.approved ? 'secondary' : 'g'}" style="padding:5px 12px;font-size:12px;box-shadow:none">${r.approved ? 'Hide' : 'Publish'}</button></form>` : ''}</td>
           </tr>`).join('')}
         </table>
       </div>
@@ -1041,7 +1049,7 @@ app.get('/admin/staff', guard('staff'), async (req, res) => {
       <form method="POST" action="/admin/staff">
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
           <div><label>Name</label><input name="name" required></div><div><label>Username</label><input name="username" required></div>
-          <div><label>Role</label>\( {sel('role', ROLES.map(r => [r, r]))}</div><div><label>Campus</label> \){sel('campus', campusOpts(null))}</div>
+          <div><label>Role</label>${sel('role', ROLES.map(r => [r, r]))}</div><div><label>Campus</label>${sel('campus', campusOpts(null))}</div>
         </div>
         <label>Password (8+)</label><input name="password" type="password" minlength="8" required>
         <p style="margin-top:18px"><button class="btn">Create Account</button></p>
@@ -1052,8 +1060,8 @@ app.get('/admin/staff', guard('staff'), async (req, res) => {
         <table>
           <tr><th>Name</th><th>Username</th><th>Role</th><th>Campus</th><th>Status</th></tr>
           ${st.map(x => `<tr>
-            <td>\( {h(x.name)}</td><td> \){h(x.username)}</td><td>\( {h(x.role)}</td><td> \){h(x.campus || 'All')}</td>
-            <td><form method="POST" action="/admin/staff/${x.id}/toggle"><button class="btn \( {x.active ? 'secondary' : 'g'}" style="padding:5px 12px;font-size:12px;box-shadow:none"> \){x.active ? 'Disable' : 'Enable'}</button></form></td>
+            <td>${h(x.name)}</td><td>${h(x.username)}</td><td>${h(x.role)}</td><td>${h(x.campus || 'All')}</td>
+            <td><form method="POST" action="/admin/staff/${x.id}/toggle"><button class="btn ${x.active ? 'secondary' : 'g'}" style="padding:5px 12px;font-size:12px;box-shadow:none">${x.active ? 'Disable' : 'Enable'}</button></form></td>
           </tr>`).join('')}
         </table>
       </div>
