@@ -151,117 +151,314 @@ const L = req => (['en', 'am', 'om'].includes(req.session.lang) ? req.session.la
 const tr = (req, k) => (T[L(req)] && T[L(req)][k]) || (T.en[k] || k);
 const campusName = (req, cKey) => { const c = CAMPUS[cKey]; if (!c) return cKey; return c[L(req)] || c.n; };
 
-// Modern CSS
+// Modern CSS – Premium 2026 look
 const CSS = `
 :root {
   --primary: #2563eb;
   --primary-dark: #1d4ed8;
+  --primary-light: #3b82f6;
+  --accent: #8b5cf6;
   --green: #10b981;
-  --bg: #f8fafc;
+  --green-dark: #059669;
+  --danger: #ef4444;
+  --bg: #f1f5f9;
   --text: #0f172a;
   --text-2: #334155;
   --text-muted: #64748b;
   --border: #e2e8f0;
-  --radius: 18px;
-  --radius-sm: 12px;
-  --shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01);
-  --shadow-lg: 0 20px 40px -12px rgba(37,99,235,0.15);
+  --radius: 20px;
+  --radius-sm: 14px;
+  --shadow: 0 4px 20px -4px rgba(15,23,42,0.08), 0 2px 8px -2px rgba(15,23,42,0.04);
+  --shadow-lg: 0 25px 50px -12px rgba(37,99,235,0.18);
+  --shadow-xl: 0 30px 60px -15px rgba(37,99,235,0.22);
+  --glass: rgba(255,255,255,0.78);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background: linear-gradient(160deg, #eff6ff 0%, #f8fafc 50%, #fdf2f8 100%);
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: 
+    radial-gradient(ellipse 120% 80% at 10% -10%, #dbeafe 0%, transparent 50%),
+    radial-gradient(ellipse 100% 60% at 90% 10%, #f3e8ff 0%, transparent 45%),
+    radial-gradient(ellipse 80% 50% at 50% 100%, #ecfdf5 0%, transparent 40%),
+    linear-gradient(165deg, #f8fafc 0%, #f1f5f9 100%);
   background-attachment: fixed;
   color: var(--text);
-  line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column;
+  line-height: 1.65;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
 }
-a { color: var(--primary); text-decoration: none; transition: 0.2s; }
+a { color: var(--primary); text-decoration: none; transition: color 0.2s, transform 0.2s; }
 a:hover { color: var(--primary-dark); }
 header {
-  background: rgba(255,255,255,0.85); backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(226,232,240,0.8); position: sticky; top: 0; z-index: 100; padding: 12px 0;
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(226,232,240,0.7);
+  position: sticky; top: 0; z-index: 100;
+  padding: 14px 0;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset;
 }
-.in { max-width: 1140px; margin: 0 auto; padding: 0 20px; width: 100%; }
-.header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-.logo-area { display: flex; align-items: center; gap: 12px; }
+.in { max-width: 1180px; margin: 0 auto; padding: 0 22px; width: 100%; }
+.header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; }
+.logo-area { display: flex; align-items: center; gap: 14px; }
 .logo-icon {
-  width: 48px; height: 48px; border-radius: 50%;
-  background: linear-gradient(135deg, #2563eb, #8b5cf6);
-  display: grid; place-items: center; font-size: 22px; color: white;
-  box-shadow: 0 6px 16px rgba(37,99,235,0.3);
+  width: 52px; height: 52px; border-radius: 16px;
+  background: linear-gradient(145deg, #2563eb 0%, #7c3aed 100%);
+  display: grid; place-items: center; font-size: 24px; color: white;
+  box-shadow: 0 8px 20px rgba(37,99,235,0.35), 0 0 0 3px rgba(37,99,235,0.12);
+  transition: transform 0.25s;
 }
-.logo-text h1 { font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.2px; }
-.logo-text p { font-size: 12px; color: var(--text-muted); font-weight: 500; }
-.nav-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.lang-box { display: flex; gap: 3px; background: #f1f5f9; padding: 4px; border-radius: 9999px; }
-.lang-btn { padding: 4px 10px; font-size: 12px; font-weight: 600; border-radius: 9999px; color: var(--text-muted); }
-.lang-btn.active { background: white; color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.logo-area:hover .logo-icon { transform: scale(1.05) rotate(-3deg); }
+.logo-text h1 { font-size: 15.5px; font-weight: 800; color: var(--text); letter-spacing: -0.3px; line-height: 1.25; }
+.logo-text p { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-top: 1px; }
+.nav-group { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lang-box {
+  display: flex; gap: 2px;
+  background: #f1f5f9; padding: 4px; border-radius: 9999px;
+  border: 1px solid #e2e8f0;
+}
+.lang-btn {
+  padding: 5px 12px; font-size: 12.5px; font-weight: 600;
+  border-radius: 9999px; color: var(--text-muted); transition: 0.2s;
+}
+.lang-btn:hover { color: var(--text); }
+.lang-btn.active {
+  background: white; color: var(--primary-dark);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
 .ext-nav { display: flex; gap: 8px; align-items: center; }
 .ext-btn {
-  padding: 8px 14px; font-size: 13px; font-weight: 600; border-radius: 12px;
-  background: white; color: var(--text); border: 1px solid var(--border); transition: 0.2s;
+  padding: 9px 16px; font-size: 13.5px; font-weight: 600; border-radius: 12px;
+  background: white; color: var(--text); border: 1px solid var(--border);
+  transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
-.ext-btn:hover { background: #f8fafc; }
-.ext-btn.login-btn { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; border: none; }
+.ext-btn:hover { background: #f8fafc; border-color: #cbd5e1; transform: translateY(-1px); }
+.ext-btn.login-btn {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white; border: none;
+  box-shadow: 0 4px 14px rgba(37,99,235,0.3);
+}
+.ext-btn.login-btn:hover { box-shadow: 0 6px 18px rgba(37,99,235,0.4); color: white; }
+
 .glass-card, .card {
-  background: white; border-radius: var(--radius); padding: 26px; margin: 16px 0;
-  box-shadow: var(--shadow); border: 1px solid rgba(226,232,240,0.8);
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin: 16px 0;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255,255,255,0.7);
+  border-top: 1px solid rgba(255,255,255,0.9);
 }
-label { display: block; font-weight: 600; font-size: 12px; margin: 14px 0 6px; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.3px; }
+label {
+  display: block; font-weight: 650; font-size: 11.5px;
+  margin: 16px 0 7px; color: var(--text-2);
+  text-transform: uppercase; letter-spacing: 0.45px;
+}
 input, select, textarea {
-  width: 100%; padding: 12px 14px; background: #f8fafc; border: 1.5px solid #e2e8f0;
-  border-radius: 12px; font: inherit; color: var(--text); font-size: 14px; transition: 0.2s;
+  width: 100%; padding: 13px 16px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  font: inherit; color: var(--text); font-size: 14.5px;
+  transition: 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
-input:focus, select:focus, textarea:focus { outline: none; border-color: #93c5fd; background: white; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
-textarea { resize: vertical; min-height: 85px; }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #93c5fd;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
+}
+textarea { resize: vertical; min-height: 90px; }
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; border: 0;
-  border-radius: 12px; padding: 12px 22px; font-weight: 600; cursor: pointer; font-size: 14px;
-  transition: 0.2s; box-shadow: 0 4px 14px rgba(37,99,235,0.25);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #fff; border: 0;
+  border-radius: 14px; padding: 13px 24px;
+  font-weight: 650; cursor: pointer; font-size: 14.5px;
+  transition: 0.22s; box-shadow: 0 4px 16px rgba(37,99,235,0.28);
+  letter-spacing: 0.01em;
 }
-.btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(37,99,235,0.3); color: #fff; }
-.btn.secondary { background: white; border: 1.5px solid #e2e8f0; color: var(--text); box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
-.btn.danger { background: linear-gradient(135deg, #f87171, #ef4444); color: white; }
-.btn.g { background: linear-gradient(135deg, #34d399, #10b981); color: white; }
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(37,99,235,0.35);
+  color: #fff;
+}
+.btn:active { transform: translateY(0); }
+.btn.secondary {
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  color: var(--text);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+.btn.secondary:hover { background: #f8fafc; border-color: #cbd5e1; color: var(--text); }
+.btn.danger { background: linear-gradient(135deg, #f87171, #ef4444); box-shadow: 0 4px 14px rgba(239,68,68,0.3); }
+.btn.g { background: linear-gradient(135deg, #34d399, #10b981); box-shadow: 0 4px 14px rgba(16,185,129,0.3); }
+
 .portal-menu {
-  background: white; border-radius: 16px; padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 6px;
-  margin: 0 0 20px; border: 1px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(10px);
+  border-radius: 18px;
+  padding: 12px 14px;
+  display: flex; flex-wrap: wrap; gap: 7px;
+  margin: 0 0 22px;
+  border: 1px solid rgba(226,232,240,0.8);
+  box-shadow: var(--shadow);
 }
 .portal-btn {
-  background: #f8fafc; color: var(--text-2); border-radius: 10px; padding: 8px 13px; font-size: 12.5px; font-weight: 600;
-  display: inline-flex; align-items: center; gap: 5px; border: 1px solid transparent; transition: 0.2s;
+  background: #f8fafc;
+  color: var(--text-2);
+  border-radius: 12px;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid transparent;
+  transition: 0.2s;
 }
-.portal-btn:hover { background: #eff6ff; color: var(--primary-dark); border-color: #bfdbfe; }
-.portal-btn.active { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; }
+.portal-btn:hover {
+  background: #eff6ff;
+  color: var(--primary-dark);
+  border-color: #bfdbfe;
+  transform: translateY(-1px);
+}
+.portal-btn.active {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+}
+
 table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
-th, td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; text-align: left; }
-th { background: #f8fafc; font-weight: 600; color: var(--text-muted); font-size: 11.5px; text-transform: uppercase; }
-.tw { overflow-x: auto; background: white; border-radius: 12px; border: 1px solid #e2e8f0; }
-.badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; }
+th, td { padding: 13px 15px; border-bottom: 1px solid #f1f5f9; text-align: left; }
+th {
+  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+  font-weight: 650; color: var(--text-muted);
+  font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.4px;
+}
+.tw {
+  overflow-x: auto;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: var(--shadow);
+}
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 4px 11px; border-radius: 9999px;
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.02em;
+}
 .badge.official { background: #d1fae5; color: #047857; }
 .badge.pending { background: #fef3c7; color: #b45309; }
 .badge.rejected { background: #fee2e2; color: #b91c1c; }
 .badge.registered { background: #dbeafe; color: #1d4ed8; }
 .badge.alert { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
-.err { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 12px 14px; border-radius: 12px; margin: 12px 0; font-size: 13.5px; font-weight: 500; }
-.msgok { background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; padding: 12px 14px; border-radius: 12px; margin: 12px 0; font-size: 13.5px; font-weight: 500; }
+
+.err {
+  background: linear-gradient(135deg, #fef2f2, #fff1f2);
+  border: 1px solid #fecaca; color: #b91c1c;
+  padding: 14px 16px; border-radius: 14px; margin: 12px 0;
+  font-size: 14px; font-weight: 550;
+}
+.msgok {
+  background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
+  border: 1px solid #a7f3d0; color: #047857;
+  padding: 14px 16px; border-radius: 14px; margin: 12px 0;
+  font-size: 14px; font-weight: 550;
+}
+
 .id {
-  border-radius: 20px; max-width: 420px; margin: 20px auto; background: white;
-  box-shadow: var(--shadow-lg); overflow: hidden; border: 1px solid #e2e8f0;
+  border-radius: 22px; max-width: 420px; margin: 24px auto;
+  background: white;
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
 }
 .id .hd {
-  background: linear-gradient(135deg, #2563eb, #7c3aed); color: #fff; padding: 14px 18px;
-  font-weight: 700; font-size: 13px; display: flex; justify-content: space-between; align-items: center;
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  color: #fff; padding: 16px 20px;
+  font-weight: 700; font-size: 13.5px;
+  display: flex; justify-content: space-between; align-items: center;
 }
-.id .bd { display: flex; gap: 14px; padding: 18px; align-items: center; }
-.id img { width: 90px; height: 115px; border-radius: 10px; object-fit: cover; border: 2px solid #e2e8f0; }
-footer { text-align: center; padding: 24px 20px; color: var(--text-muted); font-size: 12.5px; margin-top: auto; border-top: 1px solid rgba(226,232,240,0.6); }
-.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 12px; }
-.stat-card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px 16px; text-align: center; box-shadow: var(--shadow); }
-.stat-card .num { font-size: 2.2rem; font-weight: 800; line-height: 1.1; margin-bottom: 4px; }
-.stat-card .label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.id .bd { display: flex; gap: 16px; padding: 20px; align-items: center; }
+.id img {
+  width: 96px; height: 120px; border-radius: 12px;
+  object-fit: cover; border: 2px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+footer {
+  text-align: center; padding: 28px 20px;
+  color: var(--text-muted); font-size: 13px;
+  margin-top: auto;
+  border-top: 1px solid rgba(226,232,240,0.7);
+  background: rgba(255,255,255,0.4);
+}
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px; margin-bottom: 16px;
+}
+.stat-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 22px 18px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.stat-card .num { font-size: 2.35rem; font-weight: 800; line-height: 1.1; margin-bottom: 4px; }
+.stat-card .label { font-size: 12.5px; font-weight: 600; color: var(--text-muted); }
+
 main { flex: 1; display: flex; flex-direction: column; }
+
+.auth-wrap {
+  min-height: 78vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px 0;
+}
+.auth-card {
+  width: 100%; max-width: 420px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(16px);
+  border-radius: 24px;
+  padding: 32px 28px;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid rgba(255,255,255,0.8);
+}
+.auth-icon {
+  width: 72px; height: 72px; margin: 0 auto 16px;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #2563eb, #7c3aed);
+  display: grid; place-items: center;
+  font-size: 32px; color: white;
+  box-shadow: 0 12px 28px rgba(37,99,235,0.35);
+}
+.auth-title { font-size: 1.55rem; font-weight: 800; color: #0f172a; text-align: center; letter-spacing: -0.4px; }
+.auth-sub { color: #64748b; font-size: 14px; text-align: center; margin: 6px 0 22px; font-weight: 500; }
+
+.admin-hero {
+  background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
+  color: white;
+  border-radius: 20px;
+  padding: 28px 26px;
+  margin-bottom: 20px;
+  box-shadow: 0 16px 40px rgba(37,99,235,0.25);
+}
+.admin-hero h2 { font-size: 1.4rem; font-weight: 800; margin-bottom: 4px; }
+.admin-hero p { opacity: 0.9; font-size: 14px; }
+
+@media (max-width: 640px) {
+  .logo-text h1 { font-size: 14px; }
+  .portal-menu { padding: 10px; gap: 5px; }
+  .portal-btn { padding: 8px 11px; font-size: 12px; }
+  .auth-card { padding: 26px 20px; }
+}
 `;
 
 function page(req, title, body) {
@@ -643,32 +840,29 @@ function limited(req, res) {
 app.get('/login', (req, res) => {
   if (req.session.mid) return res.redirect('/student-dashboard');
   res.send(page(req, tr(req, 'login'), `
-    <div style="min-height: 70vh; display: flex; align-items: center; justify-content: center;">
-      <div style="width: 100%; max-width: 400px;">
-        <div style="text-align: center; margin-bottom: 22px;">
-          <h2 style="font-size: 1.45rem; font-weight: 800; color: #1e293b;">${h(tr(req, 'login'))}</h2>
-          <p style="color: #64748b; font-size: 13.5px;">${h(tr(req, 'site'))}</p>
-        </div>
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <div class="auth-icon">🌳</div>
+        <h2 class="auth-title">${h(tr(req, 'login'))}</h2>
+        <p class="auth-sub">${h(tr(req, 'site'))}</p>
 
-        <div style="background: white; border-radius: 22px; padding: 26px 22px; box-shadow: var(--shadow-lg); border: 1px solid #e2e8f0;">
-          ${req.query.e ? `<div class="err">Invalid credentials. Please verify your ID and password.</div>` : ''}
+        ${req.query.e ? `<div class="err">Invalid credentials. Please verify your ID and password.</div>` : ''}
 
-          <form method="POST" action="/login">
-            <label style="margin-top:0">${h(tr(req, 'no'))} / Student ID</label>
-            <input name="u" required placeholder="SM-ROB-2026-0001 or UGRR/..." autocomplete="username">
+        <form method="POST" action="/login">
+          <label style="margin-top:0">${h(tr(req, 'no'))} / Student ID</label>
+          <input name="u" required placeholder="SM-ROB-2026-0001 or UGRR/..." autocomplete="username">
 
-            <label>${h(tr(req, 'pass'))}</label>
-            <input name="p" type="password" required autocomplete="current-password">
+          <label>${h(tr(req, 'pass'))}</label>
+          <input name="p" type="password" required autocomplete="current-password">
 
-            <button class="btn" style="width: 100%; padding: 14px; font-size: 15px; margin-top: 20px;">
-              Sign in to Portal
-            </button>
-          </form>
+          <button class="btn" style="width:100%; padding:15px; font-size:15.5px; margin-top:22px; border-radius:14px;">
+            Sign in to Portal
+          </button>
+        </form>
 
-          <div style="margin-top: 16px; text-align: center; display: flex; justify-content: space-between; font-size: 13px;">
-            <a href="/sikkoo-mandoo-register">📝 New Member?</a>
-            <a href="/forgot-password" style="color:var(--text-muted)">Forgot Password?</a>
-          </div>
+        <div style="margin-top:20px; display:flex; justify-content:space-between; font-size:13.5px; font-weight:500;">
+          <a href="/sikkoo-mandoo-register">📝 New Member?</a>
+          <a href="/forgot-password" style="color:var(--text-muted)">Forgot Password?</a>
         </div>
       </div>
     </div>
@@ -689,33 +883,70 @@ app.post('/login', async (req, res) => {
 
 // Password Recovery Request (Section 11)
 app.get('/forgot-password', (req, res) => {
+  const newPass = req.query.np || '';
+  const name = req.query.nm || '';
   res.send(page(req, 'Password Recovery', `
-    <div style="max-width: 440px; margin: 30px auto;">
-      <div class="glass-card" style="padding: 26px;">
-        <h3 style="font-size:1.3rem; font-weight:750; margin-bottom:6px">🔑 Password Reset Request</h3>
-        <p style="font-size:13.5px; color:var(--text-muted); margin-bottom:16px">Submit your Student ID and phone number. Campus administrators will verify and reset your access.</p>
-        ${req.query.ok ? `<div class="msgok">Your recovery request has been submitted to your campus admin.</div>` : ''}
-        <form method="POST" action="/forgot-password">
-          <label>Student ID Number</label>
-          <input name="student_id" required placeholder="UGRR/12345/15">
-          <label>Registered Phone Number</label>
-          <input name="phone" required placeholder="09...">
-          <label>Reason / Note</label>
-          <textarea name="reason" placeholder="e.g. Forgotten password or phone changed"></textarea>
-          <p style="margin-top:18px"><button class="btn" style="width:100%">Submit Recovery Request</button></p>
-        </form>
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <div class="auth-icon">🔑</div>
+        <h2 class="auth-title">Password Reset</h2>
+        <p class="auth-sub">Enter your Student ID and Zone / Woreda to generate a new temporary password instantly.</p>
+
+        ${newPass ? `
+          <div class="msgok" style="text-align:left">
+            <strong>✅ New password generated for ${h(name)}</strong><br><br>
+            Your temporary password is:<br>
+            <div style="font-size:1.45rem; font-weight:800; letter-spacing:2px; margin:10px 0; color:#047857; background:#ecfdf5; padding:12px; border-radius:12px; text-align:center; border:2px dashed #10b981;">
+              ${h(newPass)}
+            </div>
+            <small style="color:#065f46">Please copy it now and change it after login. This screen will not show the password again.</small>
+          </div>
+          <p style="margin-top:18px"><a href="/login" class="btn" style="width:100%; padding:14px">Go to Login →</a></p>
+        ` : `
+          ${req.query.e ? `<div class="err">No matching member found. Please check Student ID and Zone/Woreda carefully.</div>` : ''}
+          <form method="POST" action="/forgot-password">
+            <label style="margin-top:0">Student ID Number</label>
+            <input name="student_id" required placeholder="UGRR/12345/15 or similar" autocomplete="username">
+            <label>Zone and Woreda (as registered)</label>
+            <input name="zone_woreda" required placeholder="e.g. Bale / Robe">
+            <p style="margin-top:22px"><button class="btn" style="width:100%; padding:14px">Generate New Password</button></p>
+          </form>
+          <p style="text-align:center; margin-top:18px; font-size:13.5px">
+            <a href="/login">← Back to Login</a>
+          </p>
+        `}
       </div>
     </div>
   `));
 });
 
 app.post('/forgot-password', async (req, res) => {
-  const { student_id, phone, reason } = req.body;
-  if (student_id && phone) {
-    await q(`INSERT INTO password_resets (student_id, phone, reason) VALUES ($1,$2,$3)`, [student_id.trim(), phone.trim(), (reason || '').slice(0, 300)]);
-    await logAudit(req, 'RECOVERY_REQUEST', student_id, `Phone: ${phone}`);
+  const student_id = String(req.body.student_id || '').trim();
+  const zone = String(req.body.zone_woreda || '').trim().toLowerCase();
+  if (!student_id || !zone) return res.redirect('/forgot-password?e=1');
+
+  const [m] = await q(
+    `SELECT * FROM members WHERE UPPER(student_id)=UPPER($1) AND LOWER(COALESCE(zone_woreda,'')) LIKE $2`,
+    [student_id, '%' + zone + '%']
+  );
+
+  if (!m) {
+    await logAudit(req, 'RECOVERY_FAILED', student_id, `Zone attempt: ${zone}`);
+    return res.redirect('/forgot-password?e=1');
   }
-  res.redirect('/forgot-password?ok=1');
+
+  // Generate secure temporary password (8 chars, easy to type)
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let temp = '';
+  for (let i = 0; i < 8; i++) temp += chars[Math.floor(Math.random() * chars.length)];
+  const hash = bcrypt.hashSync(temp, 10);
+
+  await q(`UPDATE members SET password=$1 WHERE id=$2`, [hash, m.id]);
+  await q(`INSERT INTO password_resets (student_id, phone, reason, status) VALUES ($1,$2,$3,'resolved')`,
+    [m.student_id, m.phone || '', 'Auto-generated temporary password']);
+  await logAudit(req, 'PASSWORD_AUTO_RESET', m.member_no, `Student ID: ${m.student_id}`);
+
+  res.redirect(`/forgot-password?np=${encodeURIComponent(temp)}&nm=${encodeURIComponent(m.name)}`);
 });
 
 // ---------- SECTION 3: STUDENT REGISTRATION (All fields from Image 2) ----------
@@ -1092,23 +1323,28 @@ app.get('/terms', (req, res) => res.send(page(req, tr(req, 'terms'), `
 
 // ---------- ADMIN PORTAL (Sections 5, 8, 11) ----------
 app.get('/admin-login', (req, res) => {
-  res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin Portal</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>${CSS}</style></head>
-  <body style="display:grid; place-items:center; min-height:100vh;">
-  <div class="glass-card" style="width:min(390px,92vw); padding:32px 26px;">
-    <div style="text-align:center; margin-bottom:20px">
-      <div style="width:60px; height:60px; margin:0 auto 10px; border-radius:50%; background:linear-gradient(135deg,#2563eb,#8b5cf6); display:grid; place-items:center; font-size:26px; color:white;">🔐</div>
-      <h2 style="font-size:1.35rem; font-weight:800;">Admin Access</h2>
-      <p style="color:#64748b; font-size:13px">Authorized association staff only</p>
+  res.send(`<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin Portal · Siikkoo-Mandoo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>${CSS}</style>
+  </head>
+  <body style="min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;">
+    <div class="auth-card" style="max-width:400px;">
+      <div class="auth-icon">🔐</div>
+      <h2 class="auth-title">Admin Access</h2>
+      <p class="auth-sub">Authorized association staff only</p>
+      ${req.query.e ? '<div class="err">Invalid username or password.</div>' : ''}
+      <form method="POST" action="/admin-login">
+        <label style="margin-top:0">Username</label>
+        <input name="u" required autocomplete="username">
+        <label>Password</label>
+        <input name="p" type="password" required autocomplete="current-password">
+        <button class="btn" style="width:100%; margin-top:22px; padding:14px; font-size:15px;">Sign In to Dashboard</button>
+      </form>
+      <p style="text-align:center; margin-top:22px"><a href="/" style="font-size:13.5px; font-weight:500">← Return to Website</a></p>
     </div>
-    ${req.query.e ? '<div class="err">Invalid username or password.</div>' : ''}
-    <form method="POST" action="/admin-login">
-      <label style="margin-top:0">Username</label><input name="u" required autocomplete="username">
-      <label>Password</label><input name="p" type="password" required autocomplete="current-password">
-      <button class="btn" style="width:100%; margin-top:20px; padding:13px">Sign In to Dashboard</button>
-    </form>
-    <p style="text-align:center; margin-top:20px"><a href="/" style="font-size:13px">← Return to Website</a></p>
-  </div></body></html>`);
+  </body></html>`);
 });
 
 app.post('/admin-login', async (req, res) => {
@@ -1180,6 +1416,10 @@ app.get('/admin', needStaff, async (req, res) => {
   const [resets] = await q(`SELECT COUNT(*)::int pending FROM password_resets WHERE status='pending'`);
 
   res.send(A(req, 'Admin Dashboard', `
+    <div class="admin-hero">
+      <h2>Welcome to the Control Center</h2>
+      <p>Manage members, content, finance and campus operations from one modern dashboard.</p>
+    </div>
     <div class="stat-grid">
       <div class="stat-card">
         <div class="num" style="color:#2563eb">${m.n}</div>
