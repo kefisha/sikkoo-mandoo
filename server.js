@@ -147,6 +147,7 @@ const T = {
 };
 
 const h = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const csvEsc = v => { const s = String(v == null ? '' : v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
 const L = req => (['en', 'am', 'om'].includes(req.session.lang) ? req.session.lang : 'om');
 const tr = (req, k) => (T[L(req)] && T[L(req)][k]) || (T.en[k] || k);
 const campusName = (req, cKey) => { const c = CAMPUS[cKey]; if (!c) return cKey; return c[L(req)] || c.n; };
@@ -509,6 +510,65 @@ main { flex: 1; display: flex; flex-direction: column; }
   .auth-card { padding: 26px 20px; border-radius: 24px; }
   .feature-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 }
+
+/* Modern form sections (school-portal inspired) */
+.form-section {
+  background: linear-gradient(145deg, #f8fafc 0%, #eef2ff 100%);
+  border: 1px solid #e0e7ff;
+  border-radius: 18px;
+  padding: 18px 16px 8px;
+  margin: 16px 0;
+}
+.form-section h4 {
+  font-size: 13px; font-weight: 750; color: #4338ca;
+  margin: 0 0 8px; letter-spacing: 0.2px;
+  display: flex; align-items: center; gap: 8px;
+}
+.auth-wrap {
+  min-height: 70vh; display: flex; align-items: center; justify-content: center; padding: 24px 12px;
+}
+.auth-card {
+  width: 100%; max-width: 420px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(16px);
+  border-radius: 24px; padding: 32px 28px;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid rgba(255,255,255,0.95);
+}
+.auth-icon {
+  width: 64px; height: 64px; border-radius: 20px;
+  background: linear-gradient(145deg, #4f6ef7, #8b5cf6);
+  display: grid; place-items: center; font-size: 28px; color: white;
+  margin: 0 auto 14px; box-shadow: 0 10px 24px rgba(79,110,247,0.35);
+}
+.auth-title { text-align: center; font-size: 1.35rem; font-weight: 800; margin-bottom: 4px; }
+.auth-sub { text-align: center; color: var(--text-muted); font-size: 13px; margin-bottom: 18px; }
+.err {
+  background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;
+  border-radius: 12px; padding: 10px 14px; font-size: 13.5px; margin-bottom: 14px; font-weight: 600;
+}
+.ok-box {
+  background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;
+  border-radius: 12px; padding: 10px 14px; font-size: 13.5px; margin-bottom: 14px; font-weight: 600;
+}
+.btn.excel {
+  background: linear-gradient(135deg, #059669, #047857);
+  box-shadow: 0 4px 14px rgba(5,150,105,0.3);
+}
+.btn.edit-btn {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  box-shadow: 0 4px 12px rgba(99,102,241,0.28);
+}
+.stat-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px; margin-bottom: 18px;
+}
+.stat-chip {
+  background: white; border-radius: 16px; padding: 14px 12px; text-align: center;
+  border: 1px solid #eef2ff; box-shadow: 0 4px 12px rgba(79,110,247,0.06);
+}
+.stat-chip b { display: block; font-size: 1.4rem; font-weight: 800; color: #4f6ef7; }
+.stat-chip span { font-size: 11.5px; color: var(--text-muted); font-weight: 600; }
 `;
 
 function page(req, title, body) {
@@ -1013,6 +1073,7 @@ function regForm(req, err, v) {
       <div class="glass-card" style="padding: 28px 24px;">
         ${err ? `<div class="err">${h(err)}</div>` : ''}
         <form method="POST" action="/sikkoo-mandoo-register" enctype="multipart/form-data">
+          <div class="form-section"><h4>👤 Personal Information</h4>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 4px 16px;">
             <div><label>${h(tr(req, 'name'))} *</label><input name="name" required value="${h(v.name)}" placeholder="Full name"></div>
             <div><label>${h(tr(req, 'sid'))} *</label><input name="student_id" required value="${h(v.student_id)}" placeholder="UGRR/12345/15"></div>
@@ -1026,12 +1087,16 @@ function regForm(req, err, v) {
             <div><label>${h(tr(req, 'telegram'))} (Optional)</label><input name="telegram_handle" value="${h(v.telegram_handle)}" placeholder="@username"></div>
             <div><label>${h(tr(req, 'email'))} (Optional)</label><input name="email" type="email" value="${h(v.email)}" placeholder="student@example.com"></div>
           </div>
+          </div>
 
+          <div class="form-section"><h4>📷 Photo & Security</h4>
           <label>${h(tr(req, 'photo'))} (Optional profile picture)</label>
           <input name="photo" type="file" accept="image/jpeg,image/png,image/webp">
 
           <label>${h(tr(req, 'pass'))} (Min. 6 characters) *</label>
           <input name="password" type="password" minlength="6" required>
+
+          </div>
 
           <label style="display: flex; align-items: center; gap: 12px; margin-top: 18px; padding: 14px 16px; background: #ecfdf5; border-radius: 12px; border: 1px solid #a7f3d0; color: var(--text); text-transform: none; letter-spacing: 0; font-size: 13.5px;">
             <input type="checkbox" name="want" value="1" style="width: 18px; height: 18px; flex-shrink: 0; accent-color: #10b981;">
@@ -1520,12 +1585,29 @@ app.get('/admin/members', guard('members'), async (req, res) => {
   if (statusFilter) { pr.push(statusFilter); c.push(`status=$${pr.length}`); }
   if (qs) { pr.push('%' + qs + '%'); c.push(`(name ILIKE $${pr.length} OR member_no ILIKE $${pr.length} OR student_id ILIKE $${pr.length} OR phone ILIKE $${pr.length} OR zone_woreda ILIKE $${pr.length})`); }
 
-  const ms = await q(`SELECT * FROM members ${c.length ? 'WHERE ' + c.join(' AND ') : ''} ORDER BY id DESC LIMIT 400`, pr);
+  const where = c.length ? 'WHERE ' + c.join(' AND ') : '';
+  const ms = await q(`SELECT * FROM members ${where} ORDER BY id DESC LIMIT 400`, pr);
+  const counts = await q(`SELECT status, COUNT(*)::int n FROM members ${sc ? 'WHERE campus=$1' : ''} GROUP BY status`, sc ? [sc] : []);
+  const cmap = Object.fromEntries(counts.map(r => [r.status, r.n]));
   const act = (id, a, t, cls) => `<form method="POST" action="/admin/members/${id}/${a}" style="display:inline"><button class="btn ${cls || ''}" style="padding:5px 10px;font-size:11.5px;box-shadow:none">${t}</button></form>`;
+  const exportQs = new URLSearchParams({ q: qs, campus: cf, status: statusFilter }).toString();
 
   res.send(A(req, 'Members Management', `
+    <div class="stat-row">
+      <div class="stat-chip"><b>${(cmap.official || 0)}</b><span>Official</span></div>
+      <div class="stat-chip"><b>${(cmap.pending || 0)}</b><span>Pending</span></div>
+      <div class="stat-chip"><b>${(cmap.registered || 0)}</b><span>Registered</span></div>
+      <div class="stat-chip"><b>${(cmap.rejected || 0)}</b><span>Rejected</span></div>
+      <div class="stat-chip"><b>${ms.length}</b><span>Showing</span></div>
+    </div>
+
     <div class="glass-card" style="padding:22px">
-      <form style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px">
+        <h3 style="font-size:1.15rem; font-weight:750; margin:0">👥 Members List</h3>
+        <a class="btn excel" href="/admin/members/export?${exportQs}" style="padding:10px 16px; font-size:13px">⬇ Download Excel (CSV)</a>
+      </div>
+
+      <form style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px" method="GET" action="/admin/members">
         <input name="q" value="${h(qs)}" placeholder="Search by name, ID, phone, woreda..." style="flex:1; min-width:180px">
         ${sc ? '' : sel('campus', [['', 'All Campuses']].concat(campusOpts(null)), cf)}
         ${sel('status', [['', 'All Statuses'], ['official', 'Official'], ['pending', 'Pending'], ['registered', 'Registered'], ['rejected', 'Rejected']], statusFilter)}
@@ -1534,28 +1616,138 @@ app.get('/admin/members', guard('members'), async (req, res) => {
 
       <div class="tw">
         <table>
-          <tr><th>No</th><th>Name</th><th>Campus</th><th>College & Dept</th><th>Zone/Woreda</th><th>Status</th><th>Actions</th></tr>
+          <tr><th>No</th><th>Name</th><th>Campus</th><th>College & Dept</th><th>Zone/Woreda</th><th>Phone</th><th>Status</th><th>Actions</th></tr>
           ${ms.map(m => `<tr>
             <td style="font-weight:600;font-size:12.5px">${h(m.member_no)}</td>
             <td><b>${h(m.name)}</b><br><small style="color:var(--text-muted)">${h(m.student_id)}</small></td>
             <td>${h(campusName(req, m.campus))}</td>
-            <td>${h(m.department)} · Y${h(m.year)}</td>
+            <td>${h(m.college || '')} · ${h(m.department)} · Y${h(m.year)}</td>
             <td>${h(m.zone_woreda || '-')}</td>
+            <td style="font-size:12.5px">${h(m.phone || '')}</td>
             <td><span class="badge ${m.status}">${h(m.status)}</span></td>
             <td style="white-space:nowrap">
+              <a class="btn edit-btn" href="/admin/members/${m.id}/edit" style="padding:5px 10px;font-size:11.5px;box-shadow:none;display:inline-flex">✏️ Edit</a>
               ${m.status !== 'official' ? act(m.id, 'approve', 'Approve', 'g') : ''}
               ${m.status === 'pending' ? act(m.id, 'reject', 'Reject', 'danger') : ''}
               ${m.status === 'official' ? act(m.id, 'revoke', 'Revoke', 'secondary') : ''}
             </td>
-          </tr>`).join('')}
+          </tr>`).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:28px">No members found.</td></tr>'}
         </table>
       </div>
     </div>
   `));
 });
 
+/* Excel / CSV export of members (filtered) */
+app.get('/admin/members/export', guard('members'), async (req, res) => {
+  const sc = scopeOf(req), cf = sc || (CAMPUS[req.query.campus] ? req.query.campus : '');
+  const statusFilter = req.query.status || '';
+  const qs = String(req.query.q || '').trim().slice(0, 50), pr = [], c = [];
+  if (cf) { pr.push(cf); c.push(`campus=$${pr.length}`); }
+  if (statusFilter) { pr.push(statusFilter); c.push(`status=$${pr.length}`); }
+  if (qs) { pr.push('%' + qs + '%'); c.push(`(name ILIKE $${pr.length} OR member_no ILIKE $${pr.length} OR student_id ILIKE $${pr.length} OR phone ILIKE $${pr.length} OR zone_woreda ILIKE $${pr.length})`); }
+  const rows = await q(`SELECT * FROM members ${c.length ? 'WHERE ' + c.join(' AND ') : ''} ORDER BY id DESC LIMIT 5000`, pr);
+  const headers = ['member_no','name','gender','student_id','campus','college','department','year','zone_woreda','phone','email','telegram_handle','status','created_at'];
+  const lines = [headers.join(',')];
+  for (const r of rows) {
+    lines.push(headers.map(k => csvEsc(r[k])).join(','));
+  }
+  await logAudit(req, 'MEMBERS_EXPORT', 'csv', `${rows.length} rows`);
+  res.set('Content-Type', 'text/csv; charset=utf-8')
+     .set('Content-Disposition', `attachment; filename="sikkoo-members-${new Date().toISOString().slice(0,10)}.csv"`)
+     .send("\uFEFF" + lines.join("\n"));
+});
+
+/* Full member edit */
+app.get('/admin/members/:id/edit', guard('members'), async (req, res) => {
+  const id = parseInt(req.params.id, 10) || 0;
+  const [m] = await q(`SELECT * FROM members WHERE id=$1`, [id]);
+  if (!m) return res.redirect('/admin/members');
+  const sc = scopeOf(req);
+  if (sc && m.campus !== sc) return res.redirect('/admin/members');
+  const s = (k, opts) => opts.map(x => `<option value="${h(x[0])}"${String(m[k]) === String(x[0]) ? ' selected' : ''}>${h(x[1])}</option>`).join('');
+  res.send(A(req, 'Edit Member', `
+    <div class="glass-card" style="padding:24px; max-width:820px; margin:0 auto">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px">
+        <h3 style="font-size:1.2rem; font-weight:750; margin:0">✏️ Edit Full Information</h3>
+        <a class="btn secondary" href="/admin/members" style="padding:8px 14px;font-size:13px">← Back to list</a>
+      </div>
+      <p style="color:var(--text-muted); font-size:13px; margin-bottom:14px">Member No: <b>${h(m.member_no)}</b> · Status: <span class="badge ${m.status}">${h(m.status)}</span></p>
+      <form method="POST" action="/admin/members/${m.id}/edit" enctype="multipart/form-data">
+        <div class="form-section">
+          <h4>👤 Personal</h4>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:8px 14px">
+            <div><label>Full Name *</label><input name="name" required value="${h(m.name)}"></div>
+            <div><label>Gender</label><select name="gender">${s('gender', [['M','Male'],['F','Female']])}</select></div>
+            <div><label>Student ID *</label><input name="student_id" required value="${h(m.student_id)}"></div>
+            <div><label>Phone *</label><input name="phone" required value="${h(m.phone)}"></div>
+            <div><label>Email</label><input name="email" type="email" value="${h(m.email || '')}"></div>
+            <div><label>Telegram</label><input name="telegram_handle" value="${h(m.telegram_handle || '')}"></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <h4>🎓 Academic</h4>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:8px 14px">
+            <div><label>Campus *</label><select name="campus" required>${s('campus', Object.keys(CAMPUS).map(k => [k, CAMPUS[k].n]))}</select></div>
+            <div><label>College</label><input name="college" value="${h(m.college || '')}"></div>
+            <div><label>Department</label><input name="department" value="${h(m.department || '')}"></div>
+            <div><label>Year</label><select name="year">${s('year', [1,2,3,4,5,6].map(x => [String(x), 'Year '+x]))}</select></div>
+            <div><label>Zone / Woreda</label><input name="zone_woreda" value="${h(m.zone_woreda || '')}"></div>
+            <div><label>Status</label><select name="status">${s('status', [['registered','Registered'],['pending','Pending'],['official','Official'],['rejected','Rejected']])}</select></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <h4>🔐 Security & Photo</h4>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:8px 14px">
+            <div><label>New Password (leave blank to keep)</label><input name="password" type="password" minlength="6" placeholder="Optional new password"></div>
+            <div><label>Replace Photo</label><input name="photo" type="file" accept="image/*"></div>
+          </div>
+          ${m.photo_id ? `<p style="margin-top:8px;font-size:13px">Current photo: <a href="/photo/${m.photo_id}" target="_blank">View</a></p>` : ''}
+        </div>
+        <p style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap">
+          <button class="btn" type="submit">💾 Save All Changes</button>
+          <a class="btn secondary" href="/admin/members">Cancel</a>
+        </p>
+      </form>
+    </div>
+  `));
+});
+
+app.post('/admin/members/:id/edit', guard('members'), files6([{ name: 'photo', maxCount: 1 }]), async (req, res) => {
+  const id = parseInt(req.params.id, 10) || 0;
+  const [m] = await q(`SELECT * FROM members WHERE id=$1`, [id]);
+  if (!m) return res.redirect('/admin/members');
+  const sc = scopeOf(req);
+  if (sc && m.campus !== sc) return res.redirect('/admin/members');
+  const b = req.body;
+  const name = String(b.name || '').trim().slice(0, 120);
+  const student_id = String(b.student_id || '').trim().slice(0, 40);
+  const phone = String(b.phone || '').trim().slice(0, 30);
+  if (!name || !student_id || !phone) return res.redirect('/admin/members/' + id + '/edit');
+  let photo_id = m.photo_id;
+  try {
+    const f = ((req.files || {}).photo || [])[0];
+    if (f) photo_id = await saveFile(f);
+  } catch (e) {}
+  const campus = CAMPUS[b.campus] ? b.campus : m.campus;
+  const status = ['registered','pending','official','rejected'].includes(b.status) ? b.status : m.status;
+  const year = String(parseInt(b.year, 10) || m.year || 1);
+  await q(`UPDATE members SET name=$1, gender=$2, student_id=$3, phone=$4, email=$5, telegram_handle=$6,
+            campus=$7, college=$8, department=$9, year=$10, zone_woreda=$11, status=$12, photo_id=$13
+            WHERE id=$14`,
+    [name, b.gender === 'F' ? 'F' : 'M', student_id, phone, String(b.email || '').slice(0, 80),
+     String(b.telegram_handle || '').slice(0, 60), campus, String(b.college || '').slice(0, 100),
+     String(b.department || '').slice(0, 100), year, String(b.zone_woreda || '').slice(0, 100),
+     status, photo_id, id]);
+  if (b.password && String(b.password).length >= 6) {
+    await q(`UPDATE members SET password=$1 WHERE id=$2`, [bcrypt.hashSync(String(b.password), 10), id]);
+  }
+  await logAudit(req, 'MEMBER_EDIT', m.member_no, `Updated profile fields`);
+  res.redirect('/admin/members/' + id + '/edit?saved=1');
+});
+
 [['approve', 'official'], ['reject', 'rejected'], ['revoke', 'registered']].forEach(([a, st]) => {
-  app.post('/admin/members/:id/' + a, async (req, res) => {
+  app.post('/admin/members/:id/' + a, guard('members'), async (req, res) => {
     const [m] = await q(`SELECT * FROM members WHERE id=$1`, [parseInt(req.params.id, 10) || 0]);
     if (m) {
       await q(`UPDATE members SET status=$1 WHERE id=$2`, [st, m.id]);
