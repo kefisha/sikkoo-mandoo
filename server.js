@@ -479,9 +479,7 @@ textarea { resize: vertical; min-height: 80px; }
 .btn.g, .btn.excel { background: linear-gradient(90deg, #34d399, #10b981); box-shadow: 0 4px 0 #047857; }
 .btn.edit-btn { background: linear-gradient(135deg, #6366f1, #4f46e5); box-shadow: 0 3px 0 #3730a3; }
 
-.portal-menu { background: var(--surface); border-radius: 20px; padding: 9px; display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; border: 2px dashed var(--card-dash); }
-.portal-btn { background: var(--surface-soft); color: var(--text-2); border-radius: 999px; padding: 7px 13px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--border); }
-.portal-btn.active { background: linear-gradient(90deg, #7c3aed, #ec4899); color: #fff; border-color: transparent; }
+
 
 .search-bar { display: flex; gap: 8px; margin-bottom: 14px; background: var(--surface); padding: 6px 8px; border-radius: 999px; border: 2px dashed var(--card-dash); }
 .search-bar input { border: none; background: transparent; padding: 6px 12px; }
@@ -669,29 +667,15 @@ ${CLIENT_JS}
 </html>`;
 }
 
-// Compact Sub-page Nav (keeps sub-pages clean while Home uses the 3D Hub Grid)
+// Clean Sub-page Top Bar (No Pill Menu - Navigation uses the 3D Hub Grid only)
 function portalMenu(activePath) {
-  const items = [
-    { p: '/student-dashboard', i: '🏠', t: 'Hub' },
-    { p: '/portal/announcements', i: '📢', t: 'Announcements' },
-    { p: '/portal/events', i: '📅', t: 'Events' },
-    { p: '/portal/polls', i: '🗳️', t: 'Polls' },
-    { p: '/portal/certificates', i: '🏅', t: 'Certificates' },
-    { p: '/portal/forum', i: '💡', t: 'Q&A Forum' },
-    { p: '/portal/education', i: '📚', t: 'Education' },
-    { p: '/portal/meetings', i: '🤝', t: 'Meetings' },
-    { p: '/portal/leadership', i: '👥', t: 'Leadership' },
-    { p: '/portal/finance', i: '💰', t: 'Finance' },
-    { p: '/portal/support', i: '💬', t: 'Support' },
-    { p: '/portal/profile', i: '⚙️', t: 'Profile' }
-  ];
   return `
-    <form class="search-bar" method="GET" action="/portal/search">
-      <input name="q" placeholder="🔍 Search announcements, events, education, forum..." required>
-      <button class="btn" style="padding:7px 16px;">Search</button>
-    </form>
-    <div class="portal-menu">
-      ${items.map(x => `<a href="${x.p}" class="portal-btn${activePath === x.p ? ' active' : ''}">${x.i} ${x.t}</a>`).join('')}
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+      <a href="/student-dashboard" class="btn secondary" style="padding:8px 16px; font-size:13px;">← Back to Hub · ወደ ዋናው ሜኑ</a>
+      <form class="search-bar" method="GET" action="/portal/search" style="margin:0; flex:1; min-width:210px;">
+        <input name="q" placeholder="🔍 Search announcements, events, forum..." required>
+        <button class="btn" style="padding:6px 14px; font-size:12.5px;">Search</button>
+      </form>
     </div>
   `;
 }
@@ -1366,7 +1350,10 @@ const A = (req, title, body) => {
   const isOverview = req.path === '/admin' || req.path === '/admin/';
   return page(req, title, `
     ${isOverview ? `<div class="glass-card"><div class="hub-header">🛡️ <span>Admin Control Hub · የአስተዳደር ማዕከል</span></div><div class="hub-grid">${links.map(x => `<a href="${x[0]}" class="hub-tile ${x[5]}"><div class="hub-ico-circle">${x[1]}</div><div class="t-main">${x[2]}</div><div class="t-sub">${x[3]}</div></a>`).join('')}</div></div>`
-    : `<div class="portal-menu">${links.map(x => `<a href="${x[0]}" class="portal-btn ${req.path === x[0] || (x[0] !== '/admin' && req.path.startsWith(x[0])) ? 'active' : ''}">${x[1]} ${x[2]}</a>`).join('')}</div>`}
+    : `<div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+         <a href="/admin" class="btn secondary" style="padding:8px 16px; font-size:13px;">← Back to Admin Hub · ወደ ዋናው ሜኑ</a>
+         <span class="badge registered" style="font-size:12px; padding:6px 13px;">🛡️ ${h(title)}</span>
+       </div>`}
     ${body}
   `);
 };
@@ -1531,4 +1518,4 @@ app.get('/admin/backup', guard('backup'), async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v3.0 running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v3.1 running on port ${PORT}`));
