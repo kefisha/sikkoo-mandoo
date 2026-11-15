@@ -1,15 +1,12 @@
-# Siikkoo-Mandoo Students Association · MWU Digital Portal (v3.0)
+# Siikkoo-Mandoo Students Association · MWU Digital Portal (v5.0)
 
-## What's New in v3.0
-- **Vibrant Purple-Pink Polka-Dot Portal Theme**: Applied across Student & Admin portals with crisp white dashed-border cards, 3D glossy app tiles with white circular icon badges, and a floating dark pill bottom navigation bar.
-- **Personal Welcome Hero Banner**: Student profile photo, greeting, campus/department, membership badge, and Ethiopian date.
-- **App-Style 3D Tiles with Live Notification Badges**: Real-time counts for announcements, upcoming events, open polls, and issued certificates.
-- **3D Flip Digital ID Card (Front & Back)**: Tap to flip between Front (photo, details, official SVG seal) and Back (large QR code, slogan, contact info) + 1-click PNG download.
-- **Emergency Alert Bar & Next Event Countdown Card**: Urgent announcements pinned at top + upcoming event countdown & quick RSVP right on the dashboard.
-- **All v2.0 Features Preserved**: ALLS-style Login with 2x2 role cards, Profile Settings, Online Elections/Polls, Digital Certificates, Student Q&A Forum, Ethiopian Calendar, Admin Chart.js Analytics, Excel Export, Dark Mode, PWA, and Telegram Auto-Post.
-
-## Deployment (Render)
-1. Upload all files to your GitHub repository (`main` branch).
-2. Connect to Render (Node 20 Web Service).
-3. Ensure `DATABASE_URL` is set in Render Environment Variables.
-4. Build Command: `npm install` | Start Command: `npm start`.
+## Features Included in v5.0 (Selected 3, 4, 5, 6, 9, 13, 14, 15)
+1. **Payment & Receipt Upload (Feature 3)**: Telebirr/CBE Birr contribution payment submission with receipt upload and admin verification.
+2. **Lost & Found Board (Feature 4)**: Campus-wide lost and found item board with photo attachment.
+3. **Freshman Guide & Mentor Match (Feature 5)**: Comprehensive first-year survival guide and senior mentor request system.
+4. **QR Attendance Scanner (Feature 6)**: Event and meeting attendance tracking via QR scan and logging.
+5. **Alumni Network Directory (Feature 9)**: Graduated alumni directory for career networking and mentorship.
+6. **Anonymous Suggestion Box (Feature 13)**: Secure, anonymous feedback and grievance submission box for students.
+7. **Heritage & YouTube Media Hub (Feature 14)**: Cultural videos, Oromo heritage stories, and embedded media gallery.
+8. **Targeted Broadcast Alerts (Feature 15)**: Admin tool to broadcast targeted alerts to specific campuses or year groups.
+- **Plus All v3.1 Core Features**: Vibrant polka-dot purple/pink theme, 3D Hub tiles, 3D Flip ID Card with PNG download, Ethiopian Calendar converter, Online Polls, Digital Certificates, Q&A Forum, and Admin Chart.js Analytics.

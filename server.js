@@ -669,13 +669,30 @@ ${CLIENT_JS}
 
 // Clean Sub-page Top Bar (No Pill Menu - Navigation uses the 3D Hub Grid only)
 function portalMenu(activePath) {
+  const items = [
+    { p: '/student-dashboard', i: '🏠', t: 'Hub' },
+    { p: '/portal/announcements', i: '📢', t: 'News' },
+    { p: '/portal/payments', i: '💳', t: 'Payments' },
+    { p: '/portal/lost-found', i: '🔍', t: 'Lost & Found' },
+    { p: '/portal/freshman-guide', i: '🎓', t: 'Freshman' },
+    { p: '/portal/attendance', i: '📱', t: 'Attendance' },
+    { p: '/portal/alumni', i: '🌟', t: 'Alumni' },
+    { p: '/portal/suggestions', i: '📮', t: 'Suggestions' },
+    { p: '/portal/media-hub', i: '📺', t: 'Media Hub' },
+    { p: '/portal/polls', i: '🗳️', t: 'Polls' },
+    { p: '/portal/certificates', i: '🏅', t: 'Certificates' },
+    { p: '/portal/forum', i: '💡', t: 'Forum' }
+  ];
   return `
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
-      <a href="/student-dashboard" class="btn secondary" style="padding:8px 16px; font-size:13px;">← Back to Hub · ወደ ዋናው ሜኑ</a>
-      <form class="search-bar" method="GET" action="/portal/search" style="margin:0; flex:1; min-width:210px;">
-        <input name="q" placeholder="🔍 Search announcements, events, forum..." required>
-        <button class="btn" style="padding:6px 14px; font-size:12.5px;">Search</button>
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+      <a href="/student-dashboard" class="btn secondary" style="padding:7px 14px; font-size:12.5px;">← Back to Hub · ወደ ዋናው ሜኑ</a>
+      <form class="search-bar" method="GET" action="/portal/search" style="margin:0; flex:1; min-width:200px;">
+        <input name="q" placeholder="🔍 Search portal..." required>
+        <button class="btn" style="padding:5px 12px; font-size:12px;">Search</button>
       </form>
+    </div>
+    <div class="portal-menu" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:14px; background:var(--surface); padding:8px; border-radius:18px; border:2px dashed var(--card-dash);">
+      ${items.map(x => `<a href="${x.p}" class="portal-btn${activePath === x.p ? ' active' : ''}" style="padding:6px 11px; font-size:11.5px; border-radius:999px; background:var(--surface-soft); color:var(--text-2); border:1px solid var(--border); display:inline-flex; align-items:center; gap:4px; ${activePath === x.p ? 'background:linear-gradient(90deg, #7c3aed, #ec4899); color:#fff; border-color:transparent;' : ''}">${x.i} ${x.t}</a>`).join('')}
     </div>
   `;
 }
@@ -735,6 +752,60 @@ const scopeOf = req => (CENTRAL.includes(req.session.sr) ? null : (req.session.c
   await q(`CREATE TABLE IF NOT EXISTS finance_reports (id SERIAL PRIMARY KEY, period TEXT, campus TEXT, income NUMERIC, expense NUMERIC, starting_balance NUMERIC DEFAULT 0, detail TEXT, approved INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW())`);
   await q(`CREATE TABLE IF NOT EXISTS audit_logs (id SERIAL PRIMARY KEY, actor TEXT, action TEXT, target TEXT, details TEXT, ip TEXT, created_at TIMESTAMP DEFAULT NOW())`);
   await q(`CREATE TABLE IF NOT EXISTS password_resets (id SERIAL PRIMARY KEY, student_id TEXT, phone TEXT, reason TEXT, status TEXT DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW())`);
+  
+  -- Feature 3: Payments & Receipts
+  await q(`CREATE TABLE IF NOT EXISTS member_payments (
+    id SERIAL PRIMARY KEY, member_no TEXT, name TEXT, campus TEXT, amount NUMERIC,
+    payment_method TEXT, transaction_ref TEXT UNIQUE, receipt_file_id INTEGER,
+    status TEXT DEFAULT 'pending', admin_remark TEXT, created_at TIMESTAMP DEFAULT NOW()
+  )`);
+
+  -- Feature 4: Lost & Found
+  await q(`CREATE TABLE IF NOT EXISTS lost_found (
+    id SERIAL PRIMARY KEY, member_no TEXT, author_name TEXT, campus TEXT,
+    category TEXT DEFAULT 'lost', title TEXT, description TEXT, phone TEXT,
+    image_id INTEGER, status TEXT DEFAULT 'open', created_at TIMESTAMP DEFAULT NOW()
+  )`);
+
+  -- Feature 5: Mentorship Requests
+  await q(`CREATE TABLE IF NOT EXISTS mentor_requests (
+    id SERIAL PRIMARY KEY, freshman_no TEXT, freshman_name TEXT, campus TEXT,
+    department TEXT, senior_mentor TEXT, status TEXT DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW()
+  )`);
+
+  -- Feature 6: QR Attendance
+  await q(`CREATE TABLE IF NOT EXISTS attendance_sessions (
+    id SERIAL PRIMARY KEY, title TEXT, campus TEXT DEFAULT 'all', event_date TEXT,
+    code TEXT UNIQUE, created_at TIMESTAMP DEFAULT NOW()
+  )`);
+  await q(`CREATE TABLE IF NOT EXISTS attendance_logs (
+    id SERIAL PRIMARY KEY, session_id INTEGER, member_no TEXT, member_name TEXT,
+    scanned_at TIMESTAMP DEFAULT NOW(), UNIQUE(session_id, member_no)
+  )`);
+
+  -- Feature 9: Alumni Network
+  await q(`CREATE TABLE IF NOT EXISTS alumni (
+    id SERIAL PRIMARY KEY, full_name TEXT, batch_year TEXT, department TEXT,
+    current_role TEXT, employer TEXT, phone TEXT, email TEXT, linkedin TEXT, created_at TIMESTAMP DEFAULT NOW()
+  )`);
+
+  -- Feature 13: Anonymous Suggestion Box
+  await q(`CREATE TABLE IF NOT EXISTS anonymous_suggestions (
+    id SERIAL PRIMARY KEY, campus TEXT DEFAULT 'all', category TEXT DEFAULT 'general',
+    message TEXT, reply TEXT, status TEXT DEFAULT 'open', created_at TIMESTAMP DEFAULT NOW()
+  )`);
+
+  -- Feature 14: Heritage & YouTube Media Hub
+  await q(`CREATE TABLE IF NOT EXISTS media_hub (
+    id SERIAL PRIMARY KEY, title TEXT, youtube_url TEXT, description TEXT, campus TEXT DEFAULT 'all', created_at TIMESTAMP DEFAULT NOW()
+  )`);
+
+  -- Feature 15: Targeted Broadcasts
+  await q(`CREATE TABLE IF NOT EXISTS targeted_broadcasts (
+    id SERIAL PRIMARY KEY, title TEXT, target_campus TEXT DEFAULT 'all', target_year TEXT DEFAULT 'all',
+    message TEXT, created_by TEXT, created_at TIMESTAMP DEFAULT NOW()
+  )`);
+
 
   for (const sql of [
     `ALTER TABLE files ADD COLUMN IF NOT EXISTS name TEXT`,
@@ -980,17 +1051,17 @@ app.get('/student-dashboard', needMember, async (req, res) => {
 
   const tiles = [
     { href: '/portal/announcements', cls: 'purple', ico: '📢', t: 'Announcements', sub: 'ማስታወቂያ', n: annCnt.c },
-    { href: '/portal/education', cls: 'sky', ico: '📚', t: 'Education', sub: 'ትምህርት ቤት', n: 0 },
+    { href: '/portal/payments', cls: 'green', ico: '💳', t: 'Pay & Receipt', sub: 'መዋጮ ክፍያ', n: 0 },
+    { href: '/portal/lost-found', cls: 'orange', ico: '🔍', t: 'Lost & Found', sub: 'የጠፉ ዕቃዎች', n: 0 },
+    { href: '/portal/freshman-guide', cls: 'sky', ico: '🎓', t: 'Freshman Guide', sub: 'አዲስ ገቢዎች', n: 0 },
+    { href: '/portal/attendance', cls: 'pink', ico: '📱', t: 'QR Attendance', sub: 'ስብሰባ ቅኝት', n: 0 },
+    { href: '/portal/alumni', cls: 'indigo', ico: '🌟', t: 'Alumni Network', sub: 'ምሩቃን መረብ', n: 0 },
+    { href: '/portal/suggestions', cls: 'teal', ico: '📮', t: 'Suggestion Box', sub: 'ምስጢር ሳጥን', n: 0 },
+    { href: '/portal/media-hub', cls: 'red', ico: '📺', t: 'Heritage Media', sub: 'ባህልና ሚዲያ', n: 0 },
     { href: '/portal/events', cls: 'orange', ico: '📅', t: 'Events', sub: 'ፕሮግራሞች', n: evCnt.c },
     { href: '/portal/polls', cls: 'pink', ico: '🗳️', t: 'Polls & Vote', sub: 'ምርጫ / ድምጽ', n: pollCnt.c },
     { href: '/portal/certificates', cls: 'green', ico: '🏅', t: 'Certificates', sub: 'ሰርተፍኬት', n: certCnt.c },
-    { href: '/portal/forum', cls: 'blue', ico: '💡', t: 'Q&A Forum', sub: 'መወያያ', n: forumCnt.c },
-    { href: '/portal/meetings', cls: 'teal', ico: '🤝', t: 'Meetings', sub: 'ስብሰባዎች', n: 0 },
-    { href: '/portal/leadership', cls: 'yellow', ico: '👥', t: 'Leadership', sub: 'አመራሮች', n: 0 },
-    { href: '/portal/finance', cls: 'indigo', ico: '💰', t: 'Finance', sub: 'ፋይናንስ', n: 0 },
-    { href: '/portal/news', cls: 'sky', ico: '📰', t: 'News', sub: 'ዜናዎች', n: 0 },
-    { href: '/portal/support', cls: 'red', ico: '💬', t: 'Support', sub: 'እገዛ', n: 0 },
-    { href: '/portal/profile', cls: 'purple', ico: '⚙️', t: 'My Profile', sub: 'መረጃዬ', n: 0 }
+    { href: '/portal/forum', cls: 'blue', ico: '💡', t: 'Q&A Forum', sub: 'መወያያ', n: forumCnt.c }
   ];
 
   const html = `
@@ -1313,6 +1384,356 @@ app.post('/portal/support', needMember, async (req, res) => {
 });
 
 // ---------- PHOTO, VERIFY, LEGAL ----------
+
+/* ==========================================================
+   FEATURE ROUTES (3, 4, 5, 6, 9, 13, 14, 15)
+   ========================================================== */
+
+-- Feature 3: Payment & Receipt Upload
+app.get('/portal/payments', needMember, async (req, res) => {
+  const payments = await q(`SELECT * FROM member_payments WHERE member_no=$1 ORDER BY id DESC`, [req.session.mid]);
+  res.send(page(req, 'Payment & Receipt', portalMenu('/portal/payments') + `
+    <div class="top-pill-banner">💳 Membership Contribution & Payment Portal</div>
+    <div class="glass-card">
+      <h3>Submit Contribution Payment</h3>
+      <p style="font-size:13px; color:var(--text-muted);">Transfer via Telebirr (*127#) or CBE Birr and upload your receipt screenshot/reference below.</p>
+      <div style="background:var(--surface-soft); padding:14px; border-radius:14px; margin:10px 0; font-size:13.5px;">
+        <b>🏦 CBE Account:</b> 1000000000000 (Siikkoo-Mandoo MWU)<br>
+        <b>📱 Telebirr Merchant/Num:</b> 0900000000
+      </div>
+      <form method="POST" action="/portal/payments" enctype="multipart/form-data">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px;">
+          <div><label>Amount (ETB)</label><input name="amount" type="number" step="0.01" required placeholder="50"></div>
+          <div><label>Payment Method</label><select name="payment_method"><option value="telebirr">Telebirr</option><option value="cbe_birr">CBE Birr</option><option value="bank_transfer">Bank Transfer</option></select></div>
+          <div><label>Transaction Reference / ID</label><input name="transaction_ref" required placeholder="e.g. TBR12345678"></div>
+          <div><label>Receipt Screenshot / PDF</label><input name="receipt" type="file" accept="image/*,application/pdf" required></div>
+        </div>
+        <p style="margin-top:14px;"><button class="btn g">📤 Submit Payment for Verification</button></p>
+      </form>
+    </div>
+    <div class="glass-card">
+      <h4>My Payment History</h4>
+      <div class="tw" style="margin-top:10px;"><table>
+        <tr><th>Ref / ID</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr>
+        ${payments.map(p => `<tr>
+          <td><b>${h(p.transaction_ref)}</b></td>
+          <td>${Number(p.amount).toLocaleString()} ETB</td>
+          <td>${h(p.payment_method)}</td>
+          <td><span class="badge ${p.status === 'approved' ? 'official' : (p.status === 'rejected' ? 'rejected' : 'pending')}">${h(p.status)}</span></td>
+          <td>${new Date(p.created_at).toLocaleDateString()}</td>
+        </tr>`).join('')}
+      </table></div>
+    </div>
+  `));
+});
+
+app.post('/portal/payments', needMember, upload.single('receipt'), async (req, res) => {
+  const [m] = await q(`SELECT * FROM members WHERE member_no=$1`, [req.session.mid]);
+  const b = req.body, amt = parseFloat(b.amount);
+  let rId = null;
+  if (req.file) rId = await saveFile(req.file);
+  if (m && amt > 0 && b.transaction_ref) {
+    try {
+      await q(`INSERT INTO member_payments (member_no, name, campus, amount, payment_method, transaction_ref, receipt_file_id) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+        [m.member_no, m.name, m.campus, amt, b.payment_method || 'telebirr', b.transaction_ref.trim(), rId]);
+    } catch(e) {}
+  }
+  res.redirect('/portal/payments?ok=1');
+});
+
+-- Feature 4: Lost & Found Board
+app.get('/portal/lost-found', needMember, async (req, res) => {
+  const items = await q(`SELECT * FROM lost_found ORDER BY id DESC LIMIT 40`);
+  res.send(page(req, 'Lost & Found', portalMenu('/portal/lost-found') + `
+    <div class="top-pill-banner">🔍 Lost & Found Campus Board · የጠፉ እና የተገኙ ዕቃዎች</div>
+    <div class="glass-card">
+      <h3>Post Lost or Found Item</h3>
+      <form method="POST" action="/portal/lost-found" enctype="multipart/form-data">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px;">
+          <div><label>Type</label><select name="category"><option value="lost">🔴 Lost (የጠፋ)</option><option value="found">🟢 Found (የተገኘ)</option></select></div>
+          <div><label>Item Title</label><input name="title" required placeholder="e.g. Student ID, National ID, Phone"></div>
+          <div><label>Contact Phone</label><input name="phone" required placeholder="09..."></div>
+          <div><label>Photo (Optional)</label><input name="image" type="file" accept="image/*"></div>
+        </div>
+        <label>Detailed Description & Location</label>
+        <textarea name="description" required placeholder="Where was it lost/found? Any distinguishing features..."></textarea>
+        <p style="margin-top:12px;"><button class="btn">Post to Board</button></p>
+      </form>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px;">
+      ${items.map(i => `<div class="glass-card" style="margin:0; border-left:4px solid ${i.category === 'lost' ? '#ef4444' : '#10b981'}">
+        <span class="badge ${i.category === 'lost' ? 'rejected' : 'official'}">${i.category === 'lost' ? '🔴 LOST' : '🟢 FOUND'}</span>
+        <h4 style="margin:6px 0 4px;">${h(i.title)}</h4>
+        <small style="color:var(--text-muted)">By ${h(i.author_name)} · 📞 ${h(i.phone)}</small>
+        ${i.image_id ? `<img style="width:100%; height:160px; object-fit:cover; border-radius:10px; margin:8px 0;" src="/photo/${i.image_id}">` : ''}
+        <p style="font-size:13px; color:var(--text-2); margin-top:6px;">${h(i.description)}</p>
+      </div>`).join('') || '<div class="glass-card" style="text-align:center;">No lost or found items reported.</div>'}
+    </div>
+  `));
+});
+
+app.post('/portal/lost-found', needMember, upload.single('image'), async (req, res) => {
+  const [m] = await q(`SELECT * FROM members WHERE member_no=$1`, [req.session.mid]);
+  const b = req.body;
+  let imgId = null;
+  if (req.file) imgId = await saveFile(req.file);
+  if (m && b.title && b.description) {
+    await q(`INSERT INTO lost_found (member_no, author_name, campus, category, title, description, phone, image_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+      [m.member_no, m.name, m.campus, b.category || 'lost', b.title.slice(0,120), b.description.slice(0,1000), b.phone || m.phone, imgId]);
+  }
+  res.redirect('/portal/lost-found?ok=1');
+});
+
+-- Feature 5: Freshman Guide & Mentor Match
+app.get('/portal/freshman-guide', needMember, async (req, res) => {
+  const [m] = await q(`SELECT * FROM members WHERE member_no=$1`, [req.session.mid]);
+  const [existingMentor] = await q(`SELECT * FROM mentor_requests WHERE freshman_no=$1`, [req.session.mid]);
+  res.send(page(req, 'Freshman Guide', portalMenu('/portal/freshman-guide') + `
+    <div class="top-pill-banner">🎓 Freshman Survival Guide & Senior Mentor Match</div>
+    <div class="glass-card">
+      <h3>🏛️ Campus Life & Academic Guide for First-Year Students</h3>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; margin-top:14px;">
+        <div class="form-section" style="margin:0">
+          <h4>📌 Registration & Dormitory</h4>
+          <p style="font-size:13px; color:var(--text-2)">Bring your clearance, admission letter, 4 passport photos, and bedding items. Report to your assigned block proctor upon arrival.</p>
+        </div>
+        <div class="form-section" style="margin:0">
+          <h4>🍽️ Cafeteria & ID Cards</h4>
+          <p style="font-size:13px; color:var(--text-2)">Cafeteria service requires your official University ID card and biometric/paper meal ticket. Maintain discipline during rush hours.</p>
+        </div>
+        <div class="form-section" style="margin:0">
+          <h4>📚 Library & Tutorials</h4>
+          <p style="font-size:13px; color:var(--text-2)">MWU main and campus libraries are open daily. Siikkoo-Mandoo organizes peer tutorials and mentorship for difficult freshman courses.</p>
+        </div>
+      </div>
+    </div>
+    <div class="glass-card">
+      <h3>🤝 Request a Senior Student Mentor</h3>
+      ${existingMentor ? `
+        <div class="msgok">✔ Your mentor request is submitted! Status: <b>${h(existingMentor.status)}</b>. Senior mentors will reach out to you soon.</div>
+      ` : `
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">Get paired with an upperclassman in your department to guide you through exams, assignments, and campus adaptation.</p>
+        <form method="POST" action="/portal/mentor-request">
+          <button class="btn">🤝 Request Senior Mentor Match</button>
+        </form>
+      `}
+    </div>
+  `));
+});
+
+app.post('/portal/mentor-request', needMember, async (req, res) => {
+  const [m] = await q(`SELECT * FROM members WHERE member_no=$1`, [req.session.mid]);
+  if (m) {
+    try {
+      await q(`INSERT INTO mentor_requests (freshman_no, freshman_name, campus, department) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING`,
+        [m.member_no, m.name, m.campus, m.department]);
+    } catch(e) {}
+  }
+  res.redirect('/portal/freshman-guide?ok=1');
+});
+
+-- Feature 6: QR Attendance Scanner
+app.get('/portal/attendance', needMember, async (req, res) => {
+  const sessions = await q(`SELECT * FROM attendance_sessions WHERE campus='all' OR campus=$1 ORDER BY id DESC LIMIT 20`, [req.session.campus || 'robe']);
+  const myLogs = await q(`SELECT session_id FROM attendance_logs WHERE member_no=$1`, [req.session.mid]);
+  const loggedSet = new Set(myLogs.map(l => l.session_id));
+
+  res.send(page(req, 'QR Attendance', portalMenu('/portal/attendance') + `
+    <div class="top-pill-banner">📱 QR Code Event & Meeting Attendance</div>
+    <div class="glass-card" style="text-align:center; padding:28px;">
+      <div style="font-size:42px; margin-bottom:8px;">📷</div>
+      <h3>Scan Attendance Code</h3>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">Enter the meeting/event attendance code provided by your campus coordinator.</p>
+      <form method="POST" action="/portal/attendance/scan" style="max-width:380px; margin:0 auto; display:flex; gap:8px;">
+        <input name="code" required placeholder="Enter attendance code (e.g. SM-ATT-26)" style="text-transform:uppercase;">
+        <button class="btn">Check-in</button>
+      </form>
+    </div>
+    <div class="glass-card">
+      <h4>Active Attendance Sessions</h4>
+      ${sessions.map(s => {
+        const checkedIn = loggedSet.has(s.id);
+        return `<div class="form-section" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h4>${h(s.title)}</h4>
+            <small style="color:var(--text-muted)">Date: ${h(s.event_date || 'Today')} · Code: <b>${h(s.code)}</b></small>
+          </div>
+          <div>
+            ${checkedIn ? '<span class="badge official">✔ Attendance Recorded</span>' : `<form method="POST" action="/portal/attendance/scan"><input type="hidden" name="code" value="${h(s.code)}"><button class="btn g" style="padding:6px 14px; font-size:12px;">Check-in Now</button></form>`}
+          </div>
+        </div>`;
+      }).join('') || '<p>No active attendance sessions.</p>'}
+    </div>
+  `));
+});
+
+app.post('/portal/attendance/scan', needMember, async (req, res) => {
+  const code = String(req.body.code || '').trim().toUpperCase();
+  const [m] = await q(`SELECT * FROM members WHERE member_no=$1`, [req.session.mid]);
+  const [s] = await q(`SELECT * FROM attendance_sessions WHERE UPPER(code)=UPPER($1)`, [code]);
+  if (m && s) {
+    try {
+      await q(`INSERT INTO attendance_logs (session_id, member_no, member_name) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING`,
+        [s.id, m.member_no, m.name]);
+    } catch(e) {}
+  }
+  res.redirect('/portal/attendance?ok=1');
+});
+
+-- Feature 9: Alumni Network Directory
+app.get('/portal/alumni', needMember, async (req, res) => {
+  const alumni = await q(`SELECT * FROM alumni ORDER BY id DESC LIMIT 50`);
+  res.send(page(req, 'Alumni Network', portalMenu('/portal/alumni') + `
+    <div class="top-pill-banner">🌟 Alumni Network & Graduated Members Directory</div>
+    <div class="glass-card">
+      <h3>Register as Graduated Alumni</h3>
+      <form method="POST" action="/portal/alumni">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px;">
+          <div><label>Full Name</label><input name="full_name" required placeholder="Name"></div>
+          <div><label>Batch / Graduation Year</label><input name="batch_year" required placeholder="e.g. 2024"></div>
+          <div><label>Department</label><input name="department" required placeholder="e.g. Statistics"></div>
+          <div><label>Current Job / Role</label><input name="current_role" placeholder="e.g. Data Analyst"></div>
+          <div><label>Employer / Company</label><input name="employer" placeholder="Company"></div>
+          <div><label>Phone / Contact</label><input name="phone" placeholder="Phone"></div>
+          <div><label>Email</label><input name="email" type="email" placeholder="Email"></div>
+          <div><label>LinkedIn Profile URL</label><input name="linkedin" placeholder="LinkedIn"></div>
+        </div>
+        <p style="margin-top:12px;"><button class="btn">🌟 Join Alumni Directory</button></p>
+      </form>
+    </div>
+    <div class="glass-card">
+      <h3>Graduated Alumni Directory</h3>
+      <div class="tw" style="margin-top:10px;"><table>
+        <tr><th>Name</th><th>Batch</th><th>Department</th><th>Current Role & Employer</th><th>Contact</th></tr>
+        ${alumni.map(a => `<tr>
+          <td><b>${h(a.full_name)}</b></td>
+          <td>${h(a.batch_year)}</td>
+          <td>${h(a.department)}</td>
+          <td>${h(a.current_role || '-')} @ ${h(a.employer || '-')}</td>
+          <td><small>${h(a.phone || '')} ${a.linkedin ? '· <a href="' + h(a.linkedin) + '" target="_blank">LinkedIn</a>' : ''}</small></td>
+        </tr>`).join('')}
+      </table></div>
+    </div>
+  `));
+});
+
+app.post('/portal/alumni', needMember, async (req, res) => {
+  const b = req.body;
+  if (b.full_name && b.department) {
+    try {
+      await q(`INSERT INTO alumni (full_name, batch_year, department, current_role, employer, phone, email, linkedin) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+        [b.full_name.slice(0,80), b.batch_year||'2025', b.department.slice(0,80), b.current_role||'', b.employer||'', b.phone||'', b.email||'', b.linkedin||'']);
+    } catch(e) {}
+  }
+  res.redirect('/portal/alumni?ok=1');
+});
+
+-- Feature 13: Anonymous Suggestion Box
+app.get('/portal/suggestions', needMember, async (req, res) => {
+  const suggestions = await q(`SELECT * FROM anonymous_suggestions ORDER BY id DESC LIMIT 25`);
+  res.send(page(req, 'Suggestion Box', portalMenu('/portal/suggestions') + `
+    <div class="top-pill-banner">📮 Anonymous Suggestion & Grievance Box · ሚስጥራዊ የአስተያየት ሳጥን</div>
+    <div class="glass-card">
+      <h3>Submit Anonymous Feedback</h3>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:10px;">Your identity is 100% confidential and hidden. Share your constructive suggestions, academic concerns, or union feedback.</p>
+      <form method="POST" action="/portal/suggestions">
+        <div style="display:grid; grid-template-columns:1fr 2fr; gap:10px;">
+          <div><label>Campus</label>${sel('campus', campusOpts(null, true))}</div>
+          <div><label>Category</label><select name="category"><option value="academic">Academic Quality</option><option value="cafeteria">Cafeteria & Dormitory</option><option value="union">Student Union Services</option><option value="general">General Feedback</option></select></div>
+        </div>
+        <label>Your Message / Suggestion</label>
+        <textarea name="message" required placeholder="Write your honest suggestions here..."></textarea>
+        <p style="margin-top:12px;"><button class="btn">🔒 Send Anonymously</button></p>
+      </form>
+    </div>
+    <div class="glass-card">
+      <h4>Recent Feedback & Administration Replies</h4>
+      ${suggestions.map(s => `
+        <div class="form-section">
+          <div style="display:flex; justify-content:space-between; flex-wrap:wrap;">
+            <span class="badge registered">${h(s.category)} · ${h(s.campus)}</span>
+            <small style="color:var(--text-muted)">${new Date(s.created_at).toLocaleDateString()}</small>
+          </div>
+          <p style="font-size:13.5px; margin-top:8px;">${h(s.message)}</p>
+          ${s.reply ? `<div class="msgok" style="margin-top:8px;"><b>Union Reply:</b> ${h(s.reply)}</div>` : ''}
+        </div>
+      `).join('') || '<p>No feedback submitted yet.</p>'}
+    </div>
+  `));
+});
+
+app.post('/portal/suggestions', needMember, async (req, res) => {
+  const b = req.body;
+  if (b.message) {
+    try {
+      await q(`INSERT INTO anonymous_suggestions (campus, category, message) VALUES ($1,$2,$3)`,
+        [b.campus || 'all', b.category || 'general', b.message.slice(0, 2000)]);
+    } catch(e) {}
+  }
+  res.redirect('/portal/suggestions?ok=1');
+});
+
+-- Feature 14: Heritage & YouTube Media Hub
+app.get('/portal/media-hub', needMember, async (req, res) => {
+  const media = await q(`SELECT * FROM media_hub ORDER BY id DESC LIMIT 30`);
+  res.send(page(req, 'Heritage Media', portalMenu('/portal/media-hub') + `
+    <div class="top-pill-banner">📺 Oromo Heritage & YouTube Media Hub</div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px;">
+      ${media.map(m => {
+        let embed = '';
+        const ytMatch = m.youtube_url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+        if (ytMatch && ytMatch[1]) {
+          embed = `<iframe style="width:100%; height:200px; border-radius:12px; border:none;" src="https://www.youtube.com/embed/${ytMatch[1]}" allowfullscreen></iframe>`;
+        }
+        return `<div class="glass-card" style="margin:0">
+          <h4 style="margin-bottom:8px;">${h(m.title)}</h4>
+          ${embed ? embed : `<a href="${h(m.youtube_url)}" target="_blank">🔗 Watch Video Link</a>`}
+          <p style="font-size:13px; color:var(--text-2); margin-top:8px;">${h(m.description)}</p>
+        </div>`;
+      }).join('') || '<div class="glass-card" style="text-align:center; grid-column:1/-1;">No media videos uploaded yet.</div>'}
+    </div>
+  `));
+});
+
+-- Feature 15: Targeted Broadcasts & Admin Tools
+app.get('/admin/broadcast', guard('content'), async (req, res) => {
+  const broadcasts = await q(`SELECT * FROM targeted_broadcasts ORDER BY id DESC LIMIT 30`);
+  res.send(A(req, 'Targeted Broadcast', `
+    <div class="glass-card">
+      <h3>📢 Send Targeted Broadcast Alert</h3>
+      <form method="POST" action="/admin/broadcast">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px;">
+          <div><label>Target Campus</label>${sel('campus', campusOpts(scopeOf(req), true))}</div>
+          <div><label>Target Year Group</label><select name="target_year"><option value="all">All Years</option><option value="1">Year 1</option><option value="2">Year 2</option><option value="3">Year 3</option><option value="4">Year 4</option><option value="5">Year 5</option></select></div>
+        </div>
+        <label>Broadcast Title</label><input name="title" required placeholder="Important Notice...">
+        <label>Message Content</label><textarea name="message" required placeholder="Write alert message..."></textarea>
+        <p style="margin-top:12px;"><button class="btn">🚀 Broadcast Alert</button></p>
+      </form>
+    </div>
+    <div class="glass-card">
+      <h4>Broadcast History</h4>
+      ${broadcasts.map(b => `<div class="form-section">
+        <b>${h(b.title)}</b> · <span class="badge registered">Campus: ${h(b.target_campus)} · Year: ${h(b.target_year)}</span>
+        <p style="font-size:13px; margin-top:6px;">${h(b.message)}</p>
+        <small style="color:var(--text-muted)">Sent by ${h(b.created_by)} on ${new Date(b.created_at).toLocaleString()}</small>
+      </div>`).join('') || '<p>No broadcasts sent yet.</p>'}
+    </div>
+  `));
+});
+
+app.post('/admin/broadcast', guard('content'), async (req, res) => {
+  const b = req.body;
+  if (b.title && b.message) {
+    try {
+      await q(`INSERT INTO targeted_broadcasts (title, target_campus, target_year, message, created_by) VALUES ($1,$2,$3,$4,$5)`,
+        [b.title.slice(0,150), b.target_campus||'all', b.target_year||'all', b.message.slice(0,2000), req.session.sname||'Admin']);
+    } catch(e) {}
+  }
+  res.redirect('/admin/broadcast?ok=1');
+});
+
+
 app.get('/photo/:id', async (req, res) => {
   const [f] = await q(`SELECT mime, data, name FROM files WHERE id=$1`, [parseInt(req.params.id, 10) || 0]); if (!f) return res.status(404).end();
   res.set('Content-Type', f.mime).set('Cache-Control', 'public,max-age=604800');
@@ -1344,6 +1765,10 @@ const A = (req, title, body) => {
     ['/admin/support', '💬', 'Support', 'እገዛ', 'support', 'purple'],
     ['/admin/staff', '🔑', 'Staff', 'ሰራተኞች', 'staff', 'gray'],
     ['/admin/audit-logs', '📜', 'Audit Logs', 'ታሪክ', 'audit', 'blue'],
+    ['/admin/payments', '💳', 'Payments', 'ክፍያዎች', 'finance', 'green'],
+    ['/admin/suggestions', '📮', 'Suggestions', 'ምስጢር ሳጥን', 'support', 'teal'],
+    ['/admin/attendance', '📱', 'Attendance', 'የስብሰባ ቅኝት', 'meetings', 'purple'],
+    ['/admin/broadcast', '📢', 'Broadcast', 'መልዕክት', 'content', 'orange'],
     ['/admin/backup', '💾', 'Backup', 'ባክአፕ', 'backup', 'teal']
   ].filter(x => !x[4] || can(req, x[4]));
 
@@ -1510,6 +1935,89 @@ app.get('/admin/audit-logs', guard('audit'), async (req, res) => {
   res.send(A(req, 'Audit Logs', `<div class="glass-card"><div class="tw"><table><tr><th>Time</th><th>Actor</th><th>Action</th><th>Target</th><th>Details</th></tr>${logs.map(l => `<tr><td>${new Date(l.created_at).toLocaleString()}</td><td><b>${h(l.actor)}</b></td><td>${h(l.action)}</td><td>${h(l.target || '-')}</td><td>${h(l.details || '-')}</td></tr>`).join('')}</table></div></div>`));
 });
 
+
+/* Admin Management Routes for Features 3, 6, 13 */
+app.get('/admin/payments', guard('finance'), async (req, res) => {
+  const payments = await q(`SELECT * FROM member_payments ORDER BY id DESC LIMIT 100`);
+  res.send(A(req, 'Payment Approvals', `
+    <div class="glass-card"><div class="tw"><table>
+      <tr><th>Ref / ID</th><th>Member</th><th>Campus</th><th>Amount</th><th>Status</th><th>Action</th></tr>
+      ${payments.map(p => `<tr>
+        <td><b>${h(p.transaction_ref)}</b></td>
+        <td>${h(p.name)} (${h(p.member_no)})</td>
+        <td>${h(p.campus)}</td>
+        <td>${Number(p.amount).toLocaleString()} ETB</td>
+        <td><span class="badge ${p.status === 'approved' ? 'official' : (p.status === 'rejected' ? 'rejected' : 'pending')}">${h(p.status)}</span></td>
+        <td style="white-space:nowrap">
+          ${p.receipt_file_id ? `<a href="/photo/${p.receipt_file_id}" target="_blank" class="btn secondary" style="padding:4px 8px; font-size:11px;">Receipt</a>` : ''}
+          ${p.status !== 'approved' ? `<form method="POST" action="/admin/payments/${p.id}/approve" style="display:inline"><button class="btn g" style="padding:4px 9px; font-size:11px;">Approve</button></form>` : ''}
+          ${p.status === 'pending' ? `<form method="POST" action="/admin/payments/${p.id}/reject" style="display:inline"><button class="btn danger" style="padding:4px 9px; font-size:11px;">Reject</button></form>` : ''}
+        </td>
+      </tr>`).join('')}
+    </table></div></div>
+  `));
+});
+
+app.post('/admin/payments/:id/:action', guard('finance'), async (req, res) => {
+  const st = req.params.action === 'approve' ? 'approved' : 'rejected';
+  await q(`UPDATE member_payments SET status=$1 WHERE id=$2`, [st, parseInt(req.params.id, 10) || 0]);
+  res.redirect('/admin/payments?ok=1');
+});
+
+app.get('/admin/suggestions', guard('support'), async (req, res) => {
+  const suggestions = await q(`SELECT * FROM anonymous_suggestions ORDER BY id DESC LIMIT 100`);
+  res.send(A(req, 'Anonymous Suggestions', suggestions.map(s => `
+    <div class="glass-card">
+      <span class="badge registered">${h(s.category)} · ${h(s.campus)}</span> · <small>${new Date(s.created_at).toLocaleString()}</small>
+      <p style="font-size:14px; margin:10px 0;">${h(s.message)}</p>
+      <form method="POST" action="/admin/suggestions/${s.id}/reply">
+        <textarea name="reply" rows="2" placeholder="Write administration response...">${h(s.reply || '')}</textarea>
+        <p style="margin-top:8px;"><button class="btn">Publish Reply</button></p>
+      </form>
+    </div>
+  `).join('') || '<div class="glass-card">No suggestions.</div>'));
+});
+
+app.post('/admin/suggestions/:id/reply', guard('support'), async (req, res) => {
+  await q(`UPDATE anonymous_suggestions SET reply=$1 WHERE id=$2`, [String(req.body.reply || '').slice(0, 2000), parseInt(req.params.id, 10) || 0]);
+  res.redirect('/admin/suggestions?ok=1');
+});
+
+app.get('/admin/attendance', guard('meetings'), async (req, res) => {
+  const sessions = await q(`SELECT * FROM attendance_sessions ORDER BY id DESC LIMIT 30`);
+  res.send(A(req, 'QR Attendance', `
+    <div class="glass-card">
+      <h3>Create Attendance Session</h3>
+      <form method="POST" action="/admin/attendance">
+        <div style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+          <div><label>Session Title</label><input name="title" required placeholder="e.g. General Assembly"></div>
+          <div><label>Campus</label>${sel('campus', campusOpts(scopeOf(req), true))}</div>
+        </div>
+        <label>Attendance Code (e.g. SM-ROB-01)</label><input name="code" required placeholder="SM-ATT-26">
+        <p style="margin-top:12px;"><button class="btn">Create Session</button></p>
+      </form>
+    </div>
+    <div class="glass-card">
+      <h4>Active Sessions</h4>
+      ${sessions.map(s => `<div class="form-section">
+        <b>${h(s.title)}</b> · Code: <b>${h(s.code)}</b> (${h(s.campus)})
+      </div>`).join('') || '<p>No sessions.</p>'}
+    </div>
+  `));
+});
+
+app.post('/admin/attendance', guard('meetings'), async (req, res) => {
+  const b = req.body;
+  if (b.title && b.code) {
+    try {
+      await q(`INSERT INTO attendance_sessions (title, campus, code) VALUES ($1,$2,$3)`,
+        [b.title.slice(0,150), b.campus||'all', b.code.trim().toUpperCase()]);
+    } catch(e) {}
+  }
+  res.redirect('/admin/attendance?ok=1');
+});
+
+
 app.get('/admin/backup', guard('backup'), async (req, res) => {
   if (!req.query.go) return res.send(A(req, 'Backup', `<div class="glass-card" style="text-align:center;padding:40px"><h3>💾 Database Backup</h3><p style="margin:12px 0">Download full JSON snapshot.</p><a class="btn" href="/admin/backup?go=1">⬇ Download Backup</a></div>`));
   const out = { exported_at: new Date().toISOString(), platform: 'Siikkoo-Mandoo MWU' };
@@ -1518,4 +2026,4 @@ app.get('/admin/backup', guard('backup'), async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v3.1 running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v5.0 running on port ${PORT}`));
