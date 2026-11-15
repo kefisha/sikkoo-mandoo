@@ -62,9 +62,7 @@ async function postToTelegram(title, body, type, isEmergency) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' })
     });
-  } catch (e) {
-    console.error('Telegram post err:', e.message);
-  }
+  } catch (e) { console.error('Telegram post err:', e.message); }
 }
 
 // ---------- PWA MANIFEST & SERVICE WORKER ----------
@@ -74,12 +72,11 @@ app.get('/manifest.json', (req, res) => {
     short_name: 'Siikkoo-Mandoo',
     start_url: '/',
     display: 'standalone',
-    background_color: '#4f6ef7',
-    theme_color: '#4f6ef7',
+    background_color: '#7c3aed',
+    theme_color: '#7c3aed',
     icons: [{
-      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%234f6ef7'/%3E%3Ctext x='50' y='67' font-size='54' text-anchor='middle'%3E🌳%3C/text%3E%3C/svg%3E",
-      sizes: '192x192',
-      type: 'image/svg+xml'
+      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%237c3aed'/%3E%3Ctext x='50' y='67' font-size='54' text-anchor='middle'%3E🌳%3C/text%3E%3C/svg%3E",
+      sizes: '192x192', type: 'image/svg+xml'
     }]
   });
 });
@@ -114,20 +111,14 @@ const ROLES = [
 ];
 
 const PERMS = {
-  central_admin: '*',
-  president: '*',
+  central_admin: '*', president: '*',
   vice_president: ['members', 'content', 'finance', 'support', 'leaders', 'meetings', 'approve', 'audit', 'polls', 'certificates'],
   general_secretary: ['members', 'content', 'meetings', 'support', 'leaders', 'polls', 'certificates'],
-  finance_secretary: ['finance'],
-  academic_secretary: ['content', 'support'],
-  social_secretary: ['content', 'support', 'meetings'],
-  communication_secretary: ['content', 'leaders', 'polls'],
-  media_secretary: ['content', 'gallery'],
-  info_secretary: ['content', 'support', 'staff', 'audit', 'backup', 'polls', 'certificates'],
-  dev_secretary: ['content', 'finance'],
-  campus_rep: ['members', 'content', 'support', 'finance', 'meetings', 'polls'],
-  campus_coordinator: ['members', 'content', 'support', 'meetings'],
-  committee_member: ['support']
+  finance_secretary: ['finance'], academic_secretary: ['content', 'support'],
+  social_secretary: ['content', 'support', 'meetings'], communication_secretary: ['content', 'leaders', 'polls'],
+  media_secretary: ['content', 'gallery'], info_secretary: ['content', 'support', 'staff', 'audit', 'backup', 'polls', 'certificates'],
+  dev_secretary: ['content', 'finance'], campus_rep: ['members', 'content', 'support', 'finance', 'meetings', 'polls'],
+  campus_coordinator: ['members', 'content', 'support', 'meetings'], committee_member: ['support']
 };
 
 const can = (req, x) => { const a = PERMS[req.session.sr]; return a === '*' || (Array.isArray(a) && a.includes(x)); };
@@ -199,48 +190,54 @@ const L = req => (['en', 'am', 'om'].includes(req.session.lang) ? req.session.la
 const tr = (req, k) => (T[L(req)] && T[L(req)][k]) || (T.en[k] || k);
 const campusName = (req, cKey) => { const c = CAMPUS[cKey]; if (!c) return cKey; return c[L(req)] || c.n; };
 
-// ---------- MODERN CSS (Matched to Reference Login Design + Dark Mode + Mobile Nav) ----------
+// ---------- MODERN CSS (v3.0 Vibrant Purple-Pink Polka-Dot Portal + 3D Tiles + Flip ID + Floating Dark Nav) ----------
 const CSS = `
 :root {
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
-  --teal: #0d9488;
+  --primary: #7c3aed;
+  --primary-dark: #6d28d9;
   --pink: #ec4899;
   --pink-soft: #fdf2f8;
-  --purple: #7c3aed;
+  --blue: #2563eb;
+  --teal: #0d9488;
   --green: #10b981;
   --orange: #f59e0b;
   --red: #ef4444;
   --text: #1e293b;
   --text-2: #475569;
   --text-muted: #64748b;
-  --border: #cbd5e1;
-  --surface: rgba(255,255,255,0.92);
+  --border: #e2e8f0;
+  --card-dash: rgba(168,85,247,0.42);
+  --surface: rgba(255,255,255,0.97);
   --surface-solid: #ffffff;
   --surface-soft: #f8fafc;
-  --radius: 22px;
-  --shadow: 0 10px 30px -8px rgba(37,99,235,0.14), 0 4px 12px -4px rgba(0,0,0,0.05);
-  --shadow-xl: 0 25px 50px -12px rgba(30,58,138,0.28);
+  --radius: 26px;
+  --shadow: 0 12px 32px -8px rgba(88,28,135,0.22), 0 4px 12px -4px rgba(0,0,0,0.06);
+  --shadow-xl: 0 24px 48px -12px rgba(76,29,149,0.34);
 }
 [data-theme="dark"] {
   --text: #f1f5f9;
   --text-2: #cbd5e1;
   --text-muted: #94a3b8;
   --border: #334155;
-  --surface: rgba(30,41,59,0.9);
+  --card-dash: rgba(192,132,252,0.38);
+  --surface: rgba(24,24,42,0.94);
   --surface-solid: #1e293b;
   --surface-soft: #0f172a;
   --pink-soft: rgba(236,72,153,0.18);
-  --shadow: 0 10px 30px -8px rgba(0,0,0,0.5);
+  --shadow: 0 12px 32px -8px rgba(0,0,0,0.55);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Vibrant Purple-to-Pink Polka-Dot Background (Matching Reference Image) */
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background:
-    radial-gradient(ellipse 90% 70% at 0% 0%, #60a5fa 0%, transparent 55%),
-    radial-gradient(ellipse 90% 70% at 100% 0%, #818cf8 0%, transparent 55%),
-    radial-gradient(ellipse 80% 70% at 100% 100%, #3b82f6 0%, transparent 55%),
-    linear-gradient(155deg, #dbeafe 0%, #eff6ff 45%, #ede9fe 100%);
+  background-color: #7c3aed;
+  background-image:
+    radial-gradient(rgba(255,255,255,0.13) 10px, transparent 11px),
+    radial-gradient(rgba(255,255,255,0.09) 10px, transparent 11px),
+    linear-gradient(155deg, #6d28d9 0%, #8b5cf6 32%, #a855f7 62%, #db2777 100%);
+  background-size: 56px 56px, 56px 56px, 100% 100%;
+  background-position: 0 0, 28px 28px, 0 0;
   background-attachment: fixed;
   color: var(--text);
   line-height: 1.6;
@@ -250,242 +247,251 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 [data-theme="dark"] body {
-  background:
-    radial-gradient(ellipse 90% 70% at 0% 0%, #1e1b4b 0%, transparent 55%),
-    radial-gradient(ellipse 90% 70% at 100% 0%, #172554 0%, transparent 55%),
-    linear-gradient(165deg, #0f172a 0%, #0b1120 100%);
+  background-color: #0f172a;
+  background-image:
+    radial-gradient(rgba(168,85,247,0.12) 9px, transparent 10px),
+    linear-gradient(160deg, #1e1b4b 0%, #2e1065 45%, #3b0764 100%);
+  background-size: 56px 56px, 100% 100%;
 }
-/* Vibrant Blue-Purple Auth Backdrop (Matching Reference Image) */
+/* Login Blue-Purple Backdrop */
 body.auth-bg {
-  background:
+  background-image:
     radial-gradient(circle at 12% 20%, rgba(192,132,252,0.55) 0%, transparent 40%),
     radial-gradient(circle at 88% 80%, rgba(56,189,248,0.45) 0%, transparent 45%),
     linear-gradient(160deg, #3b82f6 0%, #4f46e5 52%, #2563eb 100%);
-  background-attachment: fixed;
+  background-size: 100% 100%;
 }
 a { color: var(--primary); text-decoration: none; transition: 0.2s; }
-a:hover { opacity: 0.9; }
+a:hover { opacity: 0.92; }
 
 header {
   background: var(--surface);
   backdrop-filter: blur(18px);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2.5px dashed var(--card-dash);
   position: sticky; top: 0; z-index: 100;
-  padding: 11px 0;
+  padding: 10px 0;
+  box-shadow: 0 6px 20px rgba(88,28,135,0.16);
 }
-.in { max-width: 1140px; margin: 0 auto; padding: 0 16px; width: 100%; }
+.in { max-width: 1120px; margin: 0 auto; padding: 0 14px; width: 100%; }
 .header-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-.logo-area { display: flex; align-items: center; gap: 11px; }
+.logo-area { display: flex; align-items: center; gap: 10px; }
 .logo-icon {
-  width: 44px; height: 44px; border-radius: 50%;
-  background: linear-gradient(135deg, #f59e0b, #ec4899, #6366f1);
+  width: 42px; height: 42px; border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b, #ec4899, #7c3aed);
   padding: 2.5px; display: grid; place-items: center;
-  box-shadow: 0 6px 16px rgba(99,102,241,0.3);
+  box-shadow: 0 5px 14px rgba(124,58,237,0.3);
 }
-.logo-icon-inner {
-  width: 100%; height: 100%; border-radius: 50%; background: #ffffff;
-  display: grid; place-items: center; font-size: 20px;
-}
-.logo-text h1 { font-size: 14px; font-weight: 800; color: var(--text); }
+.logo-icon-inner { width: 100%; height: 100%; border-radius: 50%; background: #fff; display: grid; place-items: center; font-size: 19px; }
+.logo-text h1 { font-size: 13.5px; font-weight: 850; color: var(--text); }
 .logo-text p { font-size: 11px; color: var(--text-muted); font-weight: 600; }
-.nav-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.nav-group { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
 .lang-box { display: flex; gap: 2px; background: var(--surface-soft); padding: 3px; border-radius: 9999px; border: 1px solid var(--border); }
-.lang-btn { padding: 4px 10px; font-size: 11.5px; font-weight: 700; border-radius: 9999px; color: var(--text-muted); }
-.lang-btn.active { background: var(--surface-solid); color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.08); }
-.theme-btn { width: 34px; height: 34px; border-radius: 11px; border: 1px solid var(--border); background: var(--surface-solid); color: var(--text); cursor: pointer; display: grid; place-items: center; font-size: 15px; }
-.ext-nav { display: flex; gap: 7px; align-items: center; }
-.ext-btn { padding: 7px 13px; font-size: 12.5px; font-weight: 650; border-radius: 12px; background: var(--surface-solid); color: var(--text); border: 1px solid var(--border); }
-.ext-btn.login-btn { background: linear-gradient(90deg, #2563eb, #0d9488); color: white; border: none; }
+.lang-btn { padding: 4px 9px; font-size: 11px; font-weight: 700; border-radius: 9999px; color: var(--text-muted); }
+.lang-btn.active { background: linear-gradient(90deg, #7c3aed, #ec4899); color: #fff; }
+.theme-btn { width: 33px; height: 33px; border-radius: 11px; border: 1px solid var(--border); background: var(--surface-solid); color: var(--text); cursor: pointer; display: grid; place-items: center; font-size: 15px; }
+.ext-nav { display: flex; gap: 6px; align-items: center; }
+.ext-btn { padding: 7px 12px; font-size: 12px; font-weight: 700; border-radius: 999px; background: var(--surface-solid); color: var(--text); border: 1.5px solid var(--border); }
+.ext-btn.login-btn { background: linear-gradient(90deg, #7c3aed, #ec4899); color: #fff; border: none; }
 
-/* Reference-Style Auth Card */
-.alls-login-wrap {
-  min-height: 82vh; display: flex; align-items: center; justify-content: center; padding: 14px 4px;
+/* Crisp White Dashed-Border Portal Card (Matching Screenshot) */
+.glass-card, .card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 22px 18px;
+  margin: 14px 0;
+  box-shadow: var(--shadow);
+  border: 2.5px dashed var(--card-dash);
 }
-.alls-card {
-  width: 100%; max-width: 440px;
-  background: var(--surface-solid);
-  border-radius: 30px;
-  padding: 28px 24px 26px;
-  box-shadow: var(--shadow-xl);
-  position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.6);
+
+/* Top Pill Highlight Banner (Matching "Short Note" Pill in Screenshot) */
+.top-pill-banner {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: linear-gradient(90deg, #8b5cf6 0%, #c026d3 52%, #ec4899 100%);
+  color: #ffffff; text-align: center; font-weight: 800; font-size: 14.5px;
+  padding: 15px 22px; border-radius: 9999px; margin: 4px 0 16px;
+  border: 2.5px solid rgba(254,240,138,0.85);
+  box-shadow: 0 10px 26px rgba(124,58,237,0.38);
 }
-.alls-top-bar {
-  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-  width: 110px; height: 5px; border-radius: 0 0 8px 8px;
-  background: linear-gradient(90deg, #f472b6, #fbbf24);
+.top-pill-banner.emergency {
+  background: linear-gradient(90deg, #dc2626 0%, #ef4444 50%, #f97316 100%);
+  animation: pulseGlow 2s infinite;
 }
-.alls-logo-ring {
-  width: 84px; height: 84px; margin: 4px auto 14px; border-radius: 50%;
-  background: linear-gradient(135deg, #f59e0b 0%, #ec4899 50%, #6366f1 100%);
-  padding: 3.5px; box-shadow: 0 10px 25px rgba(236,72,153,0.25);
+@keyframes pulseGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.55); } 50% { box-shadow: 0 0 0 10px rgba(239,68,68,0); } }
+
+/* 1. Personal Welcome Hero Banner */
+.welcome-hero {
+  background: linear-gradient(125deg, #6d28d9 0%, #9333ea 50%, #ec4899 100%);
+  color: #ffffff; border-radius: 26px; padding: 20px 20px;
+  margin-bottom: 16px; display: flex; align-items: center; gap: 16px;
+  flex-wrap: wrap; border: 2px solid rgba(255,255,255,0.4);
+  box-shadow: 0 14px 32px rgba(88,28,135,0.34);
 }
-.alls-logo-core {
-  width: 100%; height: 100%; border-radius: 50%; background: #ffffff;
-  display: grid; place-items: center; font-size: 38px;
+.welcome-avatar {
+  width: 68px; height: 68px; border-radius: 50%; object-fit: cover;
+  border: 3px solid #fef08a; background: #fff; flex-shrink: 0;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.22);
 }
-.alls-title {
-  text-align: center; font-size: 1.22rem; font-weight: 850; letter-spacing: 0.2px;
-  color: var(--text); text-transform: uppercase; line-height: 1.3;
+.welcome-info h2 { font-size: 1.25rem; font-weight: 850; line-height: 1.25; }
+.welcome-info p { font-size: 12.5px; opacity: 0.92; margin-top: 3px; }
+.welcome-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 7px; }
+.w-pill { background: rgba(255,255,255,0.2); backdrop-filter: blur(6px); padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; color: #fff; }
+
+/* 2. App-Style 3D Colorful Hub Tiles (Exact Match to Screenshot!) */
+.hub-header {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 1.08rem; font-weight: 850; color: #5b21b6;
+  padding-bottom: 12px; margin-bottom: 14px;
+  border-bottom: 1.5px dashed rgba(139,92,246,0.35);
 }
-.alls-pill {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: var(--pink-soft); color: #be185d;
-  border: 1.5px solid #f9a8d4; border-radius: 9999px;
-  padding: 5px 16px; font-size: 12.5px; font-weight: 700;
-  margin: 10px auto 20px;
+[data-theme="dark"] .hub-header { color: #e9d5ff; }
+.hub-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 13px;
 }
-.alls-label {
-  display: block; font-size: 11.5px; font-weight: 800; letter-spacing: 0.6px;
-  color: var(--text-muted); text-transform: uppercase; margin: 14px 0 7px;
+.hub-tile {
+  position: relative; border-radius: 22px; padding: 16px 10px 14px;
+  text-align: center; color: #ffffff;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 7px; min-height: 124px; transition: transform 0.16s, box-shadow 0.16s;
+  border: 2px solid rgba(255,255,255,0.55);
 }
-.alls-role-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin-bottom: 16px;
+.hub-tile:hover { transform: translateY(-3px); color: #ffffff; }
+.hub-tile:active { transform: translateY(2px); }
+.hub-ico-circle {
+  width: 48px; height: 48px; border-radius: 50%; background: #ffffff;
+  display: grid; place-items: center; font-size: 24px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.14);
 }
-.alls-role-card {
-  position: relative; background: var(--surface-soft);
-  border: 1.5px solid var(--border); border-radius: 18px;
-  padding: 18px 10px; text-align: center; cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 0 rgba(148,163,184,0.35);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-  min-height: 82px;
+.hub-tile .t-main { font-size: 13.5px; font-weight: 800; line-height: 1.2; text-shadow: 0 1px 2px rgba(0,0,0,0.14); }
+.hub-tile .t-sub { font-size: 11px; font-weight: 600; opacity: 0.92; line-height: 1.1; }
+.notif-badge {
+  position: absolute; top: -6px; right: -5px;
+  background: #ef4444; color: #fff; font-size: 11px; font-weight: 850;
+  min-width: 22px; height: 22px; border-radius: 999px; padding: 0 6px;
+  display: grid; place-items: center; border: 2px solid #fff;
+  box-shadow: 0 3px 8px rgba(239,68,68,0.5);
 }
-.alls-role-card:hover { transform: translateY(-2px); }
+
+.hub-tile.purple { background: linear-gradient(155deg, #c084fc 0%, #8b5cf6 55%, #7e22ce 100%); box-shadow: 0 5px 0 #581c87; }
+.hub-tile.sky    { background: linear-gradient(155deg, #7dd3fc 0%, #38bdf8 50%, #0284c7 100%); box-shadow: 0 5px 0 #075985; }
+.hub-tile.orange { background: linear-gradient(155deg, #fdba74 0%, #fb923c 50%, #ea580c 100%); box-shadow: 0 5px 0 #9a3412; }
+.hub-tile.pink   { background: linear-gradient(155deg, #f9a8d4 0%, #f472b6 50%, #db2777 100%); box-shadow: 0 5px 0 #9d174d; }
+.hub-tile.green  { background: linear-gradient(155deg, #6ee7b7 0%, #34d399 50%, #059669 100%); box-shadow: 0 5px 0 #065f46; }
+.hub-tile.blue   { background: linear-gradient(155deg, #93c5fd 0%, #60a5fa 50%, #2563eb 100%); box-shadow: 0 5px 0 #1e40af; }
+.hub-tile.teal   { background: linear-gradient(155deg, #5eead4 0%, #14b8a6 50%, #0f766e 100%); box-shadow: 0 5px 0 #115e59; }
+.hub-tile.yellow { background: linear-gradient(155deg, #fde047 0%, #f59e0b 55%, #d97706 100%); box-shadow: 0 5px 0 #92400e; }
+.hub-tile.indigo { background: linear-gradient(155deg, #a5b4fc 0%, #6366f1 55%, #4338ca 100%); box-shadow: 0 5px 0 #312e81; }
+.hub-tile.red    { background: linear-gradient(155deg, #fca5a5 0%, #ef4444 55%, #dc2626 100%); box-shadow: 0 5px 0 #991b1b; }
+.hub-tile.gray   { background: linear-gradient(155deg, #94a3b8 0%, #64748b 55%, #334155 100%); box-shadow: 0 5px 0 #1e293b; }
+
+/* 3. 3D Flip Digital ID Card (Front & Back) */
+.flip-wrap { perspective: 1100px; max-width: 430px; margin: 14px auto; cursor: pointer; }
+.flip-inner {
+  position: relative; width: 100%; min-height: 248px;
+  transition: transform 0.65s cubic-bezier(0.4, 0.2, 0.2, 1);
+  transform-style: preserve-3d;
+}
+.flip-wrap.flipped .flip-inner { transform: rotateY(180deg); }
+.flip-face {
+  position: relative; width: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  border-radius: 22px; background: #ffffff; color: #1e293b;
+  box-shadow: var(--shadow-xl); overflow: hidden; border: 2px solid rgba(139,92,246,0.35);
+}
+.flip-back {
+  position: absolute; top: 0; left: 0; height: 100%;
+  transform: rotateY(180deg);
+  display: flex; flex-direction: column; justify-content: space-between;
+  background: linear-gradient(150deg, #ffffff 0%, #faf5ff 55%, #fdf2f8 100%);
+}
+.id-hd {
+  background: linear-gradient(90deg, #6d28d9 0%, #ec4899 100%);
+  color: #fff; padding: 13px 16px; font-weight: 800; font-size: 12.5px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.id-bd { display: flex; gap: 14px; padding: 16px; align-items: center; position: relative; }
+.id-bd img { width: 88px; height: 110px; border-radius: 13px; object-fit: cover; border: 2.5px solid #c084fc; }
+.id-seal { position: absolute; right: 12px; bottom: 6px; opacity: 0.22; pointer-events: none; }
+
+/* 4. Next Event Countdown Card */
+.event-highlight {
+  background: linear-gradient(135deg, #fff7ed 0%, #fdf2f8 100%);
+  border: 2px dashed #fb923c; border-radius: 20px; padding: 16px;
+  margin-top: 14px; display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 12px;
+}
+[data-theme="dark"] .event-highlight { background: rgba(234,88,12,0.14); }
+
+/* Floating Dark Pill Bottom Nav (Exact Match to Screenshot!) */
+.floating-nav-wrap {
+  position: fixed; bottom: 10px; left: 0; right: 0; z-index: 999;
+  display: flex; justify-content: center; pointer-events: none; padding: 0 12px;
+}
+.floating-nav {
+  pointer-events: auto; width: 100%; max-width: 520px;
+  background: #181c2e; border-radius: 9999px;
+  padding: 6px 10px; display: flex; justify-content: space-around; align-items: center;
+  box-shadow: 0 14px 32px rgba(15,23,42,0.52); border: 1.5px solid rgba(255,255,255,0.12);
+}
+.floating-nav a {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; color: #cbd5e1; font-size: 10.5px; font-weight: 700;
+  padding: 6px 12px; border-radius: 999px; transition: 0.2s; min-width: 56px;
+}
+.floating-nav a .ico { font-size: 17px; line-height: 1; }
+.floating-nav a.active {
+  background: linear-gradient(135deg, #60a5fa 0%, #a855f7 55%, #ec4899 100%);
+  color: #ffffff; box-shadow: 0 4px 14px rgba(168,85,247,0.55);
+}
+
+/* ALLS Login Card Styles */
+.alls-login-wrap { min-height: 84vh; display: flex; align-items: center; justify-content: center; padding: 14px 4px; }
+.alls-card { width: 100%; max-width: 440px; background: var(--surface-solid); border-radius: 30px; padding: 28px 24px 26px; box-shadow: var(--shadow-xl); position: relative; overflow: hidden; }
+.alls-top-bar { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 110px; height: 5px; border-radius: 0 0 8px 8px; background: linear-gradient(90deg, #f472b6, #fbbf24); }
+.alls-logo-ring { width: 84px; height: 84px; margin: 4px auto 14px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b 0%, #ec4899 50%, #6366f1 100%); padding: 3.5px; box-shadow: 0 10px 25px rgba(236,72,153,0.25); }
+.alls-logo-core { width: 100%; height: 100%; border-radius: 50%; background: #ffffff; display: grid; place-items: center; font-size: 38px; }
+.alls-title { text-align: center; font-size: 1.2rem; font-weight: 850; color: var(--text); text-transform: uppercase; line-height: 1.3; }
+.alls-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--pink-soft); color: #be185d; border: 1.5px solid #f9a8d4; border-radius: 9999px; padding: 5px 16px; font-size: 12.5px; font-weight: 700; margin: 10px auto 20px; }
+.alls-label { display: block; font-size: 11.5px; font-weight: 800; letter-spacing: 0.6px; color: var(--text-muted); text-transform: uppercase; margin: 14px 0 7px; }
+.alls-role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin-bottom: 16px; }
+.alls-role-card { position: relative; background: var(--surface-soft); border: 1.5px solid var(--border); border-radius: 18px; padding: 17px 10px; text-align: center; cursor: pointer; box-shadow: 0 4px 0 rgba(148,163,184,0.35); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-height: 80px; }
 .alls-role-card .r-ico { font-size: 22px; }
 .alls-role-card .r-txt { font-size: 13.5px; font-weight: 750; color: var(--text); }
-.alls-role-card .r-check {
-  display: none; position: absolute; top: 8px; right: 8px;
-  width: 22px; height: 22px; border-radius: 50%;
-  background: linear-gradient(135deg, #f472b6, #db2777);
-  color: white; font-size: 12px; font-weight: 800;
-  place-items: center; box-shadow: 0 3px 8px rgba(219,39,119,0.4);
-}
-.alls-role-card.active {
-  background: linear-gradient(180deg, #fff1f2 0%, #fce7f3 100%);
-  border: 2px solid #ec4899;
-  box-shadow: 0 4px 0 #f472b6;
-}
-[data-theme="dark"] .alls-role-card.active {
-  background: rgba(236,72,153,0.22);
-}
+.alls-role-card .r-check { display: none; position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #f472b6, #db2777); color: white; font-size: 12px; font-weight: 800; place-items: center; }
+.alls-role-card.active { background: linear-gradient(180deg, #fff1f2 0%, #fce7f3 100%); border: 2px solid #ec4899; box-shadow: 0 4px 0 #f472b6; }
+[data-theme="dark"] .alls-role-card.active { background: rgba(236,72,153,0.22); }
 .alls-role-card.active .r-check { display: grid; }
-
 .input-ico-wrap { position: relative; }
-.input-ico-wrap .ico {
-  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-  font-size: 16px; pointer-events: none;
-}
-.input-ico-wrap input {
-  padding-left: 42px; height: 48px; border-radius: 14px;
-  border: 1.5px solid var(--border); background: var(--surface-solid);
-  font-size: 14.5px; width: 100%; color: var(--text);
-}
-.input-ico-wrap input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
+.input-ico-wrap .ico { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; pointer-events: none; }
+.input-ico-wrap input { padding-left: 42px; height: 48px; border-radius: 14px; border: 1.5px solid var(--border); background: var(--surface-solid); font-size: 14.5px; width: 100%; color: var(--text); }
+.btn-alls-primary { width: 100%; border: none; border-radius: 16px; padding: 14px; background: linear-gradient(90deg, #2563eb 0%, #0d9488 100%); color: #fff; font-size: 15px; font-weight: 750; cursor: pointer; box-shadow: 0 5px 0 #4f46e5; margin-top: 18px; }
+.btn-alls-green { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; border: none; border-radius: 9999px; padding: 13px; background: linear-gradient(90deg, #34d399 0%, #10b981 100%); color: #fff; font-size: 14.5px; font-weight: 750; cursor: pointer; box-shadow: 0 5px 0 #059669; margin-top: 14px; }
+.btn-alls-forgot { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; border: none; border-radius: 14px; padding: 12px; background: linear-gradient(90deg, #2563eb 0%, #0d9488 100%); color: #fef08a; font-size: 14px; font-weight: 750; margin-top: 13px; }
 
-/* 3D Gradient Buttons matching screenshot */
-.btn-alls-primary {
-  width: 100%; border: none; border-radius: 16px; padding: 14px;
-  background: linear-gradient(90deg, #2563eb 0%, #0d9488 100%);
-  color: #ffffff; font-size: 15px; font-weight: 750; cursor: pointer;
-  box-shadow: 0 5px 0 #4f46e5, 0 10px 20px rgba(37,99,235,0.28);
-  transition: transform 0.15s, box-shadow 0.15s; margin-top: 18px;
-}
-.btn-alls-primary:hover { transform: translateY(-1px); }
-.btn-alls-primary:active { transform: translateY(2px); box-shadow: 0 2px 0 #4f46e5; }
-
-.btn-alls-green {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: 100%; border: none; border-radius: 9999px; padding: 13px;
-  background: linear-gradient(90deg, #34d399 0%, #10b981 100%);
-  color: #ffffff; font-size: 14.5px; font-weight: 750; cursor: pointer;
-  box-shadow: 0 5px 0 #059669, 0 8px 18px rgba(16,185,129,0.25);
-  margin-top: 14px;
-}
-.btn-alls-green:hover { color: #ffffff; transform: translateY(-1px); }
-
-.btn-alls-forgot {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: 100%; border: none; border-radius: 14px; padding: 12px;
-  background: linear-gradient(90deg, #2563eb 0%, #0d9488 100%);
-  color: #fef08a; font-size: 14px; font-weight: 750; cursor: pointer;
-  margin-top: 13px;
-}
-.btn-alls-forgot:hover { color: #ffffff; }
-
-/* General Components */
-.glass-card, .card {
-  background: var(--surface); backdrop-filter: blur(14px);
-  border-radius: var(--radius); padding: 22px 20px; margin: 14px 0;
-  box-shadow: var(--shadow); border: 1px solid var(--border);
-}
-label { display: block; font-weight: 650; font-size: 12px; margin: 12px 0 5px; color: var(--text-2); }
-input, select, textarea {
-  width: 100%; padding: 11px 14px; background: var(--surface-solid);
-  border: 1.5px solid var(--border); border-radius: 13px;
-  font: inherit; color: var(--text); font-size: 14px;
-}
-input:focus, select:focus, textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+/* Standard Controls */
+label { display: block; font-weight: 650; font-size: 12px; margin: 11px 0 5px; color: var(--text-2); }
+input, select, textarea { width: 100%; padding: 11px 14px; background: var(--surface-solid); border: 1.5px solid var(--border); border-radius: 13px; font: inherit; color: var(--text); font-size: 14px; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139,92,246,0.16); }
 textarea { resize: vertical; min-height: 80px; }
 
-.btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-  background: linear-gradient(90deg, #2563eb, #0d9488);
-  color: #fff; border: 0; border-radius: 14px; padding: 11px 18px;
-  font-weight: 650; cursor: pointer; font-size: 13.5px;
-  box-shadow: 0 4px 14px rgba(37,99,235,0.25); transition: 0.2s;
-}
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; background: linear-gradient(90deg, #7c3aed, #ec4899); color: #fff; border: 0; border-radius: 999px; padding: 11px 20px; font-weight: 700; cursor: pointer; font-size: 13.5px; box-shadow: 0 4px 0 rgba(109,40,217,0.45); transition: 0.15s; }
 .btn:hover { transform: translateY(-1px); color: #fff; }
-.btn.secondary { background: var(--surface-solid); border: 1.5px solid var(--border); color: var(--text); box-shadow: none; }
-.btn.danger { background: linear-gradient(135deg, #f87171, #ef4444); }
-.btn.g { background: linear-gradient(135deg, #34d399, #10b981); }
-.btn.excel { background: linear-gradient(135deg, #059669, #047857); }
-.btn.edit-btn { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+.btn.secondary { background: var(--surface-solid); border: 1.5px solid var(--border); color: var(--text); box-shadow: 0 3px 0 var(--border); }
+.btn.danger { background: linear-gradient(135deg, #f87171, #ef4444); box-shadow: 0 4px 0 #b91c1c; }
+.btn.g, .btn.excel { background: linear-gradient(90deg, #34d399, #10b981); box-shadow: 0 4px 0 #047857; }
+.btn.edit-btn { background: linear-gradient(135deg, #6366f1, #4f46e5); box-shadow: 0 3px 0 #3730a3; }
 
-.portal-menu {
-  background: var(--surface); border-radius: 18px; padding: 10px;
-  display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 16px;
-  border: 1px solid var(--border); box-shadow: var(--shadow);
-}
-.portal-btn {
-  background: var(--surface-solid); color: var(--text-2); border-radius: 12px;
-  padding: 8px 13px; font-size: 12.5px; font-weight: 650;
-  display: inline-flex; align-items: center; gap: 5px;
-  border: 1.5px solid var(--border);
-}
-.portal-btn.active { background: linear-gradient(90deg, #2563eb, #0d9488); color: white; border-color: transparent; }
+.portal-menu { background: var(--surface); border-radius: 20px; padding: 9px; display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; border: 2px dashed var(--card-dash); }
+.portal-btn { background: var(--surface-soft); color: var(--text-2); border-radius: 999px; padding: 7px 13px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--border); }
+.portal-btn.active { background: linear-gradient(90deg, #7c3aed, #ec4899); color: #fff; border-color: transparent; }
 
-.search-bar { display: flex; gap: 8px; margin-bottom: 14px; background: var(--surface); padding: 7px; border-radius: 15px; border: 1px solid var(--border); }
-.search-bar input { border: none; background: transparent; padding: 6px 10px; }
-
-.feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 13px; margin: 14px 0 20px; }
-.feature-tile {
-  border-radius: 20px; padding: 20px 14px; text-align: center; color: white;
-  font-weight: 700; font-size: 13.5px; box-shadow: 0 10px 22px -8px rgba(0,0,0,0.2);
-  display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 105px; justify-content: center;
-}
-.feature-tile:hover { transform: translateY(-3px); color: white; }
-.feature-tile .icon { font-size: 26px; }
-.feature-tile.blue { background: linear-gradient(145deg, #60a5fa, #2563eb); }
-.feature-tile.purple { background: linear-gradient(145deg, #a78bfa, #7c3aed); }
-.feature-tile.cyan { background: linear-gradient(145deg, #22d3ee, #0891b2); }
-.feature-tile.red { background: linear-gradient(145deg, #f87171, #dc2626); }
-.feature-tile.yellow { background: linear-gradient(145deg, #fbbf24, #d97706); }
-.feature-tile.indigo { background: linear-gradient(145deg, #818cf8, #4f46e5); }
-.feature-tile.orange { background: linear-gradient(145deg, #fb923c, #ea580c); }
-.feature-tile.teal { background: linear-gradient(145deg, #2dd4bf, #0d9488); }
-.feature-tile.green { background: linear-gradient(145deg, #34d399, #059669); }
-.feature-tile.brown { background: linear-gradient(145deg, #a16207, #713f12); }
-.feature-tile.gray { background: linear-gradient(145deg, #64748b, #334155); }
-.feature-tile.pink { background: linear-gradient(145deg, #f472b6, #db2777); }
+.search-bar { display: flex; gap: 8px; margin-bottom: 14px; background: var(--surface); padding: 6px 8px; border-radius: 999px; border: 2px dashed var(--card-dash); }
+.search-bar input { border: none; background: transparent; padding: 6px 12px; }
 
 table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
-th, td { padding: 11px 12px; border-bottom: 1px solid var(--border); text-align: left; }
-th { background: var(--surface-soft); font-weight: 700; color: var(--primary); font-size: 11px; text-transform: uppercase; }
+th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+th { background: var(--surface-soft); font-weight: 750; color: var(--primary); font-size: 11px; text-transform: uppercase; }
 .tw { overflow-x: auto; background: var(--surface-solid); border-radius: 16px; border: 1px solid var(--border); }
 
-.badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; }
+.badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 9999px; font-size: 11px; font-weight: 750; }
 .badge.official { background: #d1fae5; color: #047857; }
 .badge.pending { background: #fef3c7; color: #b45309; }
 .badge.rejected { background: #fee2e2; color: #b91c1c; }
@@ -494,55 +500,38 @@ th { background: var(--surface-soft); font-weight: 700; color: var(--primary); f
 .err { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 11px 14px; border-radius: 12px; margin: 10px 0; font-size: 13.5px; font-weight: 600; }
 .msgok { background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; padding: 11px 14px; border-radius: 12px; margin: 10px 0; font-size: 13.5px; font-weight: 600; }
 
-/* Digital ID Card */
-.id { border-radius: 22px; max-width: 430px; margin: 18px auto; background: #ffffff; color: #1e293b; box-shadow: var(--shadow-xl); overflow: hidden; border: 1px solid #e2e8f0; position: relative; }
-.id .hd { background: linear-gradient(90deg, #2563eb 0%, #0d9488 100%); color: #fff; padding: 14px 18px; font-weight: 700; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
-.id .bd { display: flex; gap: 14px; padding: 18px; align-items: center; position: relative; }
-.id img { width: 90px; height: 112px; border-radius: 12px; object-fit: cover; border: 2px solid #e2e8f0; }
-.id-seal { position: absolute; right: 14px; bottom: 8px; opacity: 0.22; pointer-events: none; }
+.cert-box { max-width: 720px; margin: 18px auto; background: linear-gradient(135deg, #fffbeb 0%, #ffffff 50%, #fdf2f8 100%); color: #1e293b; border: 10px double #d97706; border-radius: 18px; padding: 34px 28px; text-align: center; box-shadow: var(--shadow-xl); }
+.cert-box h2 { font-size: 1.65rem; color: #5b21b6; text-transform: uppercase; margin: 10px 0 4px; }
+.cert-name { font-size: 1.8rem; font-weight: 850; color: #b45309; margin: 12px 0; border-bottom: 2px solid #fcd34d; display: inline-block; padding: 0 22px 4px; }
 
-/* Certificate Card */
-.cert-box {
-  max-width: 720px; margin: 18px auto; background: linear-gradient(135deg, #fffbeb 0%, #ffffff 50%, #eff6ff 100%);
-  color: #1e293b; border: 10px double #d97706; border-radius: 18px; padding: 34px 28px;
-  text-align: center; position: relative; box-shadow: var(--shadow-xl);
-}
-.cert-box h2 { font-size: 1.7rem; color: #1e3a8a; letter-spacing: 1px; text-transform: uppercase; margin: 10px 0 4px; }
-.cert-name { font-size: 1.85rem; font-weight: 850; color: #b45309; margin: 14px 0; border-bottom: 2px solid #fcd34d; display: inline-block; padding: 0 24px 4px; }
-
-/* Poll Progress Bar */
 .poll-bar-bg { background: var(--surface-soft); border: 1px solid var(--border); border-radius: 999px; height: 12px; overflow: hidden; margin-top: 5px; }
-.poll-bar-fill { background: linear-gradient(90deg, #2563eb, #10b981); height: 100%; border-radius: 999px; transition: width 0.5s; }
+.poll-bar-fill { background: linear-gradient(90deg, #7c3aed, #ec4899); height: 100%; border-radius: 999px; }
 
-.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 13px; margin-bottom: 16px; }
-.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 18px 12px; text-align: center; box-shadow: var(--shadow); }
-.stat-card .num { font-size: 2rem; font-weight: 800; line-height: 1.1; margin-bottom: 4px; }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.stat-card { background: var(--surface); border: 2px dashed var(--card-dash); border-radius: 20px; padding: 16px 10px; text-align: center; box-shadow: var(--shadow); }
+.stat-card .num { font-size: 1.9rem; font-weight: 850; line-height: 1.1; margin-bottom: 4px; }
 .stat-card .label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
-.stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(115px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 14px; }
 .stat-chip { background: var(--surface-solid); border-radius: 14px; padding: 12px 10px; text-align: center; border: 1px solid var(--border); }
-.stat-chip b { display: block; font-size: 1.3rem; font-weight: 800; color: var(--primary); }
+.stat-chip b { display: block; font-size: 1.25rem; font-weight: 800; color: var(--primary); }
 .stat-chip span { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+.form-section { background: var(--surface-soft); border: 1.5px dashed var(--card-dash); border-radius: 16px; padding: 15px 14px 12px; margin: 12px 0; }
+.form-section h4 { font-size: 13px; font-weight: 800; color: var(--primary); margin: 0 0 8px; }
 
-.admin-hero { background: linear-gradient(90deg, #2563eb 0%, #7c3aed 55%, #0d9488 100%); color: white; border-radius: 20px; padding: 24px 20px; margin-bottom: 16px; text-align: center; }
-.form-section { background: var(--surface-soft); border: 1px solid var(--border); border-radius: 16px; padding: 16px 15px 12px; margin: 14px 0; }
-.form-section h4 { font-size: 13px; font-weight: 750; color: var(--primary); margin: 0 0 8px; }
-
-.toast { position: fixed; top: 18px; right: 18px; z-index: 9999; background: #10b981; color: white; padding: 12px 18px; border-radius: 13px; font-weight: 650; font-size: 13.5px; box-shadow: 0 12px 28px rgba(0,0,0,0.2); animation: slideIn 0.3s ease, fadeOut 0.4s ease 3s forwards; }
+.toast { position: fixed; top: 18px; right: 18px; z-index: 9999; background: #10b981; color: white; padding: 12px 18px; border-radius: 14px; font-weight: 700; font-size: 13.5px; box-shadow: 0 12px 28px rgba(0,0,0,0.25); animation: slideIn 0.3s ease, fadeOut 0.4s ease 3s forwards; }
 @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes fadeOut { to { transform: translateY(-20px); opacity: 0; pointer-events: none; } }
 
-.mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 999; background: var(--surface); backdrop-filter: blur(18px); border-top: 1px solid var(--border); padding: 7px 4px; justify-content: space-around; align-items: center; }
-.mobile-nav a { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10.5px; font-weight: 700; color: var(--text-muted); padding: 4px 8px; border-radius: 10px; }
-.mobile-nav a.active { color: var(--primary); background: rgba(37,99,235,0.1); }
-.mobile-nav span.ico { font-size: 18px; }
-
 main { flex: 1; display: flex; flex-direction: column; }
-footer { text-align: center; padding: 20px 16px; color: var(--text-muted); font-size: 12px; margin-top: auto; border-top: 1px solid var(--border); background: var(--surface); }
+footer { text-align: center; padding: 18px 16px 88px; color: rgba(255,255,255,0.88); font-size: 12px; margin-top: auto; }
+footer a { color: #fef08a; font-weight: 700; }
 
-@media (max-width: 680px) {
-  .feature-grid { grid-template-columns: repeat(2, 1fr); gap: 11px; }
-  .mobile-nav { display: flex; }
-  body.has-mnav { padding-bottom: 68px; }
+@media (max-width: 560px) {
+  .hub-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .hub-tile { padding: 13px 6px 11px; min-height: 110px; border-radius: 18px; }
+  .hub-ico-circle { width: 42px; height: 42px; font-size: 20px; }
+  .hub-tile .t-main { font-size: 11.8px; }
+  .hub-tile .t-sub { font-size: 9.8px; }
 }
 `;
 
@@ -598,9 +587,9 @@ function page(req, title, body, opts = {}) {
   `;
 
   let extNav = '';
-  if (isMember) extNav = `<div class="ext-nav"><a class="ext-btn" href="/student-dashboard">🪪 Portal</a><a class="ext-btn login-btn" href="/logout">${h(tr(req, 'logout'))}</a></div>`;
+  if (isMember) extNav = `<div class="ext-nav"><a class="ext-btn" href="/student-dashboard">🏠 Hub</a><a class="ext-btn login-btn" href="/logout">${h(tr(req, 'logout'))}</a></div>`;
   else if (isStaff) extNav = `<div class="ext-nav"><a class="ext-btn" href="/admin">⚙️ Admin</a><a class="ext-btn login-btn" href="/logout">${h(tr(req, 'logout'))}</a></div>`;
-  else extNav = `<div class="ext-nav"><a class="ext-btn" href="/about">${h(tr(req, 'about'))}</a><a class="ext-btn" href="/campuses">${h(tr(req, 'campuses'))}</a><a class="ext-btn login-btn" href="/login">${h(tr(req, 'login'))}</a></div>`;
+  else extNav = `<div class="ext-nav"><a class="ext-btn" href="/about">${h(tr(req, 'about'))}</a><a class="ext-btn login-btn" href="/login">${h(tr(req, 'login'))}</a></div>`;
 
   let toast = '';
   if (req.query.ok) toast = `<div class="toast">✅ Action completed successfully!</div>`;
@@ -608,31 +597,43 @@ function page(req, title, body, opts = {}) {
   else if (req.query.rsvp) toast = `<div class="toast">🎉 RSVP confirmed!</div>`;
   else if (req.query.voted) toast = `<div class="toast">🗳️ Your vote has been recorded!</div>`;
 
-  const mobileNav = isMember ? `
-    <nav class="mobile-nav">
-      <a href="/student-dashboard" class="${req.path === '/student-dashboard' ? 'active' : ''}"><span class="ico">🪪</span>ID Card</a>
-      <a href="/portal/announcements" class="${req.path.includes('announcements') ? 'active' : ''}"><span class="ico">📢</span>News</a>
-      <a href="/portal/polls" class="${req.path.includes('polls') ? 'active' : ''}"><span class="ico">🗳️</span>Polls</a>
-      <a href="/portal/forum" class="${req.path.includes('forum') ? 'active' : ''}"><span class="ico">💬</span>Forum</a>
-      <a href="/portal/profile" class="${req.path.includes('profile') ? 'active' : ''}"><span class="ico">⚙️</span>Profile</a>
-    </nav>
-  ` : '';
-
-  const bodyCls = [isMember ? 'has-mnav' : '', opts.authBg ? 'auth-bg' : ''].filter(Boolean).join(' ');
+  // Floating Dark Pill Bottom Nav (Matching Reference Screenshot)
+  let floatingNav = '';
+  if (isMember) {
+    floatingNav = `
+      <div class="floating-nav-wrap"><nav class="floating-nav">
+        <a href="/student-dashboard" class="${req.path === '/student-dashboard' ? 'active' : ''}"><span class="ico">🏠</span>Home</a>
+        <a href="/portal/announcements" class="${req.path.includes('announcements') ? 'active' : ''}"><span class="ico">📢</span>News</a>
+        <a href="/portal/polls" class="${req.path.includes('polls') ? 'active' : ''}"><span class="ico">🗳️</span>Polls</a>
+        <a href="/portal/events" class="${req.path.includes('events') ? 'active' : ''}"><span class="ico">📅</span>Events</a>
+        <a href="/portal/profile" class="${req.path.includes('profile') ? 'active' : ''}"><span class="ico">🪪</span>My Profile</a>
+      </nav></div>
+    `;
+  } else if (isStaff) {
+    floatingNav = `
+      <div class="floating-nav-wrap"><nav class="floating-nav">
+        <a href="/admin" class="${req.path === '/admin' ? 'active' : ''}"><span class="ico">📊</span>Home</a>
+        <a href="/admin/members" class="${req.path.includes('/admin/members') ? 'active' : ''}"><span class="ico">👥</span>Members</a>
+        <a href="/admin/content/announcement" class="${req.path.includes('/admin/content') ? 'active' : ''}"><span class="ico">📢</span>Posts</a>
+        <a href="/admin/polls" class="${req.path.includes('/admin/polls') ? 'active' : ''}"><span class="ico">🗳️</span>Polls</a>
+        <a href="/admin/finance" class="${req.path.includes('/admin/finance') ? 'active' : ''}"><span class="ico">💰</span>Finance</a>
+      </nav></div>
+    `;
+  }
 
   return `<!DOCTYPE html>
 <html lang="${l}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#2563eb">
+  <meta name="theme-color" content="#7c3aed">
   <link rel="manifest" href="/manifest.json">
   <title>${h(title)} · ${h(tr(req, 'site'))}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>${CSS}</style>
 </head>
-<body class="${bodyCls}">
+<body class="${opts.authBg ? 'auth-bg' : ''}">
 ${toast}
 ${opts.hideHeader ? '' : `
 <header>
@@ -650,7 +651,7 @@ ${opts.hideHeader ? '' : `
   </div>
 </header>`}
 <main>
-  <div class="in" style="padding-top: 18px; padding-bottom: 36px; width: 100%;">${body}</div>
+  <div class="in" style="padding-top: 16px; padding-bottom: 24px; width: 100%;">${body}</div>
 </main>
 ${opts.hideFooter ? '' : `
 <footer>
@@ -662,23 +663,23 @@ ${opts.hideFooter ? '' : `
     </p>
   </div>
 </footer>`}
-${mobileNav}
+${floatingNav}
 ${CLIENT_JS}
 </body>
 </html>`;
 }
 
+// Compact Sub-page Nav (keeps sub-pages clean while Home uses the 3D Hub Grid)
 function portalMenu(activePath) {
   const items = [
-    { p: '/student-dashboard', i: '🪪', t: 'ID Card' },
+    { p: '/student-dashboard', i: '🏠', t: 'Hub' },
     { p: '/portal/announcements', i: '📢', t: 'Announcements' },
-    { p: '/portal/news', i: '📰', t: 'News' },
     { p: '/portal/events', i: '📅', t: 'Events' },
-    { p: '/portal/polls', i: '🗳️', t: 'Elections & Polls' },
+    { p: '/portal/polls', i: '🗳️', t: 'Polls' },
     { p: '/portal/certificates', i: '🏅', t: 'Certificates' },
     { p: '/portal/forum', i: '💡', t: 'Q&A Forum' },
-    { p: '/portal/meetings', i: '🤝', t: 'Meetings' },
     { p: '/portal/education', i: '📚', t: 'Education' },
+    { p: '/portal/meetings', i: '🤝', t: 'Meetings' },
     { p: '/portal/leadership', i: '👥', t: 'Leadership' },
     { p: '/portal/finance', i: '💰', t: 'Finance' },
     { p: '/portal/support', i: '💬', t: 'Support' },
@@ -687,7 +688,7 @@ function portalMenu(activePath) {
   return `
     <form class="search-bar" method="GET" action="/portal/search">
       <input name="q" placeholder="🔍 Search announcements, events, education, forum..." required>
-      <button class="btn" style="padding:7px 15px; border-radius:11px;">Search</button>
+      <button class="btn" style="padding:7px 16px;">Search</button>
     </form>
     <div class="portal-menu">
       ${items.map(x => `<a href="${x.p}" class="portal-btn${activePath === x.p ? ' active' : ''}">${x.i} ${x.t}</a>`).join('')}
@@ -706,15 +707,15 @@ function postCard(req, p, extraHtml = '') {
   const isEmergency = p.is_emergency ? `<span class="badge alert" style="margin-left:8px">🚨 EMERGENCY</span>` : '';
   const dtRaw = p.event_date || p.created_at;
   const ethDt = toEthiopianDate(dtRaw, L(req));
-  return `<div class="glass-card" style="margin-bottom:15px; border-left: 4px solid ${p.is_emergency ? '#ef4444' : '#2563eb'}">
+  return `<div class="glass-card" style="margin-bottom:14px; border-left: 5px solid ${p.is_emergency ? '#ef4444' : '#7c3aed'}">
     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-      <small style="color:var(--text-muted);font-weight:600;font-size:12px">${h(p.campus === 'all' ? 'All Campuses' : campusName(req, p.campus))} · ${h(p.event_date || new Date(p.created_at).toLocaleDateString())} ${ethDt ? `(${h(ethDt)})` : ''}</small>
+      <small style="color:var(--text-muted);font-weight:700;font-size:11.5px">${h(p.campus === 'all' ? 'All Campuses' : campusName(req, p.campus))} · ${h(p.event_date || new Date(p.created_at).toLocaleDateString())} ${ethDt ? `(${h(ethDt)})` : ''}</small>
       <div>${isEmergency}</div>
     </div>
-    <h3 style="margin:7px 0 9px; font-size:1.12rem; font-weight:750">${h(postT(req, p, 'title'))}</h3>
-    ${p.image_id ? `<img style="width:100%;max-height:330px;object-fit:cover;border-radius:12px;margin-bottom:10px" src="/photo/${p.image_id}" alt="">` : ''}
+    <h3 style="margin:7px 0 8px; font-size:1.1rem; font-weight:800">${h(postT(req, p, 'title'))}</h3>
+    ${p.image_id ? `<img style="width:100%;max-height:330px;object-fit:cover;border-radius:14px;margin-bottom:10px" src="/photo/${p.image_id}" alt="">` : ''}
     <div style="color:var(--text-2);font-size:14px;line-height:1.65">${h(postT(req, p, 'body')).replace(/\n/g, '<br>')}</div>
-    ${p.file_id ? `<p style="margin-top:12px"><a class="btn secondary" style="padding:6px 13px;font-size:12px" href="/photo/${p.file_id}?dl=1">📥 Download Attachment</a></p>` : ''}
+    ${p.file_id ? `<p style="margin-top:12px"><a class="btn secondary" style="padding:6px 14px;font-size:12px" href="/photo/${p.file_id}?dl=1">📥 Download Attachment</a></p>` : ''}
     ${extraHtml}
   </div>`;
 }
@@ -774,7 +775,7 @@ app.get('/lang/:l', (req, res) => {
   res.redirect(req.get('referer') || '/');
 });
 
-// ---------- REFERENCE-STYLE UNIFIED LOGIN PAGE (Matches Uploaded Screenshot!) ----------
+// ---------- UNIFIED ALLS-STYLE LOGIN ----------
 function renderAllsLogin(req) {
   const err = req.query.e ? `<div class="err">Invalid ID / Username or Password. Please try again.</div>` : '';
   return page(req, tr(req, 'login'), `
@@ -783,63 +784,28 @@ function renderAllsLogin(req) {
         <div class="alls-top-bar"></div>
         <div class="alls-logo-ring"><div class="alls-logo-core">🌳</div></div>
         <h2 class="alls-title">${h(tr(req, 'site'))}</h2>
-        <div style="text-align:center;">
-          <span class="alls-pill">✦ Official Digital Portal</span>
-        </div>
-
+        <div style="text-align:center;"><span class="alls-pill">✦ Official Digital Portal</span></div>
         ${err}
-
         <form method="POST" action="/login">
           <input type="hidden" name="login_role" id="loginRoleInput" value="student">
-
           <span class="alls-label">CHOOSE YOUR ROLE</span>
           <div class="alls-role-grid">
-            <div class="alls-role-card active" onclick="pickRole(this,'student')">
-              <span class="r-check">✓</span>
-              <span class="r-ico">🎓</span>
-              <span class="r-txt">Student</span>
-            </div>
-            <div class="alls-role-card" onclick="pickRole(this,'campus_rep')">
-              <span class="r-check">✓</span>
-              <span class="r-ico">🏛️</span>
-              <span class="r-txt">Campus Rep</span>
-            </div>
-            <div class="alls-role-card" onclick="pickRole(this,'committee')">
-              <span class="r-check">✓</span>
-              <span class="r-ico">👥</span>
-              <span class="r-txt">Committee</span>
-            </div>
-            <div class="alls-role-card" onclick="pickRole(this,'admin')">
-              <span class="r-check">✓</span>
-              <span class="r-ico">🛡️</span>
-              <span class="r-txt">Admin</span>
-            </div>
+            <div class="alls-role-card active" onclick="pickRole(this,'student')"><span class="r-check">✓</span><span class="r-ico">🎓</span><span class="r-txt">Student</span></div>
+            <div class="alls-role-card" onclick="pickRole(this,'campus_rep')"><span class="r-check">✓</span><span class="r-ico">🏛️</span><span class="r-txt">Campus Rep</span></div>
+            <div class="alls-role-card" onclick="pickRole(this,'committee')"><span class="r-check">✓</span><span class="r-ico">👥</span><span class="r-txt">Committee</span></div>
+            <div class="alls-role-card" onclick="pickRole(this,'admin')"><span class="r-check">✓</span><span class="r-ico">🛡️</span><span class="r-txt">Admin</span></div>
           </div>
-
           <span class="alls-label">ID / USERNAME</span>
-          <div class="input-ico-wrap">
-            <span class="ico">🪪</span>
-            <input name="u" id="loginUserInput" required placeholder="SM-ROB-2026-0001 or Student ID" autocomplete="username">
-          </div>
-
+          <div class="input-ico-wrap"><span class="ico">🪪</span><input name="u" id="loginUserInput" required placeholder="SM-ROB-2026-0001 or Student ID" autocomplete="username"></div>
           <span class="alls-label">PASSWORD / PIN</span>
-          <div class="input-ico-wrap">
-            <span class="ico">🔒</span>
-            <input name="p" type="password" required placeholder="Enter password" autocomplete="current-password">
-          </div>
-
+          <div class="input-ico-wrap"><span class="ico">🔒</span><input name="p" type="password" required placeholder="Enter password" autocomplete="current-password"></div>
           <button type="submit" class="btn-alls-primary">Sign In to Portal</button>
         </form>
-
         <a href="/sikkoo-mandoo-register" class="btn-alls-green">📝 New Student Registration</a>
         <a href="/forgot-password" class="btn-alls-forgot">🔑 Forgot Password?</a>
-
-        <div style="display:flex; justify-content:center; gap:14px; margin-top:16px; font-size:12px; font-weight:600;">
-          <a href="/about">🏛️ About</a>
-          <a href="/campuses">📍 Campuses</a>
-          <a href="/lang/om">OM</a>
-          <a href="/lang/am">አማ</a>
-          <a href="/lang/en">EN</a>
+        <div style="display:flex; justify-content:center; gap:14px; margin-top:16px; font-size:12px; font-weight:700;">
+          <a href="/about">🏛️ About</a><a href="/campuses">📍 Campuses</a>
+          <a href="/lang/om">OM</a><a href="/lang/am">አማ</a><a href="/lang/en">EN</a>
         </div>
       </div>
     </div>
@@ -848,25 +814,14 @@ function renderAllsLogin(req) {
         document.querySelectorAll('.alls-role-card').forEach(c => c.classList.remove('active'));
         el.classList.add('active');
         document.getElementById('loginRoleInput').value = role;
-        const inp = document.getElementById('loginUserInput');
-        inp.placeholder = role === 'student' ? 'SM-ROB-2026-0001 or Student ID' : 'Staff / Admin Username';
+        document.getElementById('loginUserInput').placeholder = role === 'student' ? 'SM-ROB-2026-0001 or Student ID' : 'Staff / Admin Username';
       }
     </script>
   `, { authBg: true, hideHeader: true, hideFooter: true });
 }
 
-app.get('/', (req, res) => {
-  if (req.session.mid) return res.redirect('/student-dashboard');
-  if (req.session.sr) return res.redirect('/admin');
-  res.send(renderAllsLogin(req));
-});
-
-app.get('/login', (req, res) => {
-  if (req.session.mid) return res.redirect('/student-dashboard');
-  if (req.session.sr) return res.redirect('/admin');
-  res.send(renderAllsLogin(req));
-});
-
+app.get('/', (req, res) => { if (req.session.mid) return res.redirect('/student-dashboard'); if (req.session.sr) return res.redirect('/admin'); res.send(renderAllsLogin(req)); });
+app.get('/login', (req, res) => { if (req.session.mid) return res.redirect('/student-dashboard'); if (req.session.sr) return res.redirect('/admin'); res.send(renderAllsLogin(req)); });
 app.get('/admin-login', (req, res) => res.redirect('/login'));
 
 const fails = new Map();
@@ -879,11 +834,7 @@ function limited(req, res) {
 
 app.post('/login', async (req, res) => {
   const f = limited(req, res); if (!f) return;
-  const roleChoice = String(req.body.login_role || 'student');
-  const u = String(req.body.u || '').trim();
-  const pw = String(req.body.p || '');
-
-  // If Staff / Rep / Committee / Admin selected
+  const roleChoice = String(req.body.login_role || 'student'), u = String(req.body.u || '').trim(), pw = String(req.body.p || '');
   if (roleChoice !== 'student') {
     if ((u.toLowerCase() === 'admin' && pw === 'sikomando123') || (process.env.ADMIN_USER && u === process.env.ADMIN_USER && pw === process.env.ADMIN_PASS)) {
       req.session.mid = null; req.session.sr = 'central_admin'; req.session.sname = 'Central Admin'; req.session.campus = null;
@@ -897,7 +848,6 @@ app.post('/login', async (req, res) => {
       return res.redirect('/admin');
     }
   } else {
-    // Student / Member login
     const [m] = await q(`SELECT * FROM members WHERE UPPER(member_no)=UPPER($1) OR UPPER(student_id)=UPPER($1)`, [u]);
     if (m && bcrypt.compareSync(pw, m.password)) {
       req.session.sr = null; req.session.mid = m.member_no; req.session.campus = m.campus;
@@ -905,38 +855,20 @@ app.post('/login', async (req, res) => {
       return res.redirect('/student-dashboard');
     }
   }
-  f.n++; fails.set(req.ip, f);
-  res.redirect('/login?e=1');
+  f.n++; fails.set(req.ip, f); res.redirect('/login?e=1');
 });
 
 app.get('/logout', (req, res) => req.session.destroy(() => res.redirect('/')));
 
-// ---------- FORGOT PASSWORD ----------
+// ---------- FORGOT PASSWORD & REGISTRATION ----------
 app.get('/forgot-password', (req, res) => {
   const newPass = req.query.np || '', name = req.query.nm || '';
   res.send(page(req, 'Password Recovery', `
     <div class="alls-login-wrap"><div class="alls-card">
-      <div class="alls-top-bar"></div>
-      <div class="alls-logo-ring"><div class="alls-logo-core">🔑</div></div>
+      <div class="alls-top-bar"></div><div class="alls-logo-ring"><div class="alls-logo-core">🔑</div></div>
       <h2 class="alls-title">Password Reset</h2>
-      <p style="text-align:center; color:var(--text-muted); font-size:13px; margin:8px 0 18px;">Enter your Student ID and registered Zone/Woreda.</p>
-      ${newPass ? `
-        <div class="msgok">
-          <strong>✅ Temporary password for ${h(name)}:</strong>
-          <div style="font-size:1.5rem; font-weight:800; letter-spacing:2px; text-align:center; margin:10px 0; padding:10px; border:2px dashed #10b981; border-radius:12px;">${h(newPass)}</div>
-        </div>
-        <a href="/login" class="btn-alls-primary" style="display:block; text-align:center;">Go to Login →</a>
-      ` : `
-        ${req.query.e ? `<div class="err">No matching member found.</div>` : ''}
-        <form method="POST" action="/forgot-password">
-          <span class="alls-label">STUDENT ID</span>
-          <div class="input-ico-wrap"><span class="ico">🪪</span><input name="student_id" required placeholder="UGRR/..."></div>
-          <span class="alls-label">ZONE / WOREDA</span>
-          <div class="input-ico-wrap"><span class="ico">📍</span><input name="zone_woreda" required placeholder="e.g. Bale / Robe"></div>
-          <button class="btn-alls-primary">Generate New Password</button>
-        </form>
-        <p style="text-align:center; margin-top:16px;"><a href="/login">← Back to Login</a></p>
-      `}
+      ${newPass ? `<div class="msgok"><strong>✅ New password for ${h(name)}:</strong><div style="font-size:1.5rem;font-weight:800;letter-spacing:2px;text-align:center;margin:10px 0;padding:10px;border:2px dashed #10b981;border-radius:12px;">${h(newPass)}</div></div><a href="/login" class="btn-alls-primary" style="display:block;text-align:center;">Go to Login →</a>`
+      : `${req.query.e ? `<div class="err">No matching member found.</div>` : ''}<form method="POST" action="/forgot-password"><span class="alls-label">STUDENT ID</span><div class="input-ico-wrap"><span class="ico">🪪</span><input name="student_id" required></div><span class="alls-label">ZONE / WOREDA</span><div class="input-ico-wrap"><span class="ico">📍</span><input name="zone_woreda" required></div><button class="btn-alls-primary">Generate New Password</button></form><p style="text-align:center;margin-top:16px;"><a href="/login">← Back to Login</a></p>`}
     </div></div>
   `, { authBg: true, hideHeader: true, hideFooter: true }));
 });
@@ -945,81 +877,63 @@ app.post('/forgot-password', async (req, res) => {
   const sid = String(req.body.student_id || '').trim(), zone = String(req.body.zone_woreda || '').trim().toLowerCase();
   const [m] = await q(`SELECT * FROM members WHERE UPPER(student_id)=UPPER($1) AND LOWER(COALESCE(zone_woreda,'')) LIKE $2`, [sid, '%' + zone + '%']);
   if (!m) return res.redirect('/forgot-password?e=1');
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let temp = ''; for (let i = 0; i < 8; i++) temp += chars[Math.floor(Math.random() * chars.length)];
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let temp = ''; for (let i = 0; i < 8; i++) temp += chars[Math.floor(Math.random() * chars.length)];
   await q(`UPDATE members SET password=$1 WHERE id=$2`, [bcrypt.hashSync(temp, 10), m.id]);
-  await q(`INSERT INTO password_resets (student_id, phone, reason, status) VALUES ($1,$2,'Auto reset','resolved')`, [m.student_id, m.phone || '']);
   res.redirect(`/forgot-password?np=${encodeURIComponent(temp)}&nm=${encodeURIComponent(m.name)}`);
 });
 
-// ---------- REGISTRATION ----------
 function regForm(req, err, v) {
   v = v || {};
   const s = (k, o) => o.map(x => `<option value="${x[0]}"${v[k] === x[0] ? ' selected' : ''}>${h(x[1])}</option>`).join('');
   return page(req, tr(req, 'reg'), `
-    <div style="max-width: 680px; margin: 12px auto;">
-      <div class="glass-card" style="padding: 26px 22px;">
-        <h2 style="text-align:center; font-size:1.4rem; font-weight:800; margin-bottom:14px;">📝 ${h(tr(req, 'reg'))}</h2>
-        ${err ? `<div class="err">${h(err)}</div>` : ''}
-        <form method="POST" action="/sikkoo-mandoo-register" enctype="multipart/form-data">
-          <div class="form-section"><h4>👤 Personal & Academic Info</h4>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 4px 14px;">
-              <div><label>${h(tr(req, 'name'))} *</label><input name="name" required value="${h(v.name)}"></div>
-              <div><label>${h(tr(req, 'sid'))} *</label><input name="student_id" required value="${h(v.student_id)}"></div>
-              <div><label>${h(tr(req, 'gender'))} *</label><select name="gender">${s('gender', [['M', tr(req, 'male')], ['F', tr(req, 'female')]])}</select></div>
-              <div><label>${h(tr(req, 'campus'))} *</label><select name="campus" required>${s('campus', Object.keys(CAMPUS).map(k => [k, campusName(req, k)]))}</select></div>
-              <div><label>${h(tr(req, 'college'))} *</label><input name="college" required value="${h(v.college)}"></div>
-              <div><label>${h(tr(req, 'dept'))} *</label><input name="department" required value="${h(v.department)}"></div>
-              <div><label>${h(tr(req, 'year'))} *</label><select name="year">${s('year', [1,2,3,4,5,6].map(x => [String(x), 'Year ' + x]))}</select></div>
-              <div><label>${h(tr(req, 'zone_woreda'))} *</label><input name="zone_woreda" required value="${h(v.zone_woreda)}"></div>
-              <div><label>${h(tr(req, 'phone'))} *</label><input name="phone" required type="tel" value="${h(v.phone)}"></div>
-              <div><label>${h(tr(req, 'telegram'))}</label><input name="telegram_handle" value="${h(v.telegram_handle)}" placeholder="@username"></div>
-              <div><label>${h(tr(req, 'email'))}</label><input name="email" type="email" value="${h(v.email)}"></div>
-            </div>
+    <div style="max-width:680px; margin:10px auto;"><div class="glass-card">
+      <h2 style="text-align:center; margin-bottom:12px;">📝 ${h(tr(req, 'reg'))}</h2>
+      ${err ? `<div class="err">${h(err)}</div>` : ''}
+      <form method="POST" action="/sikkoo-mandoo-register" enctype="multipart/form-data">
+        <div class="form-section"><h4>👤 Personal & Academic Info</h4>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:4px 14px;">
+            <div><label>${h(tr(req, 'name'))} *</label><input name="name" required value="${h(v.name)}"></div>
+            <div><label>${h(tr(req, 'sid'))} *</label><input name="student_id" required value="${h(v.student_id)}"></div>
+            <div><label>${h(tr(req, 'gender'))} *</label><select name="gender">${s('gender', [['M', tr(req, 'male')], ['F', tr(req, 'female')]])}</select></div>
+            <div><label>${h(tr(req, 'campus'))} *</label><select name="campus" required>${s('campus', Object.keys(CAMPUS).map(k => [k, campusName(req, k)]))}</select></div>
+            <div><label>${h(tr(req, 'college'))} *</label><input name="college" required value="${h(v.college)}"></div>
+            <div><label>${h(tr(req, 'dept'))} *</label><input name="department" required value="${h(v.department)}"></div>
+            <div><label>${h(tr(req, 'year'))} *</label><select name="year">${s('year', [1,2,3,4,5,6].map(x => [String(x), 'Year ' + x]))}</select></div>
+            <div><label>${h(tr(req, 'zone_woreda'))} *</label><input name="zone_woreda" required value="${h(v.zone_woreda)}"></div>
+            <div><label>${h(tr(req, 'phone'))} *</label><input name="phone" required type="tel" value="${h(v.phone)}"></div>
+            <div><label>${h(tr(req, 'telegram'))}</label><input name="telegram_handle" value="${h(v.telegram_handle)}" placeholder="@username"></div>
+            <div><label>${h(tr(req, 'email'))}</label><input name="email" type="email" value="${h(v.email)}"></div>
           </div>
-          <div class="form-section"><h4>📷 Photo & Security</h4>
-            <label>${h(tr(req, 'photo'))} (Auto-compressed)</label>
-            <input name="photo" type="file" accept="image/jpeg,image/png,image/webp">
-            <label>${h(tr(req, 'pass'))} (Min. 6 chars) *</label>
-            <input name="password" type="password" minlength="6" required>
-          </div>
-          <label style="display:flex; align-items:center; gap:10px; padding:12px; background:rgba(16,185,129,0.12); border-radius:12px;">
-            <input type="checkbox" name="want" value="1" style="width:18px; height:18px;">
-            <span>${h(tr(req, 'want'))}</span>
-          </label>
-          <button class="btn-alls-green" type="submit">${h(tr(req, 'send'))}</button>
-        </form>
-      </div>
-    </div>
+        </div>
+        <div class="form-section"><h4>📷 Photo & Password</h4>
+          <label>${h(tr(req, 'photo'))}</label><input name="photo" type="file" accept="image/jpeg,image/png,image/webp">
+          <label>${h(tr(req, 'pass'))} (Min. 6 chars) *</label><input name="password" type="password" minlength="6" required>
+        </div>
+        <label style="display:flex;align-items:center;gap:10px;padding:11px;background:rgba(16,185,129,0.12);border-radius:12px;">
+          <input type="checkbox" name="want" value="1" style="width:18px;height:18px;"><span>${h(tr(req, 'want'))}</span>
+        </label>
+        <button class="btn-alls-green" type="submit">${h(tr(req, 'send'))}</button>
+      </form>
+    </div></div>
   `);
 }
 
 app.get('/sikkoo-mandoo-register', (req, res) => res.send(regForm(req)));
 app.post('/sikkoo-mandoo-register', upload.single('photo'), async (req, res) => {
   const b = req.body, c = CAMPUS[b.campus];
-  if (!c || !b.name || !b.student_id || !b.phone || !b.department || !b.college || !b.zone_woreda || String(b.password || '').length < 6) {
-    return res.send(regForm(req, tr(req, 'bad'), b));
-  }
+  if (!c || !b.name || !b.student_id || !b.phone || !b.department || !b.college || !b.zone_woreda || String(b.password || '').length < 6) return res.send(regForm(req, tr(req, 'bad'), b));
   try {
-    const existing = await q(`SELECT 1 FROM members WHERE UPPER(student_id)=UPPER($1)`, [b.student_id.trim()]);
-    if (existing.length) return res.send(regForm(req, tr(req, 'exists'), b));
+    if ((await q(`SELECT 1 FROM members WHERE UPPER(student_id)=UPPER($1)`, [b.student_id.trim()])).length) return res.send(regForm(req, tr(req, 'exists'), b));
     let pid = null;
-    if (req.file && /^image\/(jpeg|png|webp)$/.test(req.file.mimetype)) {
-      pid = (await q(`INSERT INTO files (mime,data,name) VALUES ($1,$2,$3) RETURNING id`, [req.file.mimetype, req.file.buffer, 'profile-photo']))[0].id;
-    }
+    if (req.file && /^image\/(jpeg|png|webp)$/.test(req.file.mimetype)) pid = (await q(`INSERT INTO files (mime,data,name) VALUES ($1,$2,$3) RETURNING id`, [req.file.mimetype, req.file.buffer, 'profile-photo']))[0].id;
     const hash = bcrypt.hashSync(String(b.password), 10), yr = new Date().getFullYear();
     for (let i = 0; i < 6; i++) {
       const [{ n }] = await q(`SELECT COUNT(*)::int AS n FROM members WHERE campus=$1`, [b.campus]);
       const no = `SM-${c.c}-${yr}-${String(n + 1 + i).padStart(4, '0')}`;
       try {
-        await q(`INSERT INTO members (member_no, name, gender, phone, email, campus, college, department, year, zone_woreda, telegram_handle, student_id, photo_id, password, status)
-                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
-          [no, b.name.trim().slice(0, 80), b.gender === 'F' ? 'F' : 'M', b.phone.trim().slice(0, 30), (b.email || '').slice(0, 80),
-           b.campus, b.college.trim().slice(0, 80), b.department.trim().slice(0, 80), String(b.year || '1'),
-           b.zone_woreda.trim().slice(0, 100), (b.telegram_handle || '').slice(0, 50), b.student_id.trim().slice(0, 40),
-           pid, hash, b.want ? 'pending' : 'registered']);
+        await q(`INSERT INTO members (member_no, name, gender, phone, email, campus, college, department, year, zone_woreda, telegram_handle, student_id, photo_id, password, status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+          [no, b.name.trim().slice(0, 80), b.gender === 'F' ? 'F' : 'M', b.phone.trim().slice(0, 30), (b.email || '').slice(0, 80), b.campus, b.college.trim().slice(0, 80), b.department.trim().slice(0, 80), String(b.year || '1'), b.zone_woreda.trim().slice(0, 100), (b.telegram_handle || '').slice(0, 50), b.student_id.trim().slice(0, 40), pid, hash, b.want ? 'pending' : 'registered']);
         req.session.mid = no; req.session.campus = b.campus;
-        await logAudit(req, 'MEMBER_REGISTER', no, `Campus: ${b.campus}`);
         return res.redirect('/student-dashboard?ok=1');
       } catch (e) { if (!/duplicate|unique/i.test(e.message)) throw e; }
     }
@@ -1029,444 +943,385 @@ app.post('/sikkoo-mandoo-register', upload.single('photo'), async (req, res) => 
 
 // ---------- ABOUT & CAMPUSES ----------
 app.get('/about', (req, res) => {
-  res.send(page(req, tr(req, 'about'), `
-    <div class="glass-card" style="padding:28px">
-      <div style="text-align:center; margin-bottom:22px">
-        <div class="alls-logo-ring"><div class="alls-logo-core">🌳</div></div>
-        <h2>${h(tr(req, 'site'))}</h2>
-        <p style="color:var(--text-muted)">${h(tr(req, 'uni'))}</p>
-        <span class="alls-pill">"Tokkummaa, Barnoota fi Aadaa" · "አንድነት፣ ትምህርት እና ባህል"</span>
-      </div>
-      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px;">
-        <div class="form-section" style="margin:0"><h4>🏛️ History</h4><p style="font-size:13.5px; color:var(--text-2);">Founded at Madda Walabu University to cultivate unity, mutual assistance, academic excellence, and cultural heritage across Robe, Goba, and Shashamane campuses.</p></div>
-        <div class="form-section" style="margin:0"><h4>🎯 Mission & Vision</h4><p style="font-size:13.5px; color:var(--text-2);">Empowering students through academic collaboration, ethical leadership, and cultural identity preservation.</p></div>
-      </div>
+  res.send(page(req, tr(req, 'about'), `<div class="glass-card" style="padding:26px">
+    <div style="text-align:center; margin-bottom:20px"><div class="alls-logo-ring"><div class="alls-logo-core">🌳</div></div><h2>${h(tr(req, 'site'))}</h2><p style="color:var(--text-muted)">${h(tr(req, 'uni'))}</p><span class="alls-pill">"Tokkummaa, Barnoota fi Aadaa" · "አንድነት፣ ትምህርት እና ባህል"</span></div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:14px;">
+      <div class="form-section" style="margin:0"><h4>🏛️ History</h4><p style="font-size:13.5px; color:var(--text-2);">Founded at Madda Walabu University to cultivate unity, mutual assistance, academic excellence, and cultural heritage across Robe, Goba, and Shashamane campuses.</p></div>
+      <div class="form-section" style="margin:0"><h4>🎯 Mission & Vision</h4><p style="font-size:13.5px; color:var(--text-2);">Empowering students through academic collaboration, ethical leadership, and cultural identity preservation.</p></div>
     </div>
-  `));
+  </div>`));
 });
 
 app.get('/campuses', async (req, res) => {
   const counts = await q(`SELECT campus, COUNT(*)::int as total, SUM(CASE WHEN status='official' THEN 1 ELSE 0 END)::int as official FROM members GROUP BY campus`);
   const cMap = {}; counts.forEach(c => { cMap[c.campus] = c; });
-  res.send(page(req, tr(req, 'campuses'), `
-    <h2 style="margin-bottom:14px">🏛️ ${h(tr(req, 'campuses'))}</h2>
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
-      ${Object.keys(CAMPUS).map(k => {
-        const c = CAMPUS[k], d = cMap[k] || { total: 0, official: 0 };
-        return `<div class="glass-card" style="margin:0">
-          <span class="badge registered">${c.c} CAMPUS</span>
-          <h3 style="margin:8px 0 4px;">${c.n}</h3>
-          <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">📍 ${c.loc}</p>
-          <p style="font-size:13px; color:var(--text-2); margin-bottom:12px;">${c.colleges}</p>
-          <div style="display:flex; gap:18px;"><div><b style="font-size:1.3rem; color:var(--primary)">${d.total}</b><br><small>Total</small></div><div><b style="font-size:1.3rem; color:#10b981">${d.official}</b><br><small>Official</small></div></div>
-        </div>`;
+  res.send(page(req, tr(req, 'campuses'), `<div class="top-pill-banner">🏛️ ${h(tr(req, 'campuses'))}</div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:14px;">
+      ${Object.keys(CAMPUS).map(k => { const c = CAMPUS[k], d = cMap[k] || { total: 0, official: 0 };
+        return `<div class="glass-card" style="margin:0"><span class="badge registered">${c.c} CAMPUS</span><h3 style="margin:8px 0 4px;">${c.n}</h3><p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">📍 ${c.loc}</p><p style="font-size:13px; margin-bottom:10px;">${c.colleges}</p><div style="display:flex; gap:18px;"><div><b style="font-size:1.3rem; color:var(--primary)">${d.total}</b><br><small>Total</small></div><div><b style="font-size:1.3rem; color:#10b981">${d.official}</b><br><small>Official</small></div></div></div>`;
       }).join('')}
-    </div>
-  `));
+    </div>`));
 });
 
-// ---------- MEMBER DASHBOARD (ID CARD + ETHIOPIAN DATE + PNG DOWNLOAD) ----------
+// ---------- STUDENT DASHBOARD (Items 1-4 + Vibrant Hub UI) ----------
 app.get('/student-dashboard', needMember, async (req, res) => {
   const [m] = await q(`SELECT * FROM members WHERE member_no=$1`, [req.session.mid]);
   if (!m) return res.redirect('/logout');
+
+  const [em] = await q(`SELECT * FROM posts WHERE type='announcement' AND is_emergency=1 AND (campus='all' OR campus=$1) ORDER BY id DESC LIMIT 1`, [m.campus]);
+  const [nextEv] = await q(`SELECT * FROM posts WHERE type='event' AND (campus='all' OR campus=$1) ORDER BY id DESC LIMIT 1`, [m.campus]);
+  const [annCnt] = await q(`SELECT COUNT(*)::int c FROM posts WHERE type='announcement'`);
+  const [evCnt] = await q(`SELECT COUNT(*)::int c FROM posts WHERE type='event'`);
+  const [pollCnt] = await q(`SELECT COUNT(*)::int c FROM polls WHERE status='open' AND (campus='all' OR campus=$1)`, [m.campus]);
+  const [certCnt] = await q(`SELECT COUNT(*)::int c FROM certificates WHERE member_no=$1`, [m.member_no]);
+  const [forumCnt] = await q(`SELECT COUNT(*)::int c FROM forum_posts`);
+
+  let joinedNextEv = false, nextEvRsvps = 0;
+  if (nextEv) {
+    joinedNextEv = (await q(`SELECT 1 FROM event_rsvps WHERE post_id=$1 AND member_no=$2`, [nextEv.id, m.member_no])).length > 0;
+    nextEvRsvps = (await q(`SELECT COUNT(*)::int c FROM event_rsvps WHERE post_id=$1`, [nextEv.id]))[0].c;
+  }
+
   const base = 'https://' + req.headers.host + '/verify/' + encodeURIComponent(m.member_no);
+  const ethToday = toEthiopianDate(new Date(), L(req));
   const ethRenewal = toEthiopianDate(m.renewal_date || new Date(), L(req));
+  const avatarSrc = m.photo_id ? `/photo/${m.photo_id}` : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23ede9fe'/%3E%3Ctext x='50' y='62' font-size='44' text-anchor='middle'%3E👤%3C/text%3E%3C/svg%3E`;
 
   const sealSvg = `<svg class="id-seal" width="84" height="84" viewBox="0 0 100 100">
-    <circle cx="50" cy="50" r="45" fill="none" stroke="#2563eb" stroke-width="3" stroke-dasharray="4 2"/>
-    <circle cx="50" cy="50" r="35" fill="none" stroke="#0d9488" stroke-width="1.5"/>
-    <text x="50" y="48" font-size="9.5" font-weight="800" text-anchor="middle" fill="#2563eb">SIIKKOO-MANDOO</text>
-    <text x="50" y="61" font-size="8" font-weight="700" text-anchor="middle" fill="#0d9488">MWU OFFICIAL</text>
+    <circle cx="50" cy="50" r="45" fill="none" stroke="#7c3aed" stroke-width="3" stroke-dasharray="4 2"/>
+    <circle cx="50" cy="50" r="35" fill="none" stroke="#ec4899" stroke-width="1.5"/>
+    <text x="50" y="48" font-size="9.5" font-weight="800" text-anchor="middle" fill="#7c3aed">SIIKKOO-MANDOO</text>
+    <text x="50" y="61" font-size="8" font-weight="700" text-anchor="middle" fill="#ec4899">MWU OFFICIAL</text>
   </svg>`;
 
-  res.send(page(req, tr(req, 'dash'), `
-    ${portalMenu('/student-dashboard')}
-    <div id="idCardBox" class="id">
-      <div class="hd">
-        <span>🌳 ${h(tr(req, 'site'))}</span>
-        <span class="badge ${m.status}">${h(tr(req, m.status))}</span>
-      </div>
-      <div class="bd">
-        ${sealSvg}
-        <img crossorigin="anonymous" src="${m.photo_id ? '/photo/' + m.photo_id : 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Crect width=%27100%27 height=%27100%27 fill=%27%23e2e8f0%27/%3E%3Ctext x=%2750%27 y=%2760%27 font-size=%2740%27 text-anchor=%27middle%27%3E👤%3C/text%3E%3C/svg%3E'}" alt="">
-        <div>
-          <b style="font-size:16px; color:#0f172a; font-weight:800">${h(m.name)}</b><br>
-          <small style="color:#64748b; font-size:11px">${h(tr(req, 'no'))}</small><br>
-          <b style="color:#2563eb; font-size:14.5px;">${h(m.member_no)}</b><br>
-          <small style="color:#475569; font-weight:600; font-size:11.5px">${h(campusName(req, m.campus))} · ${h(m.department)} · Y${h(m.year)}</small><br>
-          <small style="color:#64748b; font-size:11px">📍 ${h(m.zone_woreda || 'Bale')}</small>
+  const tiles = [
+    { href: '/portal/announcements', cls: 'purple', ico: '📢', t: 'Announcements', sub: 'ማስታወቂያ', n: annCnt.c },
+    { href: '/portal/education', cls: 'sky', ico: '📚', t: 'Education', sub: 'ትምህርት ቤት', n: 0 },
+    { href: '/portal/events', cls: 'orange', ico: '📅', t: 'Events', sub: 'ፕሮግራሞች', n: evCnt.c },
+    { href: '/portal/polls', cls: 'pink', ico: '🗳️', t: 'Polls & Vote', sub: 'ምርጫ / ድምጽ', n: pollCnt.c },
+    { href: '/portal/certificates', cls: 'green', ico: '🏅', t: 'Certificates', sub: 'ሰርተፍኬት', n: certCnt.c },
+    { href: '/portal/forum', cls: 'blue', ico: '💡', t: 'Q&A Forum', sub: 'መወያያ', n: forumCnt.c },
+    { href: '/portal/meetings', cls: 'teal', ico: '🤝', t: 'Meetings', sub: 'ስብሰባዎች', n: 0 },
+    { href: '/portal/leadership', cls: 'yellow', ico: '👥', t: 'Leadership', sub: 'አመራሮች', n: 0 },
+    { href: '/portal/finance', cls: 'indigo', ico: '💰', t: 'Finance', sub: 'ፋይናንስ', n: 0 },
+    { href: '/portal/news', cls: 'sky', ico: '📰', t: 'News', sub: 'ዜናዎች', n: 0 },
+    { href: '/portal/support', cls: 'red', ico: '💬', t: 'Support', sub: 'እገዛ', n: 0 },
+    { href: '/portal/profile', cls: 'purple', ico: '⚙️', t: 'My Profile', sub: 'መረጃዬ', n: 0 }
+  ];
+
+  const html = `
+    <!-- 4a. Emergency Alert Banner -->
+    ${em ? `<a href="/portal/announcements" class="top-pill-banner emergency">🚨 EMERGENCY: ${h(postT(req, em, 'title'))} →</a>`
+         : `<a href="/portal/announcements" class="top-pill-banner">🌳 ${h(tr(req, 'site'))} · Student Digital Hub</a>`}
+
+    <!-- 1. Personal Welcome Hero Banner -->
+    <div class="welcome-hero">
+      <img class="welcome-avatar" src="${avatarSrc}" alt="">
+      <div class="welcome-info">
+        <h2>ሰላም / Akkam, ${h(m.name.split(' ')[0])}! 👋</h2>
+        <p>${h(campusName(req, m.campus))} · ${h(m.department)} (Year ${h(m.year)})</p>
+        <div class="welcome-pills">
+          <span class="w-pill">🪪 ${h(m.member_no)}</span>
+          <span class="w-pill">${m.status === 'official' ? '✅ Official Member' : '⏳ ' + h(m.status)}</span>
+          <span class="w-pill">📅 ${h(ethToday)}</span>
         </div>
-      </div>
-      <div style="padding:11px 18px 15px; display:flex; justify-content:space-between; align-items:flex-end; border-top:1px solid #f1f5f9;">
-        <div>
-          <small style="font-weight:600; color:#64748b; font-size:11px">Student ID: <span style="color:#0f172a">${h(m.student_id)}</span></small><br>
-          <small style="color:#0d9488; font-weight:700; font-size:11px">📅 ${h(ethRenewal)}</small>
-        </div>
-        <div id="qr" style="background:#fff; padding:4px; border-radius:8px; border:1px solid #e2e8f0;"></div>
       </div>
     </div>
 
-    <div style="text-align:center; margin-top:16px; display:flex; justify-content:center; gap:9px; flex-wrap:wrap;">
-      <button onclick="downloadID()" class="btn g">📥 Download ID (PNG)</button>
-      <button onclick="print()" class="btn secondary">🖨️ ${h(tr(req, 'print'))}</button>
-      ${m.status === 'registered' ? `<form method="POST" action="/student/upgrade" style="display:inline"><button class="btn">${h(tr(req, 'upgrade'))}</button></form>` : ''}
-      <form method="POST" action="/student/renew" style="display:inline"><button class="btn secondary">🔄 ${h(tr(req, 'renew'))}</button></form>
+    <!-- Search Bar -->
+    <form class="search-bar" method="GET" action="/portal/search">
+      <input name="q" placeholder="🔍 Search announcements, events, education, forum..." required>
+      <button class="btn" style="padding:7px 16px;">Search</button>
+    </form>
+
+    <!-- 2. App-Style 3D Hub Card (Exact Match to Reference Screenshot!) -->
+    <div class="glass-card">
+      <div class="hub-header">🐾 🌳 <span>Student Portal Hub · የተማሪዎች ማዕከል</span></div>
+      <div class="hub-grid">
+        ${tiles.map(t => `
+          <a href="${t.href}" class="hub-tile ${t.cls}">
+            ${t.n > 0 ? `<span class="notif-badge">${t.n}</span>` : ''}
+            <div class="hub-ico-circle">${t.ico}</div>
+            <div class="t-main">${t.t}</div>
+            <div class="t-sub">${t.sub}</div>
+          </a>
+        `).join('')}
+      </div>
+
+      <!-- 4b. Next Event Countdown Card -->
+      ${nextEv ? `
+        <div class="event-highlight">
+          <div>
+            <span class="badge pending" data-countdown="${h(nextEv.event_date || '')}">📅 ${h(nextEv.event_date || 'Upcoming')}</span>
+            <h4 style="margin:6px 0 2px; font-size:1rem;">${h(postT(req, nextEv, 'title'))}</h4>
+            <small style="color:var(--text-muted);">${h(postT(req, nextEv, 'body')).slice(0, 90)}...</small>
+          </div>
+          <form method="POST" action="/portal/events/${nextEv.id}/rsvp">
+            <button class="btn ${joinedNextEv ? 'g' : ''}" style="padding:9px 16px; font-size:12.5px;">
+              ${joinedNextEv ? '✔ Going' : '✋ I will attend'} (${nextEvRsvps})
+            </button>
+          </form>
+        </div>
+      ` : ''}
+    </div>
+
+    <!-- 3. 3D Flip Digital ID Card (Tap to Flip Front & Back) -->
+    <div class="glass-card">
+      <div class="hub-header">🪪 <span>Digital Membership Card · ካርዱን ሲነኩ ይገለበጣል (Tap to Flip)</span></div>
+      <div id="flipCard" class="flip-wrap" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+          <!-- FRONT -->
+          <div id="idCardBox" class="flip-face">
+            <div class="id-hd">
+              <span>🌳 ${h(tr(req, 'site'))}</span>
+              <span class="badge ${m.status}">${h(tr(req, m.status))}</span>
+            </div>
+            <div class="id-bd">
+              ${sealSvg}
+              <img crossorigin="anonymous" src="${avatarSrc}" alt="">
+              <div>
+                <b style="font-size:16px; color:#0f172a; font-weight:850">${h(m.name)}</b><br>
+                <small style="color:#64748b; font-size:11px">${h(tr(req, 'no'))}</small><br>
+                <b style="color:#7c3aed; font-size:14.5px;">${h(m.member_no)}</b><br>
+                <small style="color:#475569; font-weight:650; font-size:11.5px">${h(campusName(req, m.campus))} · ${h(m.department)} · Y${h(m.year)}</small><br>
+                <small style="color:#64748b; font-size:11px">📍 ${h(m.zone_woreda || 'Bale')}</small>
+              </div>
+            </div>
+            <div style="padding:10px 16px 14px; display:flex; justify-content:space-between; align-items:flex-end; border-top:1px solid #f1f5f9;">
+              <div>
+                <small style="font-weight:700; color:#64748b; font-size:11px">Student ID: <span style="color:#0f172a">${h(m.student_id)}</span></small><br>
+                <small style="color:#0d9488; font-weight:750; font-size:11px">📅 ${h(ethRenewal)}</small>
+              </div>
+              <div id="qrFront" style="background:#fff; padding:3px; border-radius:8px; border:1px solid #e2e8f0;"></div>
+            </div>
+          </div>
+
+          <!-- BACK -->
+          <div class="flip-face flip-back">
+            <div class="id-hd" style="background:linear-gradient(90deg, #1e293b 0%, #4c1d95 100%);">
+              <span>MWU · SIIKKOO-MANDOO</span>
+              <span>BACK SIDE</span>
+            </div>
+            <div style="padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:14px;">
+              <div style="font-size:12px; color:#334155; line-height:1.55;">
+                <b style="color:#6d28d9; font-size:13px;">"Tokkummaa, Barnoota fi Aadaa"</b><br>
+                <span>"አንድነት፣ ትምህርት እና ባህል"</span><br><br>
+                <span>✔ Scan QR to verify official membership.</span><br>
+                <span>📞 MWU Main Campus (Robe)</span><br>
+                <span>✈️ @siikkoomandoomwu</span>
+              </div>
+              <div id="qrBack" style="background:#fff; padding:6px; border-radius:10px; border:2px solid #c084fc; flex-shrink:0;"></div>
+            </div>
+            <div style="padding:8px 16px; background:#f3e8ff; font-size:11px; text-align:center; color:#6d28d9; font-weight:700;">
+              Tap card again to flip back to front ↻
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:16px; display:flex; justify-content:center; gap:9px; flex-wrap:wrap;">
+        <button onclick="downloadID()" class="btn g">📥 Download ID (PNG)</button>
+        <button onclick="document.getElementById('flipCard').classList.toggle('flipped')" class="btn secondary">🔄 Flip Card</button>
+        <button onclick="print()" class="btn secondary">🖨️ ${h(tr(req, 'print'))}</button>
+        ${m.status === 'registered' ? `<form method="POST" action="/student/upgrade" style="display:inline"><button class="btn">${h(tr(req, 'upgrade'))}</button></form>` : ''}
+        <form method="POST" action="/student/renew" style="display:inline"><button class="btn secondary">✨ ${h(tr(req, 'renew'))}</button></form>
+      </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
-      new QRCode(document.getElementById('qr'),{text:${JSON.stringify(base)},width:60,height:60,colorDark:"#0f172a",colorLight:"#ffffff"});
+      new QRCode(document.getElementById('qrFront'),{text:${JSON.stringify(base)},width:56,height:56,colorDark:"#0f172a",colorLight:"#ffffff"});
+      new QRCode(document.getElementById('qrBack'),{text:${JSON.stringify(base)},width:96,height:96,colorDark:"#4c1d95",colorLight:"#ffffff"});
       function downloadID(){
-        html2canvas(document.getElementById('idCardBox'), { scale: 2, useCORS: true }).then(c => {
-          const a = document.createElement('a'); a.download = ${JSON.stringify(m.member_no + '-ID.png')}; a.href = c.toDataURL('image/png'); a.click();
-        });
+        const fc = document.getElementById('flipCard');
+        fc.classList.remove('flipped');
+        setTimeout(()=>{
+          html2canvas(document.getElementById('idCardBox'), { scale: 2, useCORS: true }).then(c => {
+            const a = document.createElement('a'); a.download = ${JSON.stringify(m.member_no + '-ID.png')}; a.href = c.toDataURL('image/png'); a.click();
+          });
+        }, 120);
       }
+      document.querySelectorAll('[data-countdown]').forEach(el=>{
+        const d=new Date(el.getAttribute('data-countdown'));
+        if(isNaN(d.getTime()))return;
+        const diff=Math.ceil((d-new Date())/86400000);
+        if(diff>0) el.textContent='⏳ '+diff+' days left ('+el.getAttribute('data-countdown')+')';
+        else if(diff===0) el.textContent='🔥 Happening Today!';
+      });
     </script>
-  `));
+  `;
+  res.send(page(req, tr(req, 'dash'), html));
 });
 
-app.post('/student/upgrade', needMember, async (req, res) => {
-  await q(`UPDATE members SET status='pending' WHERE member_no=$1 AND status='registered'`, [req.session.mid]);
-  res.redirect('/student-dashboard?ok=1');
-});
-app.post('/student/renew', needMember, async (req, res) => {
-  await q(`UPDATE members SET renewal_date=NOW() WHERE member_no=$1`, [req.session.mid]);
-  res.redirect('/student-dashboard?ok=1');
-});
+app.post('/student/upgrade', needMember, async (req, res) => { await q(`UPDATE members SET status='pending' WHERE member_no=$1 AND status='registered'`, [req.session.mid]); res.redirect('/student-dashboard?ok=1'); });
+app.post('/student/renew', needMember, async (req, res) => { await q(`UPDATE members SET renewal_date=NOW() WHERE member_no=$1`, [req.session.mid]); res.redirect('/student-dashboard?ok=1'); });
 
-// ---------- 1. MEMBER PROFILE SETTINGS & PASSWORD CHANGE ----------
+// ---------- MEMBER PROFILE, POLLS, CERTIFICATES, FORUM, SEARCH ----------
 app.get('/portal/profile', needMember, async (req, res) => {
   const [m] = await q(`SELECT * FROM members WHERE member_no=$1`, [req.session.mid]);
   if (!m) return res.redirect('/logout');
-  res.send(page(req, 'Profile Settings', `
-    ${portalMenu('/portal/profile')}
-    <div class="glass-card" style="max-width:720px; margin:0 auto;">
-      <h3 style="margin-bottom:12px;">⚙️ My Profile Settings</h3>
-      ${req.query.pwerr ? `<div class="err">Current password is incorrect or new password is too short (min 6 chars).</div>` : ''}
-      <form method="POST" action="/portal/profile" enctype="multipart/form-data">
-        <div class="form-section" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:8px 14px;">
-          <div><label>Phone</label><input name="phone" required value="${h(m.phone)}"></div>
-          <div><label>Email</label><input name="email" type="email" value="${h(m.email || '')}"></div>
-          <div><label>Telegram Username</label><input name="telegram_handle" value="${h(m.telegram_handle || '')}"></div>
-          <div><label>Academic Year</label><select name="year">${[1,2,3,4,5,6].map(y => `<option value="${y}"${String(m.year)===String(y)?' selected':''}>Year ${y}</option>`).join('')}</select></div>
-          <div><label>Zone / Woreda</label><input name="zone_woreda" value="${h(m.zone_woreda || '')}"></div>
-          <div><label>Update Photo (Auto-compressed)</label><input name="photo" type="file" accept="image/jpeg,image/png,image/webp"></div>
-        </div>
-        <button class="btn">💾 Update Profile</button>
-      </form>
-
-      <hr style="margin:24px 0; border:none; border-top:1px solid var(--border);">
-      <h3 style="margin-bottom:10px;">🔐 Change Password</h3>
-      <form method="POST" action="/portal/profile/password">
-        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px;">
-          <div><label>Current Password</label><input name="old_pass" type="password" required></div>
-          <div><label>New Password (Min 6 chars)</label><input name="new_pass" type="password" minlength="6" required></div>
-        </div>
-        <p style="margin-top:14px;"><button class="btn secondary">🔑 Update Password</button></p>
-      </form>
-    </div>
-  `));
+  res.send(page(req, 'Profile Settings', portalMenu('/portal/profile') + `<div class="glass-card" style="max-width:720px;margin:0 auto;">
+    <div class="hub-header">⚙️ <span>My Profile Settings · የግል መረጃ</span></div>
+    ${req.query.pwerr ? `<div class="err">Current password incorrect or new password too short (min 6 chars).</div>` : ''}
+    <form method="POST" action="/portal/profile" enctype="multipart/form-data">
+      <div class="form-section" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:8px 14px;">
+        <div><label>Phone</label><input name="phone" required value="${h(m.phone)}"></div>
+        <div><label>Email</label><input name="email" type="email" value="${h(m.email || '')}"></div>
+        <div><label>Telegram Username</label><input name="telegram_handle" value="${h(m.telegram_handle || '')}"></div>
+        <div><label>Academic Year</label><select name="year">${[1,2,3,4,5,6].map(y => `<option value="${y}"${String(m.year)===String(y)?' selected':''}>Year ${y}</option>`).join('')}</select></div>
+        <div><label>Zone / Woreda</label><input name="zone_woreda" value="${h(m.zone_woreda || '')}"></div>
+        <div><label>Update Photo</label><input name="photo" type="file" accept="image/jpeg,image/png,image/webp"></div>
+      </div>
+      <button class="btn">💾 Update Profile</button>
+    </form>
+    <hr style="margin:22px 0; border:none; border-top:1.5px dashed var(--card-dash);">
+    <h4 style="margin-bottom:8px;">🔐 Change Password</h4>
+    <form method="POST" action="/portal/profile/password">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px;">
+        <div><label>Current Password</label><input name="old_pass" type="password" required></div>
+        <div><label>New Password (Min 6)</label><input name="new_pass" type="password" minlength="6" required></div>
+      </div>
+      <p style="margin-top:12px;"><button class="btn secondary">🔑 Update Password</button></p>
+    </form>
+  </div>`));
 });
 
 app.post('/portal/profile', needMember, upload.single('photo'), async (req, res) => {
-  const [m] = await q(`SELECT * FROM members WHERE member_no=$1`, [req.session.mid]);
-  if (!m) return res.redirect('/logout');
+  const [m] = await q(`SELECT * FROM members WHERE member_no=$1`, [req.session.mid]); if (!m) return res.redirect('/logout');
   let pid = m.photo_id;
-  if (req.file && /^image\/(jpeg|png|webp)$/.test(req.file.mimetype)) {
-    pid = (await q(`INSERT INTO files (mime,data,name) VALUES ($1,$2,$3) RETURNING id`, [req.file.mimetype, req.file.buffer, 'profile-photo']))[0].id;
-  }
+  if (req.file && /^image\/(jpeg|png|webp)$/.test(req.file.mimetype)) pid = (await q(`INSERT INTO files (mime,data,name) VALUES ($1,$2,$3) RETURNING id`, [req.file.mimetype, req.file.buffer, 'profile-photo']))[0].id;
   const b = req.body;
-  await q(`UPDATE members SET phone=$1, email=$2, telegram_handle=$3, year=$4, zone_woreda=$5, photo_id=$6 WHERE member_no=$7`,
-    [String(b.phone || m.phone).slice(0, 30), String(b.email || '').slice(0, 80), String(b.telegram_handle || '').slice(0, 50),
-     String(b.year || m.year), String(b.zone_woreda || '').slice(0, 100), pid, req.session.mid]);
+  await q(`UPDATE members SET phone=$1, email=$2, telegram_handle=$3, year=$4, zone_woreda=$5, photo_id=$6 WHERE member_no=$7`, [String(b.phone || m.phone).slice(0, 30), String(b.email || '').slice(0, 80), String(b.telegram_handle || '').slice(0, 50), String(b.year || m.year), String(b.zone_woreda || '').slice(0, 100), pid, req.session.mid]);
   res.redirect('/portal/profile?saved=1');
 });
 
 app.post('/portal/profile/password', needMember, async (req, res) => {
   const [m] = await q(`SELECT * FROM members WHERE member_no=$1`, [req.session.mid]);
-  if (!m || !bcrypt.compareSync(String(req.body.old_pass || ''), m.password) || String(req.body.new_pass || '').length < 6) {
-    return res.redirect('/portal/profile?pwerr=1');
-  }
+  if (!m || !bcrypt.compareSync(String(req.body.old_pass || ''), m.password) || String(req.body.new_pass || '').length < 6) return res.redirect('/portal/profile?pwerr=1');
   await q(`UPDATE members SET password=$1 WHERE member_no=$2`, [bcrypt.hashSync(String(req.body.new_pass), 10), req.session.mid]);
   res.redirect('/portal/profile?saved=1');
 });
 
-// ---------- 2. ONLINE ELECTIONS & POLLS ----------
 app.get('/portal/polls', needMember, async (req, res) => {
   const polls = await q(`SELECT * FROM polls WHERE campus='all' OR campus=$1 ORDER BY (status='open') DESC, id DESC LIMIT 20`, [req.session.campus || 'robe']);
   const votes = await q(`SELECT poll_id, choice, COUNT(*)::int c FROM poll_votes GROUP BY poll_id, choice`);
-  const mine = await q(`SELECT poll_id, choice FROM poll_votes WHERE member_no=$1`, [req.session.mid]);
-  const myMap = Object.fromEntries(mine.map(r => [r.poll_id, r.choice]));
-
-  const html = portalMenu('/portal/polls') + `
-    <div class="glass-card">
-      <h3>🗳️ Online Elections & Member Polls</h3>
-      <p style="font-size:13px; color:var(--text-muted);">One member = one verified vote. Live transparent results.</p>
-    </div>
+  const myMap = Object.fromEntries((await q(`SELECT poll_id, choice FROM poll_votes WHERE member_no=$1`, [req.session.mid])).map(r => [r.poll_id, r.choice]));
+  res.send(page(req, 'Elections & Polls', portalMenu('/portal/polls') + `
+    <div class="top-pill-banner">🗳️ Online Elections & Member Polls · የኦንላይን ምርጫ</div>
     ${polls.map(p => {
       const opts = String(p.options || '').split(/\r?\n|,/).map(x => x.trim()).filter(Boolean);
-      const pVotes = votes.filter(v => v.poll_id === p.id);
-      const total = pVotes.reduce((s, v) => s + v.c, 0);
-      const myChoice = myMap[p.id];
+      const pVotes = votes.filter(v => v.poll_id === p.id), total = pVotes.reduce((s, v) => s + v.c, 0), myChoice = myMap[p.id];
       return `<div class="glass-card">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-          <h4>${h(p.title)}</h4>
-          <span class="badge ${p.status === 'open' ? 'official' : 'rejected'}">${p.status === 'open' ? '🟢 Open' : '🔒 Closed'}</span>
-        </div>
-        ${p.description ? `<p style="font-size:13px; color:var(--text-2); margin:6px 0 12px;">${h(p.description)}</p>` : ''}
-        ${(!myChoice && p.status === 'open') ? `
-          <form method="POST" action="/portal/polls/${p.id}/vote">
-            ${opts.map(o => `<label style="display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--surface-soft); border:1px solid var(--border); border-radius:12px; margin:7px 0; cursor:pointer;">
-              <input type="radio" name="choice" value="${h(o)}" required style="width:17px; height:17px;"><span>${h(o)}</span>
-            </label>`).join('')}
-            <button class="btn" style="margin-top:10px;">🗳️ Cast My Vote</button>
-          </form>
-        ` : `
-          <div style="margin-top:10px;">
-            ${opts.map(o => {
-              const cnt = (pVotes.find(v => v.choice === o) || { c: 0 }).c;
-              const pct = total ? Math.round((cnt / total) * 100) : 0;
-              return `<div style="margin-bottom:10px;">
-                <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:650;">
-                  <span>${h(o)} ${myChoice === o ? '<span class="badge official">✔ Your Vote</span>' : ''}</span>
-                  <span>${cnt} (${pct}%)</span>
-                </div>
-                <div class="poll-bar-bg"><div class="poll-bar-fill" style="width:${pct}%"></div></div>
-              </div>`;
-            }).join('')}
-            <small style="color:var(--text-muted);">Total Votes: ${total}</small>
-          </div>
-        `}
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;"><h4>${h(p.title)}</h4><span class="badge ${p.status === 'open' ? 'official' : 'rejected'}">${p.status === 'open' ? '🟢 Open' : '🔒 Closed'}</span></div>
+        ${p.description ? `<p style="font-size:13px; color:var(--text-2); margin:6px 0 10px;">${h(p.description)}</p>` : ''}
+        ${(!myChoice && p.status === 'open') ? `<form method="POST" action="/portal/polls/${p.id}/vote">${opts.map(o => `<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface-soft);border:1px solid var(--border);border-radius:12px;margin:7px 0;cursor:pointer;"><input type="radio" name="choice" value="${h(o)}" required style="width:17px;height:17px;"><span>${h(o)}</span></label>`).join('')}<button class="btn" style="margin-top:10px;">🗳️ Cast My Vote</button></form>`
+        : `<div style="margin-top:10px;">${opts.map(o => { const cnt = (pVotes.find(v => v.choice === o) || { c: 0 }).c, pct = total ? Math.round((cnt / total) * 100) : 0; return `<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;"><span>${h(o)} ${myChoice === o ? '<span class="badge official">✔ Voted</span>' : ''}</span><span>${cnt} (${pct}%)</span></div><div class="poll-bar-bg"><div class="poll-bar-fill" style="width:${pct}%"></div></div></div>`; }).join('')}<small style="color:var(--text-muted);">Total Votes: ${total}</small></div>`}
       </div>`;
-    }).join('') || `<div class="glass-card" style="text-align:center; padding:40px;">No active elections or polls yet.</div>`}
-  `;
-  res.send(page(req, 'Elections & Polls', html));
+    }).join('') || `<div class="glass-card" style="text-align:center; padding:40px;">No active polls yet.</div>`}`));
 });
 
 app.post('/portal/polls/:id/vote', needMember, async (req, res) => {
-  const pid = parseInt(req.params.id, 10) || 0;
-  const choice = String(req.body.choice || '').trim();
-  const [p] = await q(`SELECT * FROM polls WHERE id=$1 AND status='open'`, [pid]);
-  if (p && choice) {
+  const pid = parseInt(req.params.id, 10) || 0, choice = String(req.body.choice || '').trim();
+  if ((await q(`SELECT 1 FROM polls WHERE id=$1 AND status='open'`, [pid])).length && choice) {
     try { await q(`INSERT INTO poll_votes (poll_id, member_no, choice) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING`, [pid, req.session.mid, choice]); } catch (e) {}
   }
   res.redirect('/portal/polls?voted=1');
 });
 
-// ---------- 3. DIGITAL CERTIFICATES (VIEW + PNG DOWNLOAD + QR VERIFY) ----------
 app.get('/portal/certificates', needMember, async (req, res) => {
   const certs = await q(`SELECT * FROM certificates WHERE member_no=$1 ORDER BY id DESC`, [req.session.mid]);
-  const html = portalMenu('/portal/certificates') + `
-    <div class="glass-card">
-      <h3>🏅 My Official Digital Certificates</h3>
-      <p style="font-size:13px; color:var(--text-muted);">Verified awards and leadership certificates issued by Siikkoo-Mandoo MWU.</p>
-    </div>
+  res.send(page(req, 'Certificates', portalMenu('/portal/certificates') + `<div class="top-pill-banner">🏅 My Official Digital Certificates</div>
     ${certs.map(c => {
       const verifyUrl = 'https://' + req.headers.host + '/verify-cert/' + encodeURIComponent(c.cert_code);
-      const ethDt = toEthiopianDate(c.issue_date || c.created_at, L(req));
-      return `
-      <div id="cert_${c.id}" class="cert-box">
-        <div style="font-size:38px;">🌳</div>
-        <p style="font-size:12px; font-weight:800; color:#2563eb; letter-spacing:1.5px;">SIIKKOO-MANDOO STUDENTS ASSOCIATION · MWU</p>
-        <h2>${h(c.title)}</h2>
-        <p style="font-size:14px; color:#475569; margin-top:10px;">This official certificate is proudly presented to</p>
-        <div class="cert-name">${h(c.member_name)}</div>
-        <p style="font-size:14.5px; color:#334155; max-width:540px; margin:8px auto 18px; line-height:1.6;">${h(c.role_award)}</p>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:22px; padding-top:14px; border-top:1px solid #e2e8f0; flex-wrap:wrap; gap:12px;">
-          <div style="text-align:left; font-size:12px; color:#475569;">
-            <b>Date:</b> ${h(c.issue_date)} (${h(ethDt)})<br>
-            <b>Code:</b> <span style="color:#2563eb; font-weight:700;">${h(c.cert_code)}</span>
-          </div>
-          <div id="cqr_${c.id}" data-url="${h(verifyUrl)}" style="background:#fff; padding:4px; border:1px solid #e2e8f0; border-radius:8px;"></div>
-        </div>
-      </div>
-      <div style="text-align:center; margin-bottom:24px;">
-        <button onclick="dlCert('cert_${c.id}','${h(c.cert_code)}')" class="btn g">📥 Download Certificate (PNG)</button>
-      </div>`;
-    }).join('') || `<div class="glass-card" style="text-align:center; padding:40px;">No certificates issued to your account yet.</div>`}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script>
-      document.querySelectorAll('[id^="cqr_"]').forEach(el => {
-        new QRCode(el, { text: el.getAttribute('data-url'), width: 58, height: 58 });
-      });
-      function dlCert(id, code){
-        html2canvas(document.getElementById(id), { scale: 2, useCORS: true }).then(c => {
-          const a = document.createElement('a'); a.download = code + '.png'; a.href = c.toDataURL('image/png'); a.click();
-        });
-      }
-    </script>
-  `;
-  res.send(page(req, 'Certificates', html));
+      return `<div id="cert_${c.id}" class="cert-box"><div style="font-size:36px;">🌳</div><p style="font-size:12px;font-weight:800;color:#7c3aed;letter-spacing:1.4px;">SIIKKOO-MANDOO STUDENTS ASSOCIATION · MWU</p><h2>${h(c.title)}</h2><p style="font-size:13.5px;color:#475569;margin-top:8px;">Presented to</p><div class="cert-name">${h(c.member_name)}</div><p style="font-size:14px;color:#334155;max-width:520px;margin:8px auto 16px;">${h(c.role_award)}</p><div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #e2e8f0;padding-top:12px;"><div style="text-align:left;font-size:12px;"><b>Date:</b> ${h(c.issue_date)} (${toEthiopianDate(c.issue_date, L(req))})<br><b>Code:</b> <span style="color:#7c3aed;font-weight:700;">${h(c.cert_code)}</span></div><div id="cqr_${c.id}" data-url="${h(verifyUrl)}" style="background:#fff;padding:4px;border-radius:8px;border:1px solid #e2e8f0;"></div></div></div><div style="text-align:center;margin-bottom:20px;"><button onclick="dlCert('cert_${c.id}','${h(c.cert_code)}')" class="btn g">📥 Download Certificate (PNG)</button></div>`;
+    }).join('') || `<div class="glass-card" style="text-align:center;padding:40px;">No certificates issued yet.</div>`}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>document.querySelectorAll('[id^="cqr_"]').forEach(el=>new QRCode(el,{text:el.getAttribute('data-url'),width:56,height:56}));function dlCert(id,code){html2canvas(document.getElementById(id),{scale:2,useCORS:true}).then(c=>{const a=document.createElement('a');a.download=code+'.png';a.href=c.toDataURL('image/png');a.click();});}</script>`));
 });
 
 app.get('/verify-cert/:code', async (req, res) => {
   const [c] = await q(`SELECT * FROM certificates WHERE UPPER(cert_code)=UPPER($1)`, [req.params.code]);
-  res.send(page(req, 'Verify Certificate', c ? `
-    <div class="glass-card" style="max-width:440px; margin:30px auto; text-align:center;">
-      <h2 style="color:#10b981;">✔ Authentic Certificate</h2>
-      <h3 style="margin:12px 0 4px;">${h(c.member_name)}</h3>
-      <p style="color:var(--primary); font-weight:700;">${h(c.title)}</p>
-      <p style="font-size:13.5px; color:var(--text-2); margin:10px 0;">${h(c.role_award)}</p>
-      <small style="color:var(--text-muted);">Code: ${h(c.cert_code)} · Issued: ${h(c.issue_date)}</small>
-    </div>
-  ` : `<div class="glass-card" style="max-width:400px; margin:30px auto; text-align:center;"><h2 style="color:#ef4444;">✘ Certificate Not Found</h2></div>`));
+  res.send(page(req, 'Verify Certificate', c ? `<div class="glass-card" style="max-width:440px;margin:28px auto;text-align:center;"><h2 style="color:#10b981;">✔ Authentic Certificate</h2><h3 style="margin:10px 0 4px;">${h(c.member_name)}</h3><p style="color:var(--primary);font-weight:700;">${h(c.title)}</p><p style="font-size:13.5px;margin:8px 0;">${h(c.role_award)}</p><small>Code: ${h(c.cert_code)} · ${h(c.issue_date)}</small></div>` : `<div class="glass-card" style="max-width:380px;margin:28px auto;text-align:center;"><h2 style="color:#ef4444;">✘ Not Found</h2></div>`));
 });
 
-// ---------- 4. STUDENT Q&A FORUM ----------
 app.get('/portal/forum', needMember, async (req, res) => {
-  const posts = await q(`SELECT * FROM forum_posts ORDER BY id DESC LIMIT 30`);
-  const replies = await q(`SELECT * FROM forum_replies ORDER BY id ASC`);
-  const html = portalMenu('/portal/forum') + `
-    <div class="glass-card">
-      <h3 style="margin-bottom:10px;">💡 Student Q&A & Discussion Forum</h3>
-      <form method="POST" action="/portal/forum">
-        <div style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
-          <input name="title" required placeholder="Ask a question or start a topic...">
-          <select name="category">
-            <option value="academic">📚 Academic / Courses</option>
-            <option value="freshman">🎓 Freshman Guide</option>
-            <option value="exams">📝 Exams & Exit Exam</option>
-            <option value="campus">🏛️ Campus Life</option>
-          </select>
-        </div>
-        <textarea name="body" required placeholder="Write details here..." style="margin-top:8px;"></textarea>
-        <p style="margin-top:10px;"><button class="btn">Post Question</button></p>
-      </form>
-    </div>
-    ${posts.map(p => {
-      const pReplies = replies.filter(r => r.post_id === p.id);
-      return `<div class="glass-card">
-        <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;">
-          <span class="badge registered">${h(p.category)}</span>
-          <small style="color:var(--text-muted)">By <b>${h(p.author_name)}</b> · ${toEthiopianDate(p.created_at, L(req))}</small>
-        </div>
-        <h4 style="margin:8px 0 6px; font-size:1.08rem;">${h(p.title)}</h4>
-        <p style="font-size:13.5px; color:var(--text-2);">${h(p.body).replace(/\n/g, '<br>')}</p>
-        <div style="margin-top:12px; padding-left:14px; border-left:3px solid var(--border);">
-          ${pReplies.map(r => `<div style="margin-bottom:8px; font-size:13px;"><b>${h(r.author_name)}:</b> ${h(r.body)}</div>`).join('')}
-          <form method="POST" action="/portal/forum/${p.id}/reply" style="display:flex; gap:8px; margin-top:8px;">
-            <input name="body" required placeholder="Write a helpful reply..." style="padding:8px 12px;">
-            <button class="btn secondary" style="padding:7px 14px;">Reply</button>
-          </form>
-        </div>
-      </div>`;
-    }).join('') || `<div class="glass-card" style="text-align:center;">No discussions yet. Start the first one!</div>`}
-  `;
-  res.send(page(req, 'Q&A Forum', html));
+  const posts = await q(`SELECT * FROM forum_posts ORDER BY id DESC LIMIT 30`), replies = await q(`SELECT * FROM forum_replies ORDER BY id ASC`);
+  res.send(page(req, 'Q&A Forum', portalMenu('/portal/forum') + `<div class="glass-card">
+    <div class="hub-header">💡 <span>Student Q&A Forum · የተማሪዎች መወያያ</span></div>
+    <form method="POST" action="/portal/forum"><div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;"><input name="title" required placeholder="Ask a question..."><select name="category"><option value="academic">📚 Academic</option><option value="freshman">🎓 Freshman</option><option value="exams">📝 Exams</option><option value="campus">🏛️ Campus</option></select></div><textarea name="body" required placeholder="Details..." style="margin-top:8px;"></textarea><p style="margin-top:10px;"><button class="btn">Post Question</button></p></form>
+  </div>${posts.map(p => {
+    const pr = replies.filter(r => r.post_id === p.id);
+    return `<div class="glass-card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;"><span class="badge registered">${h(p.category)}</span><small style="color:var(--text-muted)">By <b>${h(p.author_name)}</b> · ${toEthiopianDate(p.created_at, L(req))}</small></div><h4 style="margin:8px 0 5px;">${h(p.title)}</h4><p style="font-size:13.5px;color:var(--text-2);">${h(p.body).replace(/\n/g, '<br>')}</p><div style="margin-top:12px;padding-left:12px;border-left:3px solid var(--card-dash);">${pr.map(r => `<div style="margin-bottom:7px;font-size:13px;"><b>${h(r.author_name)}:</b> ${h(r.body)}</div>`).join('')}<form method="POST" action="/portal/forum/${p.id}/reply" style="display:flex;gap:8px;margin-top:8px;"><input name="body" required placeholder="Reply..." style="padding:7px 12px;"><button class="btn secondary" style="padding:7px 14px;">Reply</button></form></div></div>`;
+  }).join('') || '<div class="glass-card" style="text-align:center;">No discussions yet.</div>'}`));
 });
 
 app.post('/portal/forum', needMember, async (req, res) => {
   const [m] = await q(`SELECT name, campus FROM members WHERE member_no=$1`, [req.session.mid]);
-  if (m && req.body.title && req.body.body) {
-    await q(`INSERT INTO forum_posts (member_no, author_name, campus, category, title, body) VALUES ($1,$2,$3,$4,$5,$6)`,
-      [req.session.mid, m.name, m.campus, req.body.category || 'general', req.body.title.slice(0, 180), req.body.body.slice(0, 2000)]);
-  }
+  if (m && req.body.title && req.body.body) await q(`INSERT INTO forum_posts (member_no, author_name, campus, category, title, body) VALUES ($1,$2,$3,$4,$5,$6)`, [req.session.mid, m.name, m.campus, req.body.category || 'general', req.body.title.slice(0, 180), req.body.body.slice(0, 2000)]);
   res.redirect('/portal/forum?ok=1');
 });
-
 app.post('/portal/forum/:id/reply', needMember, async (req, res) => {
   const [m] = await q(`SELECT name FROM members WHERE member_no=$1`, [req.session.mid]);
-  if (m && req.body.body) {
-    await q(`INSERT INTO forum_replies (post_id, member_no, author_name, body) VALUES ($1,$2,$3,$4)`,
-      [parseInt(req.params.id, 10) || 0, req.session.mid, m.name, req.body.body.slice(0, 1000)]);
-  }
+  if (m && req.body.body) await q(`INSERT INTO forum_replies (post_id, member_no, author_name, body) VALUES ($1,$2,$3,$4)`, [parseInt(req.params.id, 10) || 0, req.session.mid, m.name, req.body.body.slice(0, 1000)]);
   res.redirect('/portal/forum?ok=1');
 });
 
-// ---------- GLOBAL PORTAL SEARCH ----------
 app.get('/portal/search', needMember, async (req, res) => {
-  const term = String(req.query.q || '').trim().slice(0, 60);
-  if (!term) return res.redirect('/student-dashboard');
+  const term = String(req.query.q || '').trim().slice(0, 60); if (!term) return res.redirect('/student-dashboard');
   const like = '%' + term + '%';
   const posts = await q(`SELECT * FROM posts WHERE title_en ILIKE $1 OR title_om ILIKE $1 OR title_am ILIKE $1 OR body_en ILIKE $1 ORDER BY id DESC LIMIT 25`, [like]);
   const forum = await q(`SELECT * FROM forum_posts WHERE title ILIKE $1 OR body ILIKE $1 ORDER BY id DESC LIMIT 15`, [like]);
-  res.send(page(req, 'Search', portalMenu('') + `
-    <div class="glass-card"><h3>🔍 Results for "${h(term)}"</h3><p style="font-size:13px; color:var(--text-muted);">${posts.length} posts · ${forum.length} forum threads</p></div>
-    ${posts.map(p => postCard(req, p)).join('')}
-    ${forum.map(f => `<div class="glass-card"><h4>💡 ${h(f.title)}</h4><p style="font-size:13px;">${h(f.body).slice(0, 200)}</p><a href="/portal/forum">Open in Forum →</a></div>`).join('')}
-  `));
+  res.send(page(req, 'Search', portalMenu('') + `<div class="glass-card"><h3>🔍 Results for "${h(term)}"</h3><p style="font-size:13px;color:var(--text-muted);">${posts.length} posts · ${forum.length} forum threads</p></div>${posts.map(p => postCard(req, p)).join('')}${forum.map(f => `<div class="glass-card"><h4>💡 ${h(f.title)}</h4><p style="font-size:13px;">${h(f.body).slice(0, 200)}</p><a href="/portal/forum">Open in Forum →</a></div>`).join('')}`));
 });
 
-// ---------- PORTAL CONTENT (ANNOUNCEMENTS, NEWS, EVENTS + RSVP, ETC.) ----------
+// ---------- PORTAL CONTENT ROUTES ----------
 TYPES.forEach(tp => {
   app.get('/portal/' + SLUG[tp], needMember, async (req, res) => {
     const cf = req.query.campus || '';
     const rows = await q(cf ? `SELECT * FROM posts WHERE type=$1 AND (campus=$2 OR campus='all') ORDER BY is_emergency DESC, id DESC LIMIT 60` : `SELECT * FROM posts WHERE type=$1 ORDER BY is_emergency DESC, id DESC LIMIT 60`, cf ? [tp, cf] : [tp]);
-
     let rsvpCounts = {}, myRsvps = new Set();
     if (tp === 'event' && rows.length) {
       (await q(`SELECT post_id, COUNT(*)::int c FROM event_rsvps GROUP BY post_id`)).forEach(r => rsvpCounts[r.post_id] = r.c);
       (await q(`SELECT post_id FROM event_rsvps WHERE member_no=$1`, [req.session.mid])).forEach(r => myRsvps.add(r.post_id));
     }
-
     let content = '';
-    if (tp === 'gallery') {
-      content = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">${rows.map(p => `<div class="glass-card" style="padding:10px;margin:0"><img style="width:100%;height:185px;object-fit:cover;border-radius:10px;margin-bottom:7px" src="/photo/${p.image_id}"><p style="font-weight:650;font-size:13.5px">${h(postT(req, p, 'title'))}</p></div>`).join('')}</div>`;
-    } else if (tp === 'event') {
+    if (tp === 'gallery') content = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px">${rows.map(p => `<div class="glass-card" style="padding:10px;margin:0"><img style="width:100%;height:185px;object-fit:cover;border-radius:12px;margin-bottom:7px" src="/photo/${p.image_id}"><p style="font-weight:700;font-size:13.5px">${h(postT(req, p, 'title'))}</p></div>`).join('')}</div>`;
+    else if (tp === 'event') {
       content = rows.map(p => {
         const joined = myRsvps.has(p.id), cnt = rsvpCounts[p.id] || 0;
-        const extra = `<div style="margin-top:12px; padding-top:10px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-          <span class="badge registered" data-countdown="${h(p.event_date || '')}">📅 ${h(p.event_date || 'Upcoming')}</span>
-          <form method="POST" action="/portal/events/${p.id}/rsvp"><button class="btn ${joined ? 'g' : 'secondary'}" style="padding:6px 13px; font-size:12px;">${joined ? '✔ Going' : '✋ I will attend'} (${cnt})</button></form>
-        </div>`;
-        return postCard(req, p, extra);
+        return postCard(req, p, `<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;"><span class="badge registered" data-countdown="${h(p.event_date || '')}">📅 ${h(p.event_date || 'Upcoming')}</span><form method="POST" action="/portal/events/${p.id}/rsvp"><button class="btn ${joined ? 'g' : 'secondary'}" style="padding:6px 14px;font-size:12px;">${joined ? '✔ Going' : '✋ I will attend'} (${cnt})</button></form></div>`);
       }).join('') + `<script>document.querySelectorAll('[data-countdown]').forEach(el=>{const d=new Date(el.getAttribute('data-countdown'));if(isNaN(d.getTime()))return;const diff=Math.ceil((d-new Date())/86400000);if(diff>0)el.textContent='⏳ '+diff+' days left ('+el.getAttribute('data-countdown')+')';else if(diff===0)el.textContent='🔥 Happening Today!';});</script>`;
     } else content = rows.map(p => postCard(req, p)).join('');
-
     res.send(page(req, tr(req, tp), portalMenu('/portal/' + SLUG[tp]) + (rows.length ? content : `<div class="glass-card" style="text-align:center;padding:42px">${h(tr(req, 'none'))}</div>`)));
   });
 });
 
 app.post('/portal/events/:id/rsvp', needMember, async (req, res) => {
   try { await q(`INSERT INTO event_rsvps (post_id, member_no) VALUES ($1,$2) ON CONFLICT DO NOTHING`, [parseInt(req.params.id, 10) || 0, req.session.mid]); } catch (e) {}
-  res.redirect('/portal/events?rsvp=1');
+  res.redirect((req.get('referer') || '/portal/events').split('?')[0] + '?rsvp=1');
 });
 
 app.get('/portal/meetings', needMember, async (req, res) => {
   const meets = await q(`SELECT * FROM meetings ORDER BY id DESC LIMIT 30`);
-  res.send(page(req, tr(req, 'meetings'), portalMenu('/portal/meetings') + `<div class="glass-card">
-    <h3 style="margin-bottom:12px">🤝 Meetings & Minutes</h3>
-    ${meets.map(m => `<div class="form-section"><div style="display:flex; justify-content:space-between; flex-wrap:wrap;"><h4>${h(m.title)}</h4><span class="badge registered">${h(m.meeting_date)} (${toEthiopianDate(m.meeting_date, L(req))})</span></div>
-      ${m.agenda ? `<p style="font-size:13px; margin-top:6px"><b>Agenda:</b> ${h(m.agenda)}</p>` : ''}
-      ${m.minutes ? `<p style="font-size:13px; margin-top:6px"><b>Minutes:</b> ${h(m.minutes).replace(/\n/g, '<br>')}</p>` : ''}
-      ${m.resolutions ? `<p style="font-size:13px; margin-top:6px; color:#10b981"><b>Resolutions:</b> ${h(m.resolutions)}</p>` : ''}
-      ${m.file_id ? `<p style="margin-top:8px"><a href="/photo/${m.file_id}?dl=1" class="btn secondary" style="padding:5px 12px;font-size:12px">📥 Download Minutes</a></p>` : ''}
-    </div>`).join('') || `<p style="color:var(--text-muted)">No meetings yet.</p>`}
-  </div>`));
+  res.send(page(req, tr(req, 'meetings'), portalMenu('/portal/meetings') + `<div class="glass-card"><div class="hub-header">🤝 <span>Meetings & Minutes</span></div>${meets.map(m => `<div class="form-section"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;"><h4>${h(m.title)}</h4><span class="badge registered">${h(m.meeting_date)} (${toEthiopianDate(m.meeting_date, L(req))})</span></div>${m.agenda ? `<p style="font-size:13px;margin-top:6px"><b>Agenda:</b> ${h(m.agenda)}</p>` : ''}${m.minutes ? `<p style="font-size:13px;margin-top:6px"><b>Minutes:</b> ${h(m.minutes).replace(/\n/g, '<br>')}</p>` : ''}${m.resolutions ? `<p style="font-size:13px;margin-top:6px;color:#10b981"><b>Resolutions:</b> ${h(m.resolutions)}</p>` : ''}${m.file_id ? `<p style="margin-top:8px"><a href="/photo/${m.file_id}?dl=1" class="btn secondary" style="padding:5px 12px;font-size:12px">📥 Download</a></p>` : ''}</div>`).join('') || '<p>No meetings yet.</p>'}</div>`));
 });
 
 app.get('/portal/leadership', needMember, async (req, res) => {
   const ls = await q(`SELECT * FROM leaders ORDER BY (level='central') DESC, ord, id`);
-  const grp = (t, list) => list.length ? `<h3 style="margin:18px 0 10px; color:var(--primary)">${h(t)}</h3><div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px">${list.map(x => `<div class="glass-card" style="text-align:center;margin:0"><img style="width:86px;height:86px;border-radius:50%;object-fit:cover;border:3px solid #93c5fd;" src="${x.photo_id ? '/photo/' + x.photo_id : ''}"><h4 style="margin:8px 0 2px">${h(x.name)}</h4><p style="color:var(--primary);font-size:12px;font-weight:700">${h(x.position_en || x.position_om)}</p><small>${h(x.term)}</small></div>`).join('')}</div>` : '';
+  const grp = (t, list) => list.length ? `<div class="glass-card"><div class="hub-header">👥 <span>${h(t)}</span></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">${list.map(x => `<div class="form-section" style="text-align:center;margin:0"><img style="width:82px;height:82px;border-radius:50%;object-fit:cover;border:3px solid #c084fc;" src="${x.photo_id ? '/photo/' + x.photo_id : ''}"><h4 style="margin:8px 0 2px">${h(x.name)}</h4><p style="color:var(--primary);font-size:12px;font-weight:700">${h(x.position_en || x.position_om)}</p><small>${h(x.term)}</small></div>`).join('')}</div></div>` : '';
   res.send(page(req, tr(req, 'leadership'), portalMenu('/portal/leadership') + grp('Central Executive', ls.filter(x => x.level === 'central')) + Object.keys(CAMPUS).map(k => grp(campusName(req, k), ls.filter(x => x.level !== 'central' && x.campus === k))).join('')));
 });
 
 app.get('/portal/finance', needMember, async (req, res) => {
   const rs = await q(`SELECT * FROM finance_reports WHERE approved=1 ORDER BY period DESC, id DESC LIMIT 36`);
-  res.send(page(req, tr(req, 'finance'), portalMenu('/portal/finance') + (rs.map(r => `<div class="glass-card">
-    <h4 style="margin-bottom:12px">${h(r.period)} · ${h(r.campus === 'all' ? 'All Campuses' : campusName(req, r.campus))}</h4>
-    <div class="stat-row">
-      <div class="stat-chip"><b>${Number(r.starting_balance || 0).toLocaleString()}</b><span>Starting</span></div>
-      <div class="stat-chip"><b style="color:#10b981">${Number(r.income).toLocaleString()}</b><span>Income</span></div>
-      <div class="stat-chip"><b style="color:#ef4444">${Number(r.expense).toLocaleString()}</b><span>Expense</span></div>
-      <div class="stat-chip"><b>${(Number(r.starting_balance || 0) + Number(r.income) - Number(r.expense)).toLocaleString()}</b><span>Net ETB</span></div>
-    </div>
-  </div>`).join('') || `<div class="glass-card" style="text-align:center;padding:42px">${h(tr(req, 'none'))}</div>`)));
+  res.send(page(req, tr(req, 'finance'), portalMenu('/portal/finance') + (rs.map(r => `<div class="glass-card"><h4 style="margin-bottom:12px">${h(r.period)} · ${h(r.campus === 'all' ? 'All Campuses' : campusName(req, r.campus))}</h4><div class="stat-row"><div class="stat-chip"><b>${Number(r.starting_balance || 0).toLocaleString()}</b><span>Starting</span></div><div class="stat-chip"><b style="color:#10b981">${Number(r.income).toLocaleString()}</b><span>Income</span></div><div class="stat-chip"><b style="color:#ef4444">${Number(r.expense).toLocaleString()}</b><span>Expense</span></div><div class="stat-chip"><b>${(Number(r.starting_balance || 0) + Number(r.income) - Number(r.expense)).toLocaleString()}</b><span>Net ETB</span></div></div></div>`).join('') || `<div class="glass-card" style="text-align:center;padding:42px">${h(tr(req, 'none'))}</div>`)));
 });
 
 app.get('/portal/support', needMember, async (req, res) => {
   const reqs = await q(`SELECT * FROM support_requests WHERE member_no=$1 ORDER BY id DESC LIMIT 20`, [req.session.mid]);
-  res.send(page(req, tr(req, 'support'), portalMenu('/portal/support') + `
-    <div class="glass-card"><h3>🤝 Support Desk</h3><form method="POST" action="/portal/support">
-      <label>Subject</label><input name="subject" required><label>Message</label><textarea name="message" required></textarea>
-      <p style="margin-top:12px"><button class="btn">Send Request</button></p>
-    </form></div>
-    <div class="glass-card"><h4>Your Inquiries</h4>${reqs.map(r => `<div class="form-section"><b>${h(r.subject)}</b> <span class="badge ${r.status === 'closed' ? 'official' : 'pending'}">${h(r.status)}</span><p style="font-size:13px;margin-top:4px">${h(r.message)}</p>${r.reply ? `<div class="msgok"><b>Reply:</b> ${h(r.reply)}</div>` : ''}</div>`).join('') || '<p>No inquiries yet.</p>'}</div>
-  `));
+  res.send(page(req, tr(req, 'support'), portalMenu('/portal/support') + `<div class="glass-card"><div class="hub-header">💬 <span>Support Desk</span></div><form method="POST" action="/portal/support"><label>Subject</label><input name="subject" required><label>Message</label><textarea name="message" required></textarea><p style="margin-top:12px"><button class="btn">Send Request</button></p></form></div><div class="glass-card"><h4>Your Inquiries</h4>${reqs.map(r => `<div class="form-section"><b>${h(r.subject)}</b> <span class="badge ${r.status === 'closed' ? 'official' : 'pending'}">${h(r.status)}</span><p style="font-size:13px;margin-top:4px">${h(r.message)}</p>${r.reply ? `<div class="msgok"><b>Reply:</b> ${h(r.reply)}</div>` : ''}</div>`).join('') || '<p>No inquiries yet.</p>'}</div>`));
 });
-
 app.post('/portal/support', needMember, async (req, res) => {
   const [m] = await q(`SELECT * FROM members WHERE member_no=$1`, [req.session.mid]);
   if (m && req.body.subject && req.body.message) await q(`INSERT INTO support_requests (member_no, name, campus, subject, message) VALUES ($1,$2,$3,$4,$5)`, [m.member_no, m.name, m.campus, req.body.subject.slice(0, 150), req.body.message.slice(0, 3000)]);
@@ -1475,51 +1330,42 @@ app.post('/portal/support', needMember, async (req, res) => {
 
 // ---------- PHOTO, VERIFY, LEGAL ----------
 app.get('/photo/:id', async (req, res) => {
-  const [f] = await q(`SELECT mime, data, name FROM files WHERE id=$1`, [parseInt(req.params.id, 10) || 0]);
-  if (!f) return res.status(404).end();
+  const [f] = await q(`SELECT mime, data, name FROM files WHERE id=$1`, [parseInt(req.params.id, 10) || 0]); if (!f) return res.status(404).end();
   res.set('Content-Type', f.mime).set('Cache-Control', 'public,max-age=604800');
   if (req.query.dl) res.set('Content-Disposition', `attachment; filename="${String(f.name || 'file').replace(/[^\w.\-]/g, '_')}"`);
   res.send(f.data);
 });
-
 app.get('/verify/:no', async (req, res) => {
   const [m] = await q(`SELECT name,member_no,campus,department,status,photo_id FROM members WHERE UPPER(member_no)=UPPER($1)`, [req.params.no]);
-  res.send(page(req, tr(req, 'verify'), m ? `<div class="glass-card" style="max-width:380px; margin:30px auto; text-align:center;">
-    <h2 style="color:#10b981; margin-bottom:12px;">${h(tr(req, 'valid'))}</h2>
-    <img style="width:96px; height:120px; border-radius:12px; object-fit:cover;" src="${m.photo_id ? '/photo/' + m.photo_id : ''}">
-    <h3 style="margin:10px 0 3px;">${h(m.name)}</h3><p style="color:var(--primary); font-weight:700;">${h(m.member_no)}</p>
-    <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:10px;">${h(campusName(req, m.campus))} · ${h(m.department)}</p>
-    <span class="badge ${m.status}">${h(tr(req, m.status))}</span>
-  </div>` : `<div class="glass-card" style="max-width:360px; margin:30px auto; text-align:center;"><h2 style="color:#ef4444">${h(tr(req, 'invalid'))}</h2></div>`));
+  res.send(page(req, tr(req, 'verify'), m ? `<div class="glass-card" style="max-width:380px;margin:28px auto;text-align:center;"><h2 style="color:#10b981;margin-bottom:12px;">${h(tr(req, 'valid'))}</h2><img style="width:96px;height:120px;border-radius:12px;object-fit:cover;" src="${m.photo_id ? '/photo/' + m.photo_id : ''}"><h3 style="margin:10px 0 3px;">${h(m.name)}</h3><p style="color:var(--primary);font-weight:700;">${h(m.member_no)}</p><p style="font-size:12.5px;color:var(--text-muted);margin-bottom:10px;">${h(campusName(req, m.campus))} · ${h(m.department)}</p><span class="badge ${m.status}">${h(tr(req, m.status))}</span></div>` : `<div class="glass-card" style="max-width:360px;margin:28px auto;text-align:center;"><h2 style="color:#ef4444">${h(tr(req, 'invalid'))}</h2></div>`));
 });
-
 app.get('/privacy', (req, res) => res.send(page(req, tr(req, 'privacy'), `<div class="glass-card"><h2>🔒 Privacy Policy</h2><p style="margin-top:8px;">Student data is strictly used for Siikkoo-Mandoo MWU membership services.</p></div>`)));
 app.get('/terms', (req, res) => res.send(page(req, tr(req, 'terms'), `<div class="glass-card"><h2>📜 Terms & Conditions</h2><p style="margin-top:8px;">Members agree to follow MWU and association bylaws.</p></div>`)));
 
-// ---------- ADMIN PORTAL ----------
+// ---------- ADMIN PORTAL (Also Styled with Vibrant Hub Tiles & Dashed Cards!) ----------
 const A = (req, title, body) => {
   const links = [
-    ['/admin', '📊', 'Overview', null, 'blue'],
-    ['/admin/members', '👥', 'Members', 'members', 'pink'],
-    ['/admin/polls', '🗳️', 'Elections & Polls', 'polls', 'purple'],
-    ['/admin/certificates', '🏅', 'Certificates', 'certificates', 'yellow'],
-    ['/admin/content/announcement', '📢', 'Announcements', 'content', 'indigo'],
-    ['/admin/content/news', '📰', 'News', 'content', 'cyan'],
-    ['/admin/content/event', '📅', 'Events', 'content', 'orange'],
-    ['/admin/meetings', '🤝', 'Meetings', 'meetings', 'teal'],
-    ['/admin/content/education', '📚', 'Education', 'content', 'blue'],
-    ['/admin/content/gallery', '🖼️', 'Gallery', 'content', 'green'],
-    ['/admin/leaders', '🎖️', 'Leadership', 'leaders', 'yellow'],
-    ['/admin/finance', '💰', 'Finance', 'finance', 'green'],
-    ['/admin/support', '💬', 'Support', 'support', 'purple'],
-    ['/admin/staff', '🔑', 'Staff & Roles', 'staff', 'gray'],
-    ['/admin/audit-logs', '📜', 'Audit Logs', 'audit', 'indigo'],
-    ['/admin/backup', '💾', 'Backup', 'backup', 'teal']
-  ].filter(x => !x[3] || can(req, x[3]));
+    ['/admin', '📊', 'Overview', 'ማጠቃለያ', null, 'purple'],
+    ['/admin/members', '👥', 'Members', 'አባላት', 'members', 'pink'],
+    ['/admin/polls', '🗳️', 'Elections', 'ምርጫ', 'polls', 'orange'],
+    ['/admin/certificates', '🏅', 'Certificates', 'ሰርተፍኬት', 'certificates', 'yellow'],
+    ['/admin/content/announcement', '📢', 'Announce', 'ማስታወቂያ', 'content', 'sky'],
+    ['/admin/content/news', '📰', 'News', 'ዜና', 'content', 'blue'],
+    ['/admin/content/event', '📅', 'Events', 'ፕሮግራም', 'content', 'green'],
+    ['/admin/meetings', '🤝', 'Meetings', 'ስብሰባ', 'meetings', 'teal'],
+    ['/admin/content/education', '📚', 'Education', 'ትምህርት', 'content', 'indigo'],
+    ['/admin/content/gallery', '🖼️', 'Gallery', 'ፎቶዎች', 'content', 'pink'],
+    ['/admin/leaders', '🎖️', 'Leaders', 'አመራሮች', 'leaders', 'orange'],
+    ['/admin/finance', '💰', 'Finance', 'ፋይናንስ', 'finance', 'green'],
+    ['/admin/support', '💬', 'Support', 'እገዛ', 'support', 'purple'],
+    ['/admin/staff', '🔑', 'Staff', 'ሰራተኞች', 'staff', 'gray'],
+    ['/admin/audit-logs', '📜', 'Audit Logs', 'ታሪክ', 'audit', 'blue'],
+    ['/admin/backup', '💾', 'Backup', 'ባክአፕ', 'backup', 'teal']
+  ].filter(x => !x[4] || can(req, x[4]));
 
   const isOverview = req.path === '/admin' || req.path === '/admin/';
   return page(req, title, `
-    ${isOverview ? `<div class="feature-grid">${links.map(x => `<a href="${x[0]}" class="feature-tile ${x[4]}"><span class="icon">${x[1]}</span><span>${x[2]}</span></a>`).join('')}</div>`
+    ${isOverview ? `<div class="glass-card"><div class="hub-header">🛡️ <span>Admin Control Hub · የአስተዳደር ማዕከል</span></div><div class="hub-grid">${links.map(x => `<a href="${x[0]}" class="hub-tile ${x[5]}"><div class="hub-ico-circle">${x[1]}</div><div class="t-main">${x[2]}</div><div class="t-sub">${x[3]}</div></a>`).join('')}</div></div>`
     : `<div class="portal-menu">${links.map(x => `<a href="${x[0]}" class="portal-btn ${req.path === x[0] || (x[0] !== '/admin' && req.path.startsWith(x[0])) ? 'active' : ''}">${x[1]} ${x[2]}</a>`).join('')}</div>`}
     ${body}
   `);
@@ -1528,22 +1374,18 @@ const A = (req, title, body) => {
 const OKMIME = /^(image\/(jpeg|png|webp)|application\/(pdf|msword|vnd\.openxmlformats-officedocument\.[\w.]+|vnd\.ms-[\w.]+))$/;
 const up6 = multer({ storage: multer.memoryStorage(), limits: { fileSize: 6 * 1024 * 1024 } });
 const files6 = fields => (req, res, next) => up6.fields(fields)(req, res, err => (err ? res.status(400).send('File exceeds 6 MB') : next()));
-async function saveFile(f) {
-  if (!f || !OKMIME.test(f.mimetype)) return null;
-  return (await q(`INSERT INTO files (mime,data,name) VALUES ($1,$2,$3) RETURNING id`, [f.mimetype, f.buffer, String(f.originalname || 'file').slice(0, 100)]))[0].id;
-}
+async function saveFile(f) { if (!f || !OKMIME.test(f.mimetype)) return null; return (await q(`INSERT INTO files (mime,data,name) VALUES ($1,$2,$3) RETURNING id`, [f.mimetype, f.buffer, String(f.originalname || 'file').slice(0, 100)]))[0].id; }
 const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
 const sel = (name, opts, cur) => `<select name="${name}">${opts.map(o => `<option value="${o[0]}"${cur === o[0] ? ' selected' : ''}>${h(o[1])}</option>`).join('')}</select>`;
 const campusOpts = (sc, all) => (sc ? [[sc, CAMPUS[sc].n]] : (all ? [['all', 'All campuses']] : []).concat(Object.keys(CAMPUS).map(k => [k, CAMPUS[k].n])));
 
-// Admin Overview + Charts
 app.get('/admin', needStaff, async (req, res) => {
   const sc = scopeOf(req), w = sc ? ' WHERE campus=$1' : '', pr = sc ? [sc] : [];
   const [m] = await q(`SELECT COUNT(*)::int n, SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END)::int p, SUM(CASE WHEN status='official' THEN 1 ELSE 0 END)::int o, SUM(CASE WHEN status='rejected' THEN 1 ELSE 0 END)::int r, SUM(CASE WHEN campus='robe' THEN 1 ELSE 0 END)::int robe, SUM(CASE WHEN campus='goba' THEN 1 ELSE 0 END)::int goba, SUM(CASE WHEN campus='shashamane' THEN 1 ELSE 0 END)::int sha FROM members${w}`, pr);
   res.send(A(req, 'Admin Dashboard', `
-    <div class="admin-hero"><h2>Welcome, ${h(req.session.sname || 'Admin')}</h2><p>Live Analytics · 📅 ${toEthiopianDate(new Date(), L(req))}</p></div>
+    <div class="welcome-hero"><div class="welcome-info"><h2>Welcome, ${h(req.session.sname || 'Admin')} 🛡️</h2><p>Live Analytics & Control Center · 📅 ${toEthiopianDate(new Date(), L(req))}</p></div></div>
     <div class="stat-grid">
-      <div class="stat-card"><div class="num" style="color:#2563eb">${m.n || 0}</div><div class="label">Total</div></div>
+      <div class="stat-card"><div class="num" style="color:#7c3aed">${m.n || 0}</div><div class="label">Total</div></div>
       <div class="stat-card"><div class="num" style="color:#10b981">${m.o || 0}</div><div class="label">Official</div></div>
       <div class="stat-card"><div class="num" style="color:#f59e0b">${m.p || 0}</div><div class="label">Pending</div></div>
       <div class="stat-card"><div class="num" style="color:#ef4444">${m.r || 0}</div><div class="label">Rejected</div></div>
@@ -1554,128 +1396,48 @@ app.get('/admin', needStaff, async (req, res) => {
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-      new Chart(document.getElementById('campusChart'), { type:'bar', data:{ labels:['Robe','Goba','Shashamane'], datasets:[{ data:[${m.robe||0},${m.goba||0},${m.sha||0}], backgroundColor:['#2563eb','#10b981','#f59e0b'], borderRadius:10 }] }, options:{ plugins:{ legend:{ display:false } } } });
-      new Chart(document.getElementById('statusChart'), { type:'doughnut', data:{ labels:['Official','Pending','Registered','Rejected'], datasets:[{ data:[${m.o||0},${m.p||0},${(m.n||0)-(m.o||0)-(m.p||0)-(m.r||0)},${m.r||0}], backgroundColor:['#10b981','#f59e0b','#2563eb','#ef4444'] }] } });
+      new Chart(document.getElementById('campusChart'), { type:'bar', data:{ labels:['Robe','Goba','Shashamane'], datasets:[{ data:[${m.robe||0},${m.goba||0},${m.sha||0}], backgroundColor:['#7c3aed','#10b981','#f59e0b'], borderRadius:10 }] }, options:{ plugins:{ legend:{ display:false } } } });
+      new Chart(document.getElementById('statusChart'), { type:'doughnut', data:{ labels:['Official','Pending','Registered','Rejected'], datasets:[{ data:[${m.o||0},${m.p||0},${(m.n||0)-(m.o||0)-(m.p||0)-(m.r||0)},${m.r||0}], backgroundColor:['#10b981','#f59e0b','#7c3aed','#ef4444'] }] } });
     </script>
   `));
 });
 
-// Admin Polls & Elections
 app.get('/admin/polls', guard('polls'), async (req, res) => {
   const polls = await q(`SELECT * FROM polls ORDER BY id DESC LIMIT 30`);
-  res.send(A(req, 'Manage Polls', `
-    <div class="glass-card">
-      <h3>🗳️ Create New Election / Poll</h3>
-      <form method="POST" action="/admin/polls">
-        <div style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
-          <div><label>Title / Question</label><input name="title" required placeholder="e.g. 2026 President Election"></div>
-          <div><label>Campus</label>${sel('campus', campusOpts(scopeOf(req), true))}</div>
-        </div>
-        <label>Description (Optional)</label><input name="description" placeholder="Brief instructions...">
-        <label>Options (One per line or comma separated)</label><textarea name="options" required placeholder="Candidate A\nCandidate B\nCandidate C"></textarea>
-        <p style="margin-top:12px;"><button class="btn">Launch Poll</button></p>
-      </form>
-    </div>
-    <div class="glass-card">
-      ${polls.map(p => `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); flex-wrap:wrap; gap:8px;">
-        <div><b>${h(p.title)}</b> <span class="badge ${p.status === 'open' ? 'official' : 'rejected'}">${h(p.status)}</span></div>
-        <div style="display:flex; gap:6px;">
-          <form method="POST" action="/admin/polls/${p.id}/toggle"><button class="btn secondary" style="padding:4px 10px; font-size:11.5px;">${p.status === 'open' ? 'Close' : 'Reopen'}</button></form>
-          <form method="POST" action="/admin/polls/${p.id}/delete"><button class="btn danger" style="padding:4px 10px; font-size:11.5px;">Delete</button></form>
-        </div>
-      </div>`).join('') || '<p>No polls yet.</p>'}
-    </div>
-  `));
+  res.send(A(req, 'Polls', `<div class="glass-card"><h3>🗳️ Create Election / Poll</h3><form method="POST" action="/admin/polls"><div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;"><div><label>Title</label><input name="title" required></div><div><label>Campus</label>${sel('campus', campusOpts(scopeOf(req), true))}</div></div><label>Description</label><input name="description"><label>Options (One per line or comma)</label><textarea name="options" required></textarea><p style="margin-top:12px;"><button class="btn">Launch Poll</button></p></form></div><div class="glass-card">${polls.map(p => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px;"><div><b>${h(p.title)}</b> <span class="badge ${p.status==='open'?'official':'rejected'}">${h(p.status)}</span></div><div style="display:flex;gap:6px;"><form method="POST" action="/admin/polls/${p.id}/toggle"><button class="btn secondary" style="padding:4px 10px;font-size:11.5px;">${p.status==='open'?'Close':'Reopen'}</button></form><form method="POST" action="/admin/polls/${p.id}/delete"><button class="btn danger" style="padding:4px 10px;font-size:11.5px;">Delete</button></form></div></div>`).join('') || '<p>No polls yet.</p>'}</div>`));
 });
+app.post('/admin/polls', guard('polls'), async (req, res) => { if (req.body.title && req.body.options) await q(`INSERT INTO polls (title, description, options, campus) VALUES ($1,$2,$3,$4)`, [req.body.title.slice(0,200), (req.body.description||'').slice(0,500), req.body.options.slice(0,1500), req.body.campus||'all']); res.redirect('/admin/polls?ok=1'); });
+app.post('/admin/polls/:id/toggle', guard('polls'), async (req, res) => { await q(`UPDATE polls SET status=CASE WHEN status='open' THEN 'closed' ELSE 'open' END WHERE id=$1`, [parseInt(req.params.id,10)||0]); res.redirect('/admin/polls?ok=1'); });
+app.post('/admin/polls/:id/delete', guard('polls'), async (req, res) => { await q(`DELETE FROM polls WHERE id=$1`, [parseInt(req.params.id,10)||0]); res.redirect('/admin/polls?ok=1'); });
 
-app.post('/admin/polls', guard('polls'), async (req, res) => {
-  if (req.body.title && req.body.options) {
-    await q(`INSERT INTO polls (title, description, options, campus) VALUES ($1,$2,$3,$4)`,
-      [req.body.title.slice(0, 200), (req.body.description || '').slice(0, 500), req.body.options.slice(0, 1500), req.body.campus || 'all']);
-  }
-  res.redirect('/admin/polls?ok=1');
-});
-app.post('/admin/polls/:id/toggle', guard('polls'), async (req, res) => {
-  await q(`UPDATE polls SET status = CASE WHEN status='open' THEN 'closed' ELSE 'open' END WHERE id=$1`, [parseInt(req.params.id, 10) || 0]);
-  res.redirect('/admin/polls?ok=1');
-});
-app.post('/admin/polls/:id/delete', guard('polls'), async (req, res) => {
-  await q(`DELETE FROM polls WHERE id=$1`, [parseInt(req.params.id, 10) || 0]);
-  res.redirect('/admin/polls?ok=1');
-});
-
-// Admin Digital Certificates
 app.get('/admin/certificates', guard('certificates'), async (req, res) => {
   const certs = await q(`SELECT * FROM certificates ORDER BY id DESC LIMIT 40`);
-  res.send(A(req, 'Issue Certificates', `
-    <div class="glass-card">
-      <h3>🏅 Issue Official Digital Certificate</h3>
-      <form method="POST" action="/admin/certificates">
-        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:10px;">
-          <div><label>Member No. (e.g. SM-ROB-...)</label><input name="member_no" required placeholder="SM-ROB-2026-0001"></div>
-          <div><label>Certificate Title</label><input name="title" required value="Certificate of Appreciation"></div>
-          <div><label>Issue Date</label><input name="issue_date" type="date" required value="${new Date().toISOString().slice(0, 10)}"></div>
-        </div>
-        <label>Citation / Award Description</label>
-        <textarea name="role_award" required placeholder="For outstanding leadership and service as Committee Member..."></textarea>
-        <p style="margin-top:12px;"><button class="btn g">🏅 Issue Certificate</button></p>
-      </form>
-    </div>
-    <div class="glass-card"><div class="tw"><table>
-      <tr><th>Code</th><th>Member</th><th>Title</th><th>Date</th><th>Action</th></tr>
-      ${certs.map(c => `<tr><td><b>${h(c.cert_code)}</b></td><td>${h(c.member_name)} (${h(c.member_no)})</td><td>${h(c.title)}</td><td>${h(c.issue_date)}</td>
-        <td><form method="POST" action="/admin/certificates/${c.id}/delete"><button class="btn danger" style="padding:4px 9px;font-size:11px">Delete</button></form></td></tr>`).join('')}
-    </table></div></div>
-  `));
+  res.send(A(req, 'Certificates', `<div class="glass-card"><h3>🏅 Issue Certificate</h3><form method="POST" action="/admin/certificates"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;"><div><label>Member No.</label><input name="member_no" required placeholder="SM-ROB-2026-0001"></div><div><label>Title</label><input name="title" required value="Certificate of Appreciation"></div><div><label>Date</label><input name="issue_date" type="date" required value="${new Date().toISOString().slice(0,10)}"></div></div><label>Award Citation</label><textarea name="role_award" required></textarea><p style="margin-top:12px;"><button class="btn g">🏅 Issue Certificate</button></p></form></div><div class="glass-card"><div class="tw"><table><tr><th>Code</th><th>Member</th><th>Title</th><th>Date</th><th>Action</th></tr>${certs.map(c => `<tr><td><b>${h(c.cert_code)}</b></td><td>${h(c.member_name)} (${h(c.member_no)})</td><td>${h(c.title)}</td><td>${h(c.issue_date)}</td><td><form method="POST" action="/admin/certificates/${c.id}/delete"><button class="btn danger" style="padding:4px 9px;font-size:11px">Delete</button></form></td></tr>`).join('')}</table></div></div>`));
 });
-
 app.post('/admin/certificates', guard('certificates'), async (req, res) => {
-  const mno = String(req.body.member_no || '').trim();
-  const [m] = await q(`SELECT member_no, name FROM members WHERE UPPER(member_no)=UPPER($1)`, [mno]);
+  const [m] = await q(`SELECT member_no, name FROM members WHERE UPPER(member_no)=UPPER($1)`, [String(req.body.member_no||'').trim()]);
   if (m && req.body.title && req.body.role_award) {
-    const code = 'CERT-' + new Date().getFullYear() + '-' + Math.random().toString(36).slice(2, 7).toUpperCase();
-    await q(`INSERT INTO certificates (cert_code, member_no, member_name, title, role_award, issue_date) VALUES ($1,$2,$3,$4,$5,$6)`,
-      [code, m.member_no, m.name, req.body.title.slice(0, 140), req.body.role_award.slice(0, 600), req.body.issue_date || new Date().toISOString().slice(0, 10)]);
+    const code = 'CERT-' + new Date().getFullYear() + '-' + Math.random().toString(36).slice(2,7).toUpperCase();
+    await q(`INSERT INTO certificates (cert_code, member_no, member_name, title, role_award, issue_date) VALUES ($1,$2,$3,$4,$5,$6)`, [code, m.member_no, m.name, req.body.title.slice(0,140), req.body.role_award.slice(0,600), req.body.issue_date||new Date().toISOString().slice(0,10)]);
   }
   res.redirect('/admin/certificates?ok=1');
 });
-app.post('/admin/certificates/:id/delete', guard('certificates'), async (req, res) => {
-  await q(`DELETE FROM certificates WHERE id=$1`, [parseInt(req.params.id, 10) || 0]);
-  res.redirect('/admin/certificates?ok=1');
-});
+app.post('/admin/certificates/:id/delete', guard('certificates'), async (req, res) => { await q(`DELETE FROM certificates WHERE id=$1`, [parseInt(req.params.id,10)||0]); res.redirect('/admin/certificates?ok=1'); });
 
-// Admin Members, Export, Edit
 app.get('/admin/members', guard('members'), async (req, res) => {
-  const sc = scopeOf(req), cf = sc || (CAMPUS[req.query.campus] ? req.query.campus : '');
-  const sf = req.query.status || '', qs = String(req.query.q || '').trim().slice(0, 50), pr = [], c = [];
+  const sc = scopeOf(req), cf = sc || (CAMPUS[req.query.campus] ? req.query.campus : ''), sf = req.query.status || '', qs = String(req.query.q || '').trim().slice(0, 50), pr = [], c = [];
   if (cf) { pr.push(cf); c.push(`campus=$${pr.length}`); }
   if (sf) { pr.push(sf); c.push(`status=$${pr.length}`); }
   if (qs) { pr.push('%' + qs + '%'); c.push(`(name ILIKE $${pr.length} OR member_no ILIKE $${pr.length} OR student_id ILIKE $${pr.length} OR phone ILIKE $${pr.length})`); }
   const ms = await q(`SELECT * FROM members ${c.length ? 'WHERE ' + c.join(' AND ') : ''} ORDER BY id DESC LIMIT 400`, pr);
   const act = (id, a, t, cls) => `<form method="POST" action="/admin/members/${id}/${a}" style="display:inline"><button class="btn ${cls || ''}" style="padding:4px 9px;font-size:11px;box-shadow:none">${t}</button></form>`;
   const exportQs = new URLSearchParams({ q: qs, campus: cf, status: sf }).toString();
-  res.send(A(req, 'Members', `<div class="glass-card">
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px">
-      <h3>👥 Members (${ms.length})</h3><a class="btn excel" href="/admin/members/export?${exportQs}">⬇ Excel (CSV)</a>
-    </div>
-    <form style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px" method="GET" action="/admin/members">
-      <input name="q" value="${h(qs)}" placeholder="Search..." style="flex:1; min-width:160px">
-      ${sc ? '' : sel('campus', [['', 'All Campuses']].concat(campusOpts(null)), cf)}
-      ${sel('status', [['', 'All Status'], ['official', 'Official'], ['pending', 'Pending'], ['registered', 'Registered'], ['rejected', 'Rejected']], sf)}
-      <button class="btn">Filter</button>
-    </form>
-    <div class="tw"><table>
-      <tr><th>No</th><th>Name</th><th>Campus</th><th>Dept</th><th>Phone</th><th>Status</th><th>Actions</th></tr>
-      ${ms.map(m => `<tr><td><b>${h(m.member_no)}</b></td><td>${h(m.name)}<br><small>${h(m.student_id)}</small></td><td>${h(campusName(req, m.campus))}</td><td>${h(m.department)} Y${h(m.year)}</td><td>${h(m.phone)}</td><td><span class="badge ${m.status}">${h(m.status)}</span></td>
-      <td style="white-space:nowrap"><a class="btn edit-btn" href="/admin/members/${m.id}/edit" style="padding:4px 9px;font-size:11px">✏️</a> ${m.status !== 'official' ? act(m.id, 'approve', 'Approve', 'g') : ''} ${m.status === 'pending' ? act(m.id, 'reject', 'Reject', 'danger') : ''}</td></tr>`).join('')}
-    </table></div>
-  </div>`));
+  res.send(A(req, 'Members', `<div class="glass-card"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px"><h3>👥 Members (${ms.length})</h3><a class="btn excel" href="/admin/members/export?${exportQs}">⬇ Excel (CSV)</a></div><form style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px" method="GET" action="/admin/members"><input name="q" value="${h(qs)}" placeholder="Search..." style="flex:1;min-width:160px">${sc ? '' : sel('campus', [['', 'All Campuses']].concat(campusOpts(null)), cf)}${sel('status', [['', 'All Status'], ['official', 'Official'], ['pending', 'Pending'], ['registered', 'Registered'], ['rejected', 'Rejected']], sf)}<button class="btn">Filter</button></form><div class="tw"><table><tr><th>No</th><th>Name</th><th>Campus</th><th>Dept</th><th>Phone</th><th>Status</th><th>Actions</th></tr>${ms.map(m => `<tr><td><b>${h(m.member_no)}</b></td><td>${h(m.name)}<br><small>${h(m.student_id)}</small></td><td>${h(campusName(req, m.campus))}</td><td>${h(m.department)} Y${h(m.year)}</td><td>${h(m.phone)}</td><td><span class="badge ${m.status}">${h(m.status)}</span></td><td style="white-space:nowrap"><a class="btn edit-btn" href="/admin/members/${m.id}/edit" style="padding:4px 9px;font-size:11px">✏️</a> ${m.status !== 'official' ? act(m.id, 'approve', 'Approve', 'g') : ''} ${m.status === 'pending' ? act(m.id, 'reject', 'Reject', 'danger') : ''}</td></tr>`).join('')}</table></div></div>`));
 });
 
 app.get('/admin/members/export', guard('members'), async (req, res) => {
   const sc = scopeOf(req), cf = sc || (CAMPUS[req.query.campus] ? req.query.campus : ''), sf = req.query.status || '', qs = String(req.query.q || '').trim().slice(0, 50), pr = [], c = [];
-  if (cf) { pr.push(cf); c.push(`campus=$${pr.length}`); }
-  if (sf) { pr.push(sf); c.push(`status=$${pr.length}`); }
+  if (cf) { pr.push(cf); c.push(`campus=$${pr.length}`); } if (sf) { pr.push(sf); c.push(`status=$${pr.length}`); }
   if (qs) { pr.push('%' + qs + '%'); c.push(`(name ILIKE $${pr.length} OR member_no ILIKE $${pr.length})`); }
   const rows = await q(`SELECT * FROM members ${c.length ? 'WHERE ' + c.join(' AND ') : ''} ORDER BY id DESC LIMIT 5000`, pr);
   const headers = ['member_no','name','gender','student_id','campus','college','department','year','zone_woreda','phone','email','status','created_at'];
@@ -1684,67 +1446,23 @@ app.get('/admin/members/export', guard('members'), async (req, res) => {
 });
 
 app.get('/admin/members/:id/edit', guard('members'), async (req, res) => {
-  const [m] = await q(`SELECT * FROM members WHERE id=$1`, [parseInt(req.params.id, 10) || 0]);
-  if (!m) return res.redirect('/admin/members');
+  const [m] = await q(`SELECT * FROM members WHERE id=$1`, [parseInt(req.params.id, 10) || 0]); if (!m) return res.redirect('/admin/members');
   const s = (k, opts) => opts.map(x => `<option value="${h(x[0])}"${String(m[k]) === String(x[0]) ? ' selected' : ''}>${h(x[1])}</option>`).join('');
-  res.send(A(req, 'Edit Member', `<div class="glass-card" style="max-width:780px; margin:0 auto">
-    <h3>✏️ Edit ${h(m.name)}</h3>
-    <form method="POST" action="/admin/members/${m.id}/edit" enctype="multipart/form-data">
-      <div class="form-section" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:8px 12px">
-        <div><label>Name</label><input name="name" required value="${h(m.name)}"></div>
-        <div><label>Student ID</label><input name="student_id" required value="${h(m.student_id)}"></div>
-        <div><label>Phone</label><input name="phone" required value="${h(m.phone)}"></div>
-        <div><label>Campus</label><select name="campus">${s('campus', Object.keys(CAMPUS).map(k => [k, CAMPUS[k].n]))}</select></div>
-        <div><label>Department</label><input name="department" value="${h(m.department || '')}"></div>
-        <div><label>Year</label><select name="year">${s('year', [1,2,3,4,5,6].map(x => [String(x), 'Year '+x]))}</select></div>
-        <div><label>Status</label><select name="status">${s('status', [['registered','Registered'],['pending','Pending'],['official','Official'],['rejected','Rejected']])}</select></div>
-        <div><label>New Password</label><input name="password" type="password" minlength="6"></div>
-      </div>
-      <button class="btn">💾 Save</button> <a class="btn secondary" href="/admin/members">Back</a>
-    </form>
-  </div>`));
+  res.send(A(req, 'Edit Member', `<div class="glass-card" style="max-width:780px;margin:0 auto"><h3>✏️ Edit ${h(m.name)}</h3><form method="POST" action="/admin/members/${m.id}/edit" enctype="multipart/form-data"><div class="form-section" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px 12px"><div><label>Name</label><input name="name" required value="${h(m.name)}"></div><div><label>Student ID</label><input name="student_id" required value="${h(m.student_id)}"></div><div><label>Phone</label><input name="phone" required value="${h(m.phone)}"></div><div><label>Campus</label><select name="campus">${s('campus', Object.keys(CAMPUS).map(k => [k, CAMPUS[k].n]))}</select></div><div><label>Department</label><input name="department" value="${h(m.department || '')}"></div><div><label>Year</label><select name="year">${s('year', [1,2,3,4,5,6].map(x => [String(x), 'Year '+x]))}</select></div><div><label>Status</label><select name="status">${s('status', [['registered','Registered'],['pending','Pending'],['official','Official'],['rejected','Rejected']])}</select></div><div><label>New Password</label><input name="password" type="password" minlength="6"></div></div><button class="btn">💾 Save</button> <a class="btn secondary" href="/admin/members">Back</a></form></div>`));
 });
-
 app.post('/admin/members/:id/edit', guard('members'), files6([{ name: 'photo', maxCount: 1 }]), async (req, res) => {
   const id = parseInt(req.params.id, 10) || 0, b = req.body;
-  await q(`UPDATE members SET name=$1, student_id=$2, phone=$3, campus=$4, department=$5, year=$6, status=$7 WHERE id=$8`,
-    [b.name, b.student_id, b.phone, b.campus, b.department, b.year, b.status, id]);
+  await q(`UPDATE members SET name=$1, student_id=$2, phone=$3, campus=$4, department=$5, year=$6, status=$7 WHERE id=$8`, [b.name, b.student_id, b.phone, b.campus, b.department, b.year, b.status, id]);
   if (b.password && String(b.password).length >= 6) await q(`UPDATE members SET password=$1 WHERE id=$2`, [bcrypt.hashSync(String(b.password), 10), id]);
   res.redirect('/admin/members/' + id + '/edit?saved=1');
 });
+[['approve', 'official'], ['reject', 'rejected'], ['revoke', 'registered']].forEach(([a, st]) => { app.post('/admin/members/:id/' + a, guard('members'), async (req, res) => { await q(`UPDATE members SET status=$1 WHERE id=$2`, [st, parseInt(req.params.id, 10) || 0]); res.redirect('/admin/members?ok=1'); }); });
 
-[['approve', 'official'], ['reject', 'rejected'], ['revoke', 'registered']].forEach(([a, st]) => {
-  app.post('/admin/members/:id/' + a, guard('members'), async (req, res) => {
-    await q(`UPDATE members SET status=$1 WHERE id=$2`, [st, parseInt(req.params.id, 10) || 0]);
-    res.redirect('/admin/members?ok=1');
-  });
-});
-
-// Admin Content, Meetings, Leaders, Finance, Support, Staff, Audit, Backup
 app.get('/admin/content/:type', guard('content'), async (req, res) => {
   const tp = req.params.type; if (!TYPES.includes(tp)) return res.redirect('/admin');
   const sc = scopeOf(req), ps = await q(`SELECT * FROM posts WHERE type=$1 ${sc ? 'AND campus=$2' : ''} ORDER BY id DESC LIMIT 60`, sc ? [tp, sc] : [tp]);
-  res.send(A(req, tp, `<div class="glass-card">
-    <h3>Publish ${h(tp.toUpperCase())}</h3>
-    <form method="POST" action="/admin/content/${tp}" enctype="multipart/form-data">
-      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px">
-        <div><label>Campus</label>${sel('campus', campusOpts(sc, true))}</div>
-        ${tp === 'announcement' ? `<div><label>Priority</label><select name="is_emergency"><option value="0">Normal</option><option value="1">🚨 Emergency</option></select></div>` : ''}
-        <div><label>Date</label><input name="event_date" type="${tp === 'event' ? 'date' : 'text'}"></div>
-      </div>
-      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px">
-        <div><label>Title (OM)</label><input name="title_om"></div><div><label>Title (AM)</label><input name="title_am"></div><div><label>Title (EN)</label><input name="title_en"></div>
-      </div>
-      ${tp === 'gallery' ? '' : `<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px">
-        <div><label>Body (OM)</label><textarea name="body_om"></textarea></div><div><label>Body (AM)</label><textarea name="body_am"></textarea></div><div><label>Body (EN)</label><textarea name="body_en"></textarea></div>
-      </div>`}
-      <label>Image</label><input name="image" type="file" accept="image/*">
-      <label>Document PDF (Optional)</label><input name="file" type="file">
-      <p style="margin-top:14px"><button class="btn">Publish</button></p>
-    </form>
-  </div><div class="glass-card">${ps.map(p => `<div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border)"><span><b>${h(p.title_en || p.title_om || p.title_am)}</b></span><form method="POST" action="/admin/content/${tp}/${p.id}/delete"><button class="btn danger" style="padding:4px 9px;font-size:11px">Delete</button></form></div>`).join('')}</div>`));
+  res.send(A(req, tp, `<div class="glass-card"><h3>Publish ${h(tp.toUpperCase())}</h3><form method="POST" action="/admin/content/${tp}" enctype="multipart/form-data"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px"><div><label>Campus</label>${sel('campus', campusOpts(sc, true))}</div>${tp === 'announcement' ? `<div><label>Priority</label><select name="is_emergency"><option value="0">Normal</option><option value="1">🚨 Emergency</option></select></div>` : ''}<div><label>Date</label><input name="event_date" type="${tp === 'event' ? 'date' : 'text'}"></div></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px"><div><label>Title (OM)</label><input name="title_om"></div><div><label>Title (AM)</label><input name="title_am"></div><div><label>Title (EN)</label><input name="title_en"></div></div>${tp === 'gallery' ? '' : `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px"><div><label>Body (OM)</label><textarea name="body_om"></textarea></div><div><label>Body (AM)</label><textarea name="body_am"></textarea></div><div><label>Body (EN)</label><textarea name="body_en"></textarea></div></div>`}<label>Image</label><input name="image" type="file" accept="image/*"><label>Document PDF (Optional)</label><input name="file" type="file"><p style="margin-top:14px"><button class="btn">Publish</button></p></form></div><div class="glass-card">${ps.map(p => `<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)"><span><b>${h(p.title_en || p.title_om || p.title_am)}</b></span><form method="POST" action="/admin/content/${tp}/${p.id}/delete"><button class="btn danger" style="padding:4px 9px;font-size:11px">Delete</button></form></div>`).join('')}</div>`));
 });
-
 app.post('/admin/content/:type', guard('content'), files6([{ name: 'image', maxCount: 1 }, { name: 'file', maxCount: 1 }]), async (req, res) => {
   const tp = req.params.type, b = req.body, sc = scopeOf(req), s = (k, n) => String(b[k] || '').trim().slice(0, n);
   const img = await saveFile(((req.files || {}).image || [])[0]), fl = await saveFile(((req.files || {}).file || [])[0]);
@@ -1760,48 +1478,22 @@ app.post('/admin/content/:type/:id/delete', guard('content'), async (req, res) =
 
 app.get('/admin/meetings', guard('meetings'), async (req, res) => {
   const meets = await q(`SELECT * FROM meetings ORDER BY id DESC LIMIT 40`);
-  res.send(A(req, 'Meetings', `<div class="glass-card"><h3>Record Meeting</h3><form method="POST" action="/admin/meetings" enctype="multipart/form-data">
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px">
-      <div><label>Title</label><input name="title" required></div><div><label>Date</label><input name="meeting_date" type="date" required></div><div><label>Campus</label>${sel('campus', campusOpts(scopeOf(req), true))}</div>
-    </div><label>Agenda</label><textarea name="agenda"></textarea><label>Minutes</label><textarea name="minutes"></textarea><label>Resolutions</label><textarea name="resolutions"></textarea><label>File</label><input name="file" type="file"><p style="margin-top:12px"><button class="btn">Save</button></p>
-  </form></div><div class="glass-card">${meets.map(m => `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border)"><span><b>${h(m.title)}</b> (${h(m.meeting_date)})</span><form method="POST" action="/admin/meetings/${m.id}/delete"><button class="btn danger" style="padding:4px 9px;font-size:11px">Delete</button></form></div>`).join('')}</div>`));
+  res.send(A(req, 'Meetings', `<div class="glass-card"><h3>Record Meeting</h3><form method="POST" action="/admin/meetings" enctype="multipart/form-data"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px"><div><label>Title</label><input name="title" required></div><div><label>Date</label><input name="meeting_date" type="date" required></div><div><label>Campus</label>${sel('campus', campusOpts(scopeOf(req), true))}</div></div><label>Agenda</label><textarea name="agenda"></textarea><label>Minutes</label><textarea name="minutes"></textarea><label>Resolutions</label><textarea name="resolutions"></textarea><label>File</label><input name="file" type="file"><p style="margin-top:12px"><button class="btn">Save</button></p></form></div><div class="glass-card">${meets.map(m => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span><b>${h(m.title)}</b> (${h(m.meeting_date)})</span><form method="POST" action="/admin/meetings/${m.id}/delete"><button class="btn danger" style="padding:4px 9px;font-size:11px">Delete</button></form></div>`).join('')}</div>`));
 });
-app.post('/admin/meetings', guard('meetings'), files6([{ name: 'file', maxCount: 1 }]), async (req, res) => {
-  const b = req.body, fl = await saveFile(((req.files || {}).file || [])[0]);
-  if (b.title) await q(`INSERT INTO meetings (campus, title, meeting_date, agenda, minutes, resolutions, file_id) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [b.campus || 'all', b.title, b.meeting_date, b.agenda, b.minutes, b.resolutions, fl]);
-  res.redirect('/admin/meetings?ok=1');
-});
+app.post('/admin/meetings', guard('meetings'), files6([{ name: 'file', maxCount: 1 }]), async (req, res) => { const b = req.body, fl = await saveFile(((req.files || {}).file || [])[0]); if (b.title) await q(`INSERT INTO meetings (campus, title, meeting_date, agenda, minutes, resolutions, file_id) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [b.campus || 'all', b.title, b.meeting_date, b.agenda, b.minutes, b.resolutions, fl]); res.redirect('/admin/meetings?ok=1'); });
 app.post('/admin/meetings/:id/delete', guard('meetings'), async (req, res) => { await q(`DELETE FROM meetings WHERE id=$1`, [parseInt(req.params.id, 10) || 0]); res.redirect('/admin/meetings?ok=1'); });
 
 app.get('/admin/leaders', guard('leaders'), async (req, res) => {
   const sc = scopeOf(req), ls = await q(`SELECT * FROM leaders ${sc ? 'WHERE campus=$1' : ''} ORDER BY id DESC`, sc ? [sc] : []);
-  res.send(A(req, 'Leaders', `<div class="glass-card"><h3>Add Leader</h3><form method="POST" action="/admin/leaders" enctype="multipart/form-data">
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px">
-      <div><label>Name</label><input name="name" required></div><div><label>Term</label><input name="term" value="2025-2026"></div>
-      <div><label>Level</label>${sel('level', sc ? [['campus','Campus']] : [['central','Central'],['campus','Campus']])}</div><div><label>Campus</label>${sel('campus', campusOpts(sc, false))}</div>
-    </div><label>Position</label><input name="position_en" required><label>Photo</label><input name="photo" type="file" accept="image/*"><p style="margin-top:12px"><button class="btn">Save</button></p>
-  </form></div><div class="glass-card">${ls.map(x => `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border)"><span><b>${h(x.name)}</b> · ${h(x.position_en)}</span><form method="POST" action="/admin/leaders/${x.id}/delete"><button class="btn danger" style="padding:4px 9px;font-size:11px">Delete</button></form></div>`).join('')}</div>`));
+  res.send(A(req, 'Leaders', `<div class="glass-card"><h3>Add Leader</h3><form method="POST" action="/admin/leaders" enctype="multipart/form-data"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px"><div><label>Name</label><input name="name" required></div><div><label>Term</label><input name="term" value="2025-2026"></div><div><label>Level</label>${sel('level', sc ? [['campus','Campus']] : [['central','Central'],['campus','Campus']])}</div><div><label>Campus</label>${sel('campus', campusOpts(sc, false))}</div></div><label>Position</label><input name="position_en" required><label>Photo</label><input name="photo" type="file" accept="image/*"><p style="margin-top:12px"><button class="btn">Save</button></p></form></div><div class="glass-card">${ls.map(x => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span><b>${h(x.name)}</b> · ${h(x.position_en)}</span><form method="POST" action="/admin/leaders/${x.id}/delete"><button class="btn danger" style="padding:4px 9px;font-size:11px">Delete</button></form></div>`).join('')}</div>`));
 });
-app.post('/admin/leaders', guard('leaders'), files6([{ name: 'photo', maxCount: 1 }]), async (req, res) => {
-  const b = req.body, sc = scopeOf(req), pid = await saveFile(((req.files || {}).photo || [])[0]);
-  if (b.name) await q(`INSERT INTO leaders (name, position_en, term, level, campus, photo_id) VALUES ($1,$2,$3,$4,$5,$6)`, [b.name, b.position_en || '', b.term || '2025-2026', sc ? 'campus' : b.level, sc || b.campus || 'all', pid]);
-  res.redirect('/admin/leaders?ok=1');
-});
+app.post('/admin/leaders', guard('leaders'), files6([{ name: 'photo', maxCount: 1 }]), async (req, res) => { const b = req.body, sc = scopeOf(req), pid = await saveFile(((req.files || {}).photo || [])[0]); if (b.name) await q(`INSERT INTO leaders (name, position_en, term, level, campus, photo_id) VALUES ($1,$2,$3,$4,$5,$6)`, [b.name, b.position_en || '', b.term || '2025-2026', sc ? 'campus' : b.level, sc || b.campus || 'all', pid]); res.redirect('/admin/leaders?ok=1'); });
 app.post('/admin/leaders/:id/delete', guard('leaders'), async (req, res) => { await q(`DELETE FROM leaders WHERE id=$1`, [parseInt(req.params.id, 10) || 0]); res.redirect('/admin/leaders?ok=1'); });
 
 const KINDS = [['contribution', 'Contribution'], ['donation', 'Donation'], ['fundraising', 'Fundraising'], ['income', 'Other Income'], ['expense', 'Expense']];
 app.get('/admin/finance', guard('finance'), async (req, res) => {
   const sc = scopeOf(req), rp = await q(`SELECT * FROM finance_reports ${sc ? 'WHERE campus=$1' : ''} ORDER BY id DESC LIMIT 20`, sc ? [sc] : []);
-  res.send(A(req, 'Finance', `<div class="glass-card"><h3>Record Transaction</h3><form method="POST" action="/admin/finance/tx">
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px">
-      <div><label>Type</label>${sel('kind', KINDS)}</div><div><label>Amount (ETB)</label><input name="amount" type="number" required></div><div><label>Date</label><input name="tdate" type="date" required></div><div><label>Campus</label>${sel('campus', campusOpts(sc, true))}</div>
-    </div><label>Note</label><input name="note"><p style="margin-top:12px"><button class="btn">Record</button></p></form></div>
-    <div class="glass-card"><h3>Generate Report</h3><form method="POST" action="/admin/finance/report" style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end">
-      <div><label>Period (YYYY-MM)</label><input name="period" placeholder="2026-11" required></div><div><label>Start Balance</label><input name="starting_balance" type="number" value="0"></div><div><label>Campus</label>${sel('campus', campusOpts(sc, true))}</div><button class="btn secondary">Generate</button>
-    </form><div class="tw" style="margin-top:12px"><table><tr><th>Period</th><th>Income</th><th>Expense</th><th>Status</th><th>Action</th></tr>
-      ${rp.map(r => `<tr><td>${h(r.period)}</td><td style="color:#10b981">${Number(r.income).toLocaleString()}</td><td style="color:#ef4444">${Number(r.expense).toLocaleString()}</td><td>${r.approved ? 'Published' : 'Draft'}</td>
-      <td>${can(req, 'approve') ? `<form method="POST" action="/admin/finance/report/${r.id}/${r.approved ? 'hide' : 'approve'}"><button class="btn g" style="padding:4px 9px;font-size:11px">${r.approved ? 'Hide' : 'Publish'}</button></form>` : ''}</td></tr>`).join('')}
-    </table></div></div>`));
+  res.send(A(req, 'Finance', `<div class="glass-card"><h3>Record Transaction</h3><form method="POST" action="/admin/finance/tx"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px"><div><label>Type</label>${sel('kind', KINDS)}</div><div><label>Amount (ETB)</label><input name="amount" type="number" required></div><div><label>Date</label><input name="tdate" type="date" required></div><div><label>Campus</label>${sel('campus', campusOpts(sc, true))}</div></div><label>Note</label><input name="note"><p style="margin-top:12px"><button class="btn">Record</button></p></form></div><div class="glass-card"><h3>Generate Report</h3><form method="POST" action="/admin/finance/report" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end"><div><label>Period (YYYY-MM)</label><input name="period" placeholder="2026-11" required></div><div><label>Start Balance</label><input name="starting_balance" type="number" value="0"></div><div><label>Campus</label>${sel('campus', campusOpts(sc, true))}</div><button class="btn secondary">Generate</button></form><div class="tw" style="margin-top:12px"><table><tr><th>Period</th><th>Income</th><th>Expense</th><th>Status</th><th>Action</th></tr>${rp.map(r => `<tr><td>${h(r.period)}</td><td style="color:#10b981">${Number(r.income).toLocaleString()}</td><td style="color:#ef4444">${Number(r.expense).toLocaleString()}</td><td>${r.approved ? 'Published' : 'Draft'}</td><td>${can(req, 'approve') ? `<form method="POST" action="/admin/finance/report/${r.id}/${r.approved ? 'hide' : 'approve'}"><button class="btn g" style="padding:4px 9px;font-size:11px">${r.approved ? 'Hide' : 'Publish'}</button></form>` : ''}</td></tr>`).join('')}</table></div></div>`));
 });
 app.post('/admin/finance/tx', guard('finance'), async (req, res) => { const b = req.body; if (num(b.amount) > 0 && b.tdate) await q(`INSERT INTO transactions (kind,amount,tdate,note,campus,created_by) VALUES ($1,$2,$3,$4,$5,$6)`, [b.kind, num(b.amount), b.tdate, b.note || '', scopeOf(req) || b.campus || 'all', req.session.sname || '']); res.redirect('/admin/finance?ok=1'); });
 app.post('/admin/finance/report', guard('finance'), async (req, res) => {
@@ -1815,26 +1507,15 @@ app.post('/admin/finance/report/:id/:a', guard('approve'), async (req, res) => {
 
 app.get('/admin/support', guard('support'), async (req, res) => {
   const rs = await q(`SELECT * FROM support_requests ORDER BY (status='open') DESC, id DESC LIMIT 80`);
-  res.send(A(req, 'Support', rs.map(r => `<div class="glass-card"><small>${h(r.member_no)} · ${h(r.name)}</small><h4>${h(r.subject)} <span class="badge ${r.status==='closed'?'official':'pending'}">${h(r.status)}</span></h4><p style="font-size:13px">${h(r.message)}</p>
-    <form method="POST" action="/admin/support/${r.id}/reply" style="margin-top:8px"><textarea name="reply" rows="2">${h(r.reply || '')}</textarea><p style="margin-top:6px"><button class="btn">Reply & Close</button></p></form></div>`).join('') || '<div class="glass-card">No tickets.</div>'));
+  res.send(A(req, 'Support', rs.map(r => `<div class="glass-card"><small>${h(r.member_no)} · ${h(r.name)}</small><h4>${h(r.subject)} <span class="badge ${r.status==='closed'?'official':'pending'}">${h(r.status)}</span></h4><p style="font-size:13px">${h(r.message)}</p><form method="POST" action="/admin/support/${r.id}/reply" style="margin-top:8px"><textarea name="reply" rows="2">${h(r.reply || '')}</textarea><p style="margin-top:6px"><button class="btn">Reply & Close</button></p></form></div>`).join('') || '<div class="glass-card">No tickets.</div>'));
 });
 app.post('/admin/support/:id/reply', guard('support'), async (req, res) => { await q(`UPDATE support_requests SET reply=$1, status='closed' WHERE id=$2`, [String(req.body.reply || '').slice(0, 2000), parseInt(req.params.id, 10) || 0]); res.redirect('/admin/support?ok=1'); });
 
 app.get('/admin/staff', guard('staff'), async (req, res) => {
   const st = await q(`SELECT id,username,name,role,campus,active FROM staff ORDER BY id`);
-  res.send(A(req, 'Staff', `<div class="glass-card"><h3>Create Staff</h3><form method="POST" action="/admin/staff">
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px">
-      <div><label>Name</label><input name="name" required></div><div><label>Username</label><input name="username" required></div><div><label>Role</label>${sel('role', ROLES.map(r => [r, r]))}</div><div><label>Campus</label>${sel('campus', campusOpts(null))}</div>
-    </div><label>Password (Min 8)</label><input name="password" type="password" minlength="8" required><p style="margin-top:12px"><button class="btn">Create</button></p></form></div>
-    <div class="glass-card"><div class="tw"><table><tr><th>Name</th><th>User</th><th>Role</th><th>Status</th><th>Action</th></tr>${st.map(x => `<tr><td>${h(x.name)}</td><td>${h(x.username)}</td><td>${h(x.role)}</td><td>${x.active ? 'Active' : 'Disabled'}</td><td><form method="POST" action="/admin/staff/${x.id}/toggle"><button class="btn secondary" style="padding:4px 9px;font-size:11px">Toggle</button></form></td></tr>`).join('')}</table></div></div>`));
+  res.send(A(req, 'Staff', `<div class="glass-card"><h3>Create Staff</h3><form method="POST" action="/admin/staff"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px"><div><label>Name</label><input name="name" required></div><div><label>Username</label><input name="username" required></div><div><label>Role</label>${sel('role', ROLES.map(r => [r, r]))}</div><div><label>Campus</label>${sel('campus', campusOpts(null))}</div></div><label>Password (Min 8)</label><input name="password" type="password" minlength="8" required><p style="margin-top:12px"><button class="btn">Create</button></p></form></div><div class="glass-card"><div class="tw"><table><tr><th>Name</th><th>User</th><th>Role</th><th>Status</th><th>Action</th></tr>${st.map(x => `<tr><td>${h(x.name)}</td><td>${h(x.username)}</td><td>${h(x.role)}</td><td>${x.active ? 'Active' : 'Disabled'}</td><td><form method="POST" action="/admin/staff/${x.id}/toggle"><button class="btn secondary" style="padding:4px 9px;font-size:11px">Toggle</button></form></td></tr>`).join('')}</table></div></div>`));
 });
-app.post('/admin/staff', guard('staff'), async (req, res) => {
-  const b = req.body;
-  if (ROLES.includes(b.role) && b.name && b.username && String(b.password || '').length >= 8) {
-    try { await q(`INSERT INTO staff (username,name,role,campus,password) VALUES ($1,$2,$3,$4,$5)`, [b.username.trim().toLowerCase(), b.name, b.role, CAMPUS[b.campus] ? b.campus : null, bcrypt.hashSync(String(b.password), 10)]); } catch (e) {}
-  }
-  res.redirect('/admin/staff?ok=1');
-});
+app.post('/admin/staff', guard('staff'), async (req, res) => { const b = req.body; if (ROLES.includes(b.role) && b.name && b.username && String(b.password || '').length >= 8) { try { await q(`INSERT INTO staff (username,name,role,campus,password) VALUES ($1,$2,$3,$4,$5)`, [b.username.trim().toLowerCase(), b.name, b.role, CAMPUS[b.campus] ? b.campus : null, bcrypt.hashSync(String(b.password), 10)]); } catch (e) {} } res.redirect('/admin/staff?ok=1'); });
 app.post('/admin/staff/:id/toggle', guard('staff'), async (req, res) => { await q(`UPDATE staff SET active=1-active WHERE id=$1`, [parseInt(req.params.id, 10) || 0]); res.redirect('/admin/staff?ok=1'); });
 
 app.get('/admin/audit-logs', guard('audit'), async (req, res) => {
@@ -1850,4 +1531,4 @@ app.get('/admin/backup', guard('backup'), async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v3.0 running on port ${PORT}`));
