@@ -699,9 +699,11 @@ function portalMenu(activePath, electionOn = true) {
 
 function postT(req, p, f) {
   const l = L(req);
-  if (l === 'am') return p[f + '_am'] || p[f + '_om'] || p[f + '_en'] || '';
-  if (l === 'om') return p[f + '_om'] || p[f + '_en'] || '';
-  return p[f + '_en'] || p[f + '_om'] || '';
+  let val = '';
+  if (l === 'am') val = p[f + '_am'] || p[f + '_om'] || p[f + '_en'] || '';
+  else if (l === 'om') val = p[f + '_om'] || p[f + '_en'] || '';
+  else val = p[f + '_en'] || p[f + '_om'] || '';
+  return stripReligious(val);
 }
 
 function postCard(req, p, extraHtml = '') {
@@ -722,6 +724,16 @@ function postCard(req, p, extraHtml = '') {
 }
 
 const scopeOf = req => (CENTRAL.includes(req.session.sr) ? null : (req.session.campus || '-'));
+function stripReligious(s) {
+  return String(s == null ? '' : s)
+    .replace(/Assalaamu\s*Alaikum\s*(Warahmatullaahi\s*(Wabarakaatuh)?)?[!.،,]*/gi, '')
+    .replace(/As-?salamu\s*Alaykum[^\n]*/gi, '')
+    .replace(/In\s*the\s*name\s*of\s*(Allah|God)[^\n]*/gi, '')
+    .replace(/Bismillah[^\n]*/gi, '')
+    .replace(/Alhamdulillah[^\n]*/gi, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
 async function isElectionOn() {
   try {
     await q(`CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY, val TEXT)`);
@@ -886,6 +898,18 @@ function staffRoleBanner(req) {
     `CREATE UNIQUE INDEX IF NOT EXISTS poll_votes_multi_idx ON poll_votes(poll_id, member_no, choice)`
   ]) { try { await q(sql); } catch (e) {} }
   await q(`INSERT INTO site_settings (key, val) VALUES ('election_portal_on', '1') ON CONFLICT (key) DO NOTHING`);
+
+  // Clean any religious greetings from existing posts in DB to keep association strictly secular/neutral
+  try {
+    await q(`UPDATE posts SET
+      body_en = TRIM(REGEXP_REPLACE(COALESCE(body_en,''), 'Assalaamu\s*Alaikum[^\n]*', '', 'gi')),
+      body_om = TRIM(REGEXP_REPLACE(COALESCE(body_om,''), 'Assalaamu\s*Alaikum[^\n]*', '', 'gi')),
+      body_am = TRIM(REGEXP_REPLACE(COALESCE(body_am,''), 'Assalaamu\s*Alaikum[^\n]*', '', 'gi')),
+      title_en = TRIM(REGEXP_REPLACE(COALESCE(title_en,''), 'Assalaamu\s*Alaikum[^\n]*', '', 'gi')),
+      title_om = TRIM(REGEXP_REPLACE(COALESCE(title_om,''), 'Assalaamu\s*Alaikum[^\n]*', '', 'gi')),
+      title_am = TRIM(REGEXP_REPLACE(COALESCE(title_am,''), 'Assalaamu\s*Alaikum[^\n]*', '', 'gi'))
+      WHERE COALESCE(body_en,'') ~* 'Assalaamu' OR COALESCE(body_om,'') ~* 'Assalaamu' OR COALESCE(body_am,'') ~* 'Assalaamu'`);
+  } catch (e) {}
 
   const adminPass = bcrypt.hashSync(process.env.ADMIN_PASS || 'sikomando123', 10);
   const adminUser = process.env.ADMIN_USER || 'admin';
@@ -2328,10 +2352,10 @@ app.post('/admin/members/:id/edit', guard('members'), files6([{ name: 'photo', m
 app.get('/admin/content/:type', guard('content'), async (req, res) => {
   const tp = req.params.type; if (!TYPES.includes(tp)) return res.redirect('/admin');
   const sc = scopeOf(req), ps = await q(`SELECT * FROM posts WHERE type=$1 ${sc ? 'AND campus=$2' : ''} ORDER BY id DESC LIMIT 60`, sc ? [tp, sc] : [tp]);
-  res.send(A(req, tp, `<div class="glass-card"><h3>Publish ${h(tp.toUpperCase())}</h3><form method="POST" action="/admin/content/${tp}" enctype="multipart/form-data"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px"><div><label>Campus</label>${sel('campus', campusOpts(sc, true))}</div>${tp === 'announcement' ? `<div><label>Priority</label><select name="is_emergency"><option value="0">Normal</option><option value="1">🚨 Emergency</option></select></div>` : ''}<div><label>Date</label><input name="event_date" type="${tp === 'event' ? 'date' : 'text'}"></div></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px"><div><label>Title (OM)</label><input name="title_om"></div><div><label>Title (AM)</label><input name="title_am"></div><div><label>Title (EN)</label><input name="title_en"></div></div>${tp === 'gallery' ? '' : `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px"><div><label>Body (OM)</label><textarea name="body_om"></textarea></div><div><label>Body (AM)</label><textarea name="body_am"></textarea></div><div><label>Body (EN)</label><textarea name="body_en"></textarea></div></div>`}<label>Image</label><input name="image" type="file" accept="image/*"><label>Document PDF (Optional)</label><input name="file" type="file"><p style="margin-top:14px"><button class="btn">Publish</button></p></form></div><div class="glass-card">${ps.map(p => `<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)"><span><b>${h(p.title_en || p.title_om || p.title_am)}</b></span><form method="POST" action="/admin/content/${tp}/${p.id}/delete"><button class="btn danger" style="padding:4px 9px;font-size:11px">Delete</button></form></div>`).join('')}</div>`));
+  res.send(A(req, tp, `<div class="glass-card"><h3>Publish ${h(tp.toUpperCase())}</h3><form method="POST" action="/admin/content/${tp}" enctype="multipart/form-data"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px"><div><label>Campus</label>${sel('campus', campusOpts(sc, true))}</div>${tp === 'announcement' ? `<div><label>Priority</label><select name="is_emergency"><option value="0">Normal</option><option value="1">🚨 Emergency</option></select></div>` : ''}<div><label>Date</label><input name="event_date" type="${tp === 'event' ? 'date' : 'text'}"></div></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px"><div><label>Title (OM)</label><input name="title_om"></div><div><label>Title (AM)</label><input name="title_am"></div><div><label>Title (EN)</label><input name="title_en"></div></div>${tp === 'gallery' ? '' : `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px"><div><label>Body (OM)</label><textarea name="body_om"></textarea></div><div><label>Body (AM)</label><textarea name="body_am"></textarea></div><div><label>Body (EN)</label><textarea name="body_en"></textarea></div></div>`}<label>Image</label><input name="image" type="file" accept="image/*"><label>Document PDF (Optional)</label><input name="file" type="file"><p style="margin-top:14px"><button class="btn">Publish</button></p></form></div><div class="glass-card">${ps.map(p => `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)"><span><b>${h(stripReligious(p.title_en || p.title_om || p.title_am))}</b></span><div style="display:flex;gap:6px;"><a class="btn edit-btn" href="/admin/content/${tp}/${p.id}/edit" style="padding:4px 9px;font-size:11px">✏️ Edit</a><form method="POST" action="/admin/content/${tp}/${p.id}/delete"><button class="btn danger" style="padding:4px 9px;font-size:11px">Delete</button></form></div></div>`).join('')}</div>`));
 });
 app.post('/admin/content/:type', guard('content'), files6([{ name: 'image', maxCount: 1 }, { name: 'file', maxCount: 1 }]), async (req, res) => {
-  const tp = req.params.type, b = req.body, sc = scopeOf(req), s = (k, n) => String(b[k] || '').trim().slice(0, n);
+  const tp = req.params.type, b = req.body, sc = scopeOf(req), s = (k, n) => stripReligious(String(b[k] || '').trim()).slice(0, n);
   const img = await saveFile(((req.files || {}).image || [])[0]), fl = await saveFile(((req.files || {}).file || [])[0]);
   const tEn = s('title_en', 200), tOm = s('title_om', 200), tAm = s('title_am', 200), isEm = parseInt(b.is_emergency, 10) || 0;
   if (tOm || tEn || tAm) {
@@ -2341,6 +2365,36 @@ app.post('/admin/content/:type', guard('content'), files6([{ name: 'image', maxC
   }
   res.redirect('/admin/content/' + tp + '?ok=1');
 });
+app.get('/admin/content/:type/:id/edit', guard('content'), async (req, res) => {
+  const tp = req.params.type, id = parseInt(req.params.id, 10) || 0;
+  const [p] = await q(`SELECT * FROM posts WHERE id=$1`, [id]);
+  if (!p) return res.redirect('/admin/content/' + tp);
+  res.send(A(req, 'Edit Post', `<div class="glass-card">
+    <h3>✏️ Edit Post</h3>
+    <form method="POST" action="/admin/content/${tp}/${p.id}/edit">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px">
+        <div><label>Title (OM)</label><input name="title_om" value="${h(stripReligious(p.title_om || ''))}"></div>
+        <div><label>Title (AM)</label><input name="title_am" value="${h(stripReligious(p.title_am || ''))}"></div>
+        <div><label>Title (EN)</label><input name="title_en" value="${h(stripReligious(p.title_en || ''))}"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px">
+        <div><label>Body (OM)</label><textarea name="body_om" rows="5">${h(stripReligious(p.body_om || ''))}</textarea></div>
+        <div><label>Body (AM)</label><textarea name="body_am" rows="5">${h(stripReligious(p.body_am || ''))}</textarea></div>
+        <div><label>Body (EN)</label><textarea name="body_en" rows="5">${h(stripReligious(p.body_en || ''))}</textarea></div>
+      </div>
+      <p style="margin-top:14px"><button class="btn">💾 Save Changes</button> <a class="btn secondary" href="/admin/content/${tp}">Cancel</a></p>
+    </form>
+  </div>`));
+});
+
+app.post('/admin/content/:type/:id/edit', guard('content'), async (req, res) => {
+  const tp = req.params.type, id = parseInt(req.params.id, 10) || 0, b = req.body;
+  const s = (k, n) => stripReligious(String(b[k] || '').trim()).slice(0, n);
+  await q(`UPDATE posts SET title_om=$1, title_am=$2, title_en=$3, body_om=$4, body_am=$5, body_en=$6 WHERE id=$7`,
+    [s('title_om', 200), s('title_am', 200), s('title_en', 200), s('body_om', 4000), s('body_am', 4000), s('body_en', 4000), id]);
+  res.redirect('/admin/content/' + tp + '?saved=1');
+});
+
 app.post('/admin/content/:type/:id/delete', guard('content'), async (req, res) => { await q(`DELETE FROM posts WHERE id=$1`, [parseInt(req.params.id, 10) || 0]); res.redirect('/admin/content/' + req.params.type + '?ok=1'); });
 
 app.get('/admin/meetings', guard('meetings'), async (req, res) => {
@@ -2552,4 +2606,4 @@ app.get('/admin/backup', guard('backup'), async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v7.1 running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v7.3 running on port ${PORT}`));
