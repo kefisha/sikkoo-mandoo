@@ -3,10 +3,18 @@ const express = require('express'), session = require('express-session'), PgStor
 const { Pool } = require('pg'), bcrypt = require('bcryptjs'), multer = require('multer');
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+pool.on('error', err => console.error('PG Pool error:', err.message));
 const q = (s, p) => pool.query(s, p || []).then(r => r.rows);
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 3 * 1024 * 1024 } });
 
 const app = express();
+const origGet = app.get.bind(app);
+const origPost = app.post.bind(app);
+const wrapAsync = fn => (typeof fn === 'function' && fn.length < 4)
+  ? (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next)
+  : fn;
+app.get = (path, ...handlers) => origGet(path, ...handlers.map(wrapAsync));
+app.post = (path, ...handlers) => origPost(path, ...handlers.map(wrapAsync));
 app.set('trust proxy', 1);
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
@@ -887,6 +895,12 @@ function staffRoleBanner(req) {
     `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS year TEXT`,
     `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS block_no TEXT`,
     `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS room_no TEXT`,
+    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS ord INTEGER DEFAULT 0`,
+    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS level TEXT DEFAULT 'central'`,
+    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS role_key TEXT`,
+    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS position_om TEXT`,
+    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS position_am TEXT`,
+    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS responsibilities TEXT`,
     `ALTER TABLE members ADD COLUMN IF NOT EXISTS renewal_date TIMESTAMP DEFAULT NOW()`,
     `ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_emergency INTEGER DEFAULT 0`,
     `ALTER TABLE posts ADD COLUMN IF NOT EXISTS title_am TEXT`,
@@ -2605,5 +2619,18 @@ app.get('/admin/backup', guard('backup'), async (req, res) => {
   res.set('Content-Type', 'application/json').set('Content-Disposition', `attachment; filename="sikkoo-mandoo-backup-${new Date().toISOString().slice(0,10)}.json"`).send(JSON.stringify(out, null, 2));
 });
 
+app.use((err, req, res, next) => {
+  console.error('Route Error:', req.path, err && err.message);
+  if (res.headersSent) return;
+  res.status(500).send(page(req, 'Temporary Notice', `<div class="glass-card" style="max-width:460px;margin:28px auto;text-align:center;">
+    <h3>⚠️ Please Refresh Page</h3>
+    <p style="font-size:13.5px;color:var(--text-muted);margin:10px 0;">${h((err && err.message) || 'Temporary connection hiccup.')}</p>
+    <a href="${h(req.path || '/')}" class="btn">🔄 Retry Now</a>
+  </div>`));
+});
+
+process.on('unhandledRejection', err => console.error('Unhandled Rejection:', err && err.message));
+process.on('uncaughtException', err => console.error('Uncaught Exception:', err && err.message));
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v7.5 running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v7.6 running on port ${PORT}`));
