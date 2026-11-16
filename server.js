@@ -797,160 +797,79 @@ function staffRoleBanner(req) {
   `;
 }
 
-// ---------- DATABASE SCHEMA ----------
-(async () => {
-  // Ensure all tables exist immediately
-  await q(`CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY, val TEXT)`);
-  await q(`CREATE TABLE IF NOT EXISTS files (id SERIAL PRIMARY KEY, mime TEXT, data BYTEA, name TEXT)`);
-  await q(`CREATE TABLE IF NOT EXISTS members (
+// ---------- DATABASE SCHEMA (GUARANTEED SYNC BEFORE ROUTES) ----------
+const DB_STATEMENTS = [
+  `CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY, val TEXT)`,
+  `CREATE TABLE IF NOT EXISTS files (id SERIAL PRIMARY KEY, mime TEXT, data BYTEA, name TEXT)`,
+  `CREATE TABLE IF NOT EXISTS members (
     id SERIAL PRIMARY KEY, member_no TEXT UNIQUE, name TEXT, gender TEXT, phone TEXT, email TEXT,
     campus TEXT, college TEXT, department TEXT, year TEXT, block_no TEXT, room_no TEXT, zone_woreda TEXT, telegram_handle TEXT,
     student_id TEXT UNIQUE, photo_id INTEGER, password TEXT,
     status TEXT DEFAULT 'registered', role TEXT DEFAULT 'student',
     renewal_date TIMESTAMP DEFAULT NOW(), created_at TIMESTAMP DEFAULT NOW()
-  )`);
-  await q(`CREATE TABLE IF NOT EXISTS posts (
+  )`,
+  `CREATE TABLE IF NOT EXISTS posts (
     id SERIAL PRIMARY KEY, type TEXT, subcategory TEXT DEFAULT 'general', campus TEXT DEFAULT 'all',
     title_om TEXT, title_en TEXT, title_am TEXT, body_om TEXT, body_en TEXT, body_am TEXT,
     event_date TEXT, image_id INTEGER, file_id INTEGER, is_emergency INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW()
-  )`);
-  await q(`CREATE TABLE IF NOT EXISTS event_rsvps (id SERIAL PRIMARY KEY, post_id INTEGER, member_no TEXT, created_at TIMESTAMP DEFAULT NOW(), UNIQUE(post_id, member_no))`);
-  await q(`CREATE TABLE IF NOT EXISTS polls (id SERIAL PRIMARY KEY, title TEXT, description TEXT, options TEXT, candidate_nos TEXT, max_choices INTEGER DEFAULT 5, campus TEXT DEFAULT 'all', status TEXT DEFAULT 'open', created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS poll_votes (id SERIAL PRIMARY KEY, poll_id INTEGER, member_no TEXT, choice TEXT, created_at TIMESTAMP DEFAULT NOW(), UNIQUE(poll_id, member_no, choice))`);
-  await q(`CREATE TABLE IF NOT EXISTS certificates (id SERIAL PRIMARY KEY, cert_code TEXT UNIQUE, member_no TEXT, member_name TEXT, title TEXT, role_award TEXT, issue_date TEXT, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS forum_posts (id SERIAL PRIMARY KEY, member_no TEXT, author_name TEXT, campus TEXT, category TEXT DEFAULT 'general', title TEXT, body TEXT, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS forum_replies (id SERIAL PRIMARY KEY, post_id INTEGER, member_no TEXT, author_name TEXT, body TEXT, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS staff (id SERIAL PRIMARY KEY, username TEXT UNIQUE, name TEXT, role TEXT, campus TEXT, password TEXT, active INTEGER DEFAULT 1, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS leaders (id SERIAL PRIMARY KEY, member_no TEXT, name TEXT, phone TEXT, department TEXT, year TEXT, block_no TEXT, room_no TEXT, role_key TEXT, position_om TEXT, position_en TEXT, position_am TEXT, term TEXT DEFAULT '2025-2026', responsibilities TEXT, level TEXT DEFAULT 'central', campus TEXT DEFAULT 'all', photo_id INTEGER, ord INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS meetings (id SERIAL PRIMARY KEY, campus TEXT DEFAULT 'all', title TEXT, meeting_date TEXT, agenda TEXT, minutes TEXT, resolutions TEXT, attendance_count INTEGER DEFAULT 0, file_id INTEGER, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS support_requests (id SERIAL PRIMARY KEY, member_no TEXT, name TEXT, campus TEXT, subject TEXT, category TEXT DEFAULT 'general', message TEXT, status TEXT DEFAULT 'open', reply TEXT, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS transactions (id SERIAL PRIMARY KEY, kind TEXT, amount NUMERIC, tdate TEXT, note TEXT, campus TEXT DEFAULT 'all', created_by TEXT, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS finance_reports (id SERIAL PRIMARY KEY, period TEXT, campus TEXT, income NUMERIC, expense NUMERIC, starting_balance NUMERIC DEFAULT 0, detail TEXT, approved INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS audit_logs (id SERIAL PRIMARY KEY, actor TEXT, action TEXT, target TEXT, details TEXT, ip TEXT, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS password_resets (id SERIAL PRIMARY KEY, student_id TEXT, phone TEXT, reason TEXT, status TEXT DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS member_payments (id SERIAL PRIMARY KEY, member_no TEXT, name TEXT, campus TEXT, amount NUMERIC, payment_method TEXT, transaction_ref TEXT UNIQUE, receipt_file_id INTEGER, status TEXT DEFAULT 'pending', admin_remark TEXT, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS lost_found (id SERIAL PRIMARY KEY, member_no TEXT, author_name TEXT, campus TEXT, category TEXT DEFAULT 'lost', title TEXT, description TEXT, phone TEXT, image_id INTEGER, status TEXT DEFAULT 'open', created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS mentor_requests (id SERIAL PRIMARY KEY, freshman_no TEXT, freshman_name TEXT, campus TEXT, department TEXT, senior_mentor TEXT, status TEXT DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS attendance_sessions (id SERIAL PRIMARY KEY, title TEXT, campus TEXT DEFAULT 'all', event_date TEXT, code TEXT UNIQUE, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS attendance_logs (id SERIAL PRIMARY KEY, session_id INTEGER, member_no TEXT, member_name TEXT, scanned_at TIMESTAMP DEFAULT NOW(), UNIQUE(session_id, member_no))`);
-  await q(`CREATE TABLE IF NOT EXISTS alumni (id SERIAL PRIMARY KEY, full_name TEXT, batch_year TEXT, department TEXT, current_role TEXT, employer TEXT, phone TEXT, email TEXT, linkedin TEXT, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS anonymous_suggestions (id SERIAL PRIMARY KEY, campus TEXT DEFAULT 'all', category TEXT DEFAULT 'general', message TEXT, reply TEXT, status TEXT DEFAULT 'open', created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS media_hub (id SERIAL PRIMARY KEY, title TEXT, youtube_url TEXT, description TEXT, campus TEXT DEFAULT 'all', created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS targeted_broadcasts (id SERIAL PRIMARY KEY, title TEXT, target_campus TEXT DEFAULT 'all', target_year TEXT DEFAULT 'all', message TEXT, created_by TEXT, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS members (
-    id SERIAL PRIMARY KEY, member_no TEXT UNIQUE, name TEXT, gender TEXT, phone TEXT, email TEXT,
-    campus TEXT, college TEXT, department TEXT, year TEXT, block_no TEXT, room_no TEXT, zone_woreda TEXT, telegram_handle TEXT,
-    student_id TEXT UNIQUE, photo_id INTEGER, password TEXT,
-    status TEXT DEFAULT 'registered', role TEXT DEFAULT 'student',
-    renewal_date TIMESTAMP DEFAULT NOW(), created_at TIMESTAMP DEFAULT NOW()
-  )`);
-  await q(`CREATE TABLE IF NOT EXISTS posts (
-    id SERIAL PRIMARY KEY, type TEXT, subcategory TEXT DEFAULT 'general', campus TEXT DEFAULT 'all',
-    title_om TEXT, title_en TEXT, title_am TEXT, body_om TEXT, body_en TEXT, body_am TEXT,
-    event_date TEXT, image_id INTEGER, file_id INTEGER, is_emergency INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW()
-  )`);
-  await q(`CREATE TABLE IF NOT EXISTS event_rsvps (id SERIAL PRIMARY KEY, post_id INTEGER, member_no TEXT, created_at TIMESTAMP DEFAULT NOW(), UNIQUE(post_id, member_no))`);
-  await q(`CREATE TABLE IF NOT EXISTS polls (id SERIAL PRIMARY KEY, title TEXT, description TEXT, options TEXT, candidate_nos TEXT, max_choices INTEGER DEFAULT 5, campus TEXT DEFAULT 'all', status TEXT DEFAULT 'open', created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS poll_votes (id SERIAL PRIMARY KEY, poll_id INTEGER, member_no TEXT, choice TEXT, created_at TIMESTAMP DEFAULT NOW(), UNIQUE(poll_id, member_no, choice))`);
-  await q(`CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY, val TEXT)`);
-  await q(`CREATE TABLE IF NOT EXISTS certificates (id SERIAL PRIMARY KEY, cert_code TEXT UNIQUE, member_no TEXT, member_name TEXT, title TEXT, role_award TEXT, issue_date TEXT, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS forum_posts (id SERIAL PRIMARY KEY, member_no TEXT, author_name TEXT, campus TEXT, category TEXT DEFAULT 'general', title TEXT, body TEXT, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS forum_replies (id SERIAL PRIMARY KEY, post_id INTEGER, member_no TEXT, author_name TEXT, body TEXT, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS staff (id SERIAL PRIMARY KEY, username TEXT UNIQUE, name TEXT, role TEXT, campus TEXT, password TEXT, active INTEGER DEFAULT 1, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS leaders (id SERIAL PRIMARY KEY, member_no TEXT, name TEXT, phone TEXT, department TEXT, year TEXT, block_no TEXT, room_no TEXT, role_key TEXT, position_om TEXT, position_en TEXT, position_am TEXT, term TEXT DEFAULT '2025-2026', responsibilities TEXT, level TEXT DEFAULT 'central', campus TEXT DEFAULT 'all', photo_id INTEGER, ord INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS meetings (id SERIAL PRIMARY KEY, campus TEXT DEFAULT 'all', title TEXT, meeting_date TEXT, agenda TEXT, minutes TEXT, resolutions TEXT, attendance_count INTEGER DEFAULT 0, file_id INTEGER, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS support_requests (id SERIAL PRIMARY KEY, member_no TEXT, name TEXT, campus TEXT, subject TEXT, category TEXT DEFAULT 'general', message TEXT, status TEXT DEFAULT 'open', reply TEXT, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS transactions (id SERIAL PRIMARY KEY, kind TEXT, amount NUMERIC, tdate TEXT, note TEXT, campus TEXT DEFAULT 'all', created_by TEXT, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS finance_reports (id SERIAL PRIMARY KEY, period TEXT, campus TEXT, income NUMERIC, expense NUMERIC, starting_balance NUMERIC DEFAULT 0, detail TEXT, approved INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS audit_logs (id SERIAL PRIMARY KEY, actor TEXT, action TEXT, target TEXT, details TEXT, ip TEXT, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS password_resets (id SERIAL PRIMARY KEY, student_id TEXT, phone TEXT, reason TEXT, status TEXT DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW())`);
-  
-  /* Feature 3: Payments & Receipts */
-  await q(`CREATE TABLE IF NOT EXISTS member_payments (
-    id SERIAL PRIMARY KEY, member_no TEXT, name TEXT, campus TEXT, amount NUMERIC,
-    payment_method TEXT, transaction_ref TEXT UNIQUE, receipt_file_id INTEGER,
-    status TEXT DEFAULT 'pending', admin_remark TEXT, created_at TIMESTAMP DEFAULT NOW()
-  )`);
+  )`,
+  `CREATE TABLE IF NOT EXISTS event_rsvps (id SERIAL PRIMARY KEY, post_id INTEGER, member_no TEXT, created_at TIMESTAMP DEFAULT NOW(), UNIQUE(post_id, member_no))`,
+  `CREATE TABLE IF NOT EXISTS polls (id SERIAL PRIMARY KEY, title TEXT, description TEXT, options TEXT, candidate_nos TEXT, max_choices INTEGER DEFAULT 5, campus TEXT DEFAULT 'all', status TEXT DEFAULT 'open', created_at TIMESTAMP DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS poll_votes (id SERIAL PRIMARY KEY, poll_id INTEGER, member_no TEXT, choice TEXT, created_at TIMESTAMP DEFAULT NOW(), UNIQUE(poll_id, member_no, choice))`,
+  `CREATE TABLE IF NOT EXISTS certificates (id SERIAL PRIMARY KEY, cert_code TEXT UNIQUE, member_no TEXT, member_name TEXT, title TEXT, role_award TEXT, issue_date TEXT, created_at TIMESTAMP DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS forum_posts (id SERIAL PRIMARY KEY, member_no TEXT, author_name TEXT, campus TEXT, category TEXT DEFAULT 'general', title TEXT, body TEXT, created_at TIMESTAMP DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS forum_replies (id SERIAL PRIMARY KEY, post_id INTEGER, member_no TEXT, author_name TEXT, body TEXT, created_at TIMESTAMP DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS staff (id SERIAL PRIMARY KEY, username TEXT UNIQUE, name TEXT, role TEXT, campus TEXT, password TEXT, active INTEGER DEFAULT 1, created_at TIMESTAMP DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS leaders (id SERIAL PRIMARY KEY, member_no TEXT, name TEXT, phone TEXT, department TEXT, year TEXT, block_no TEXT, room_no TEXT, role_key TEXT, position_om TEXT, position_en TEXT, position_am TEXT, term TEXT DEFAULT '2025-2026', responsibilities TEXT, level TEXT DEFAULT 'central', campus TEXT DEFAULT 'all', photo_id INTEGER, ord INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS meetings (id SERIAL PRIMARY KEY, campus TEXT DEFAULT 'all', title TEXT, meeting_date TEXT, agenda TEXT, minutes TEXT, resolutions TEXT, attendance_count INTEGER DEFAULT 0, file_id INTEGER, created_at TIMESTAMP DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS support_requests (id SERIAL PRIMARY KEY, member_no TEXT, name TEXT, campus TEXT, subject TEXT, category TEXT DEFAULT 'general', message TEXT, status TEXT DEFAULT 'open', reply TEXT, created_at TIMESTAMP DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS transactions (id SERIAL PRIMARY KEY, kind TEXT, amount NUMERIC, tdate TEXT, note TEXT, campus TEXT DEFAULT 'all', created_by TEXT, created_at TIMESTAMP DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS finance_reports (id SERIAL PRIMARY KEY, period TEXT, campus TEXT, income NUMERIC, expense NUMERIC, starting_balance NUMERIC DEFAULT 0, detail TEXT, approved INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS audit_logs (id SERIAL PRIMARY KEY, actor TEXT, action TEXT, target TEXT, details TEXT, ip TEXT, created_at TIMESTAMP DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS password_resets (id SERIAL PRIMARY KEY, student_id TEXT, phone TEXT, reason TEXT, status TEXT DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS member_payments (id SERIAL PRIMARY KEY, member_no TEXT, name TEXT, campus TEXT, amount NUMERIC, payment_method TEXT, transaction_ref TEXT UNIQUE, receipt_file_id INTEGER, status TEXT DEFAULT 'pending', admin_remark TEXT, created_at TIMESTAMP DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS lost_found (id SERIAL PRIMARY KEY, member_no TEXT, author_name TEXT, campus TEXT, category TEXT DEFAULT 'lost', title TEXT, description TEXT, phone TEXT, image_id INTEGER, status TEXT DEFAULT 'open', created_at TIMESTAMP DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS mentor_requests (id SERIAL PRIMARY KEY, freshman_no TEXT, freshman_name TEXT, campus TEXT, department TEXT, senior_mentor TEXT, status TEXT DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS attendance_sessions (id SERIAL PRIMARY KEY, title TEXT, campus TEXT DEFAULT 'all', event_date TEXT, code TEXT UNIQUE, created_at TIMESTAMP DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS attendance_logs (id SERIAL PRIMARY KEY, session_id INTEGER, member_no TEXT, member_name TEXT, scanned_at TIMESTAMP DEFAULT NOW(), UNIQUE(session_id, member_no))`,
+  `CREATE TABLE IF NOT EXISTS alumni (id SERIAL PRIMARY KEY, full_name TEXT, batch_year TEXT, department TEXT, current_role TEXT, employer TEXT, phone TEXT, email TEXT, linkedin TEXT, created_at TIMESTAMP DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS anonymous_suggestions (id SERIAL PRIMARY KEY, campus TEXT DEFAULT 'all', category TEXT DEFAULT 'general', message TEXT, reply TEXT, status TEXT DEFAULT 'open', created_at TIMESTAMP DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS media_hub (id SERIAL PRIMARY KEY, title TEXT, youtube_url TEXT, description TEXT, campus TEXT DEFAULT 'all', created_at TIMESTAMP DEFAULT NOW())`,
+  `CREATE TABLE IF NOT EXISTS targeted_broadcasts (id SERIAL PRIMARY KEY, title TEXT, target_campus TEXT DEFAULT 'all', target_year TEXT DEFAULT 'all', message TEXT, created_by TEXT, created_at TIMESTAMP DEFAULT NOW())`,
+  `ALTER TABLE files ADD COLUMN IF NOT EXISTS name TEXT`,
+  `ALTER TABLE members ADD COLUMN IF NOT EXISTS college TEXT`,
+  `ALTER TABLE members ADD COLUMN IF NOT EXISTS zone_woreda TEXT`,
+  `ALTER TABLE members ADD COLUMN IF NOT EXISTS telegram_handle TEXT`,
+  `ALTER TABLE members ADD COLUMN IF NOT EXISTS block_no TEXT`,
+  `ALTER TABLE members ADD COLUMN IF NOT EXISTS room_no TEXT`,
+  `ALTER TABLE members ADD COLUMN IF NOT EXISTS renewal_date TIMESTAMP DEFAULT NOW()`,
+  `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS member_no TEXT`,
+  `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS phone TEXT`,
+  `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS department TEXT`,
+  `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS year TEXT`,
+  `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS block_no TEXT`,
+  `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS room_no TEXT`,
+  `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS ord INTEGER DEFAULT 0`,
+  `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS level TEXT DEFAULT 'central'`,
+  `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS role_key TEXT`,
+  `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS position_om TEXT`,
+  `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS position_am TEXT`,
+  `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS responsibilities TEXT`,
+  `ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_emergency INTEGER DEFAULT 0`,
+  `ALTER TABLE posts ADD COLUMN IF NOT EXISTS title_am TEXT`,
+  `ALTER TABLE posts ADD COLUMN IF NOT EXISTS body_am TEXT`,
+  `ALTER TABLE finance_reports ADD COLUMN IF NOT EXISTS starting_balance NUMERIC DEFAULT 0`,
+  `ALTER TABLE polls ADD COLUMN IF NOT EXISTS candidate_nos TEXT`,
+  `ALTER TABLE polls ADD COLUMN IF NOT EXISTS max_choices INTEGER DEFAULT 5`,
+  `ALTER TABLE poll_votes DROP CONSTRAINT IF EXISTS poll_votes_poll_id_member_no_key`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS poll_votes_multi_idx ON poll_votes(poll_id, member_no, choice)`,
+  `INSERT INTO site_settings (key, val) VALUES ('election_portal_on', '1') ON CONFLICT (key) DO NOTHING`
+];
 
-  /* Feature 4: Lost & Found */
-  await q(`CREATE TABLE IF NOT EXISTS lost_found (
-    id SERIAL PRIMARY KEY, member_no TEXT, author_name TEXT, campus TEXT,
-    category TEXT DEFAULT 'lost', title TEXT, description TEXT, phone TEXT,
-    image_id INTEGER, status TEXT DEFAULT 'open', created_at TIMESTAMP DEFAULT NOW()
-  )`);
-
-  /* Feature 5: Mentorship Requests */
-  await q(`CREATE TABLE IF NOT EXISTS mentor_requests (
-    id SERIAL PRIMARY KEY, freshman_no TEXT, freshman_name TEXT, campus TEXT,
-    department TEXT, senior_mentor TEXT, status TEXT DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW()
-  )`);
-
-  /* Feature 6: QR Attendance */
-  await q(`CREATE TABLE IF NOT EXISTS attendance_sessions (
-    id SERIAL PRIMARY KEY, title TEXT, campus TEXT DEFAULT 'all', event_date TEXT,
-    code TEXT UNIQUE, created_at TIMESTAMP DEFAULT NOW()
-  )`);
-  await q(`CREATE TABLE IF NOT EXISTS attendance_logs (
-    id SERIAL PRIMARY KEY, session_id INTEGER, member_no TEXT, member_name TEXT,
-    scanned_at TIMESTAMP DEFAULT NOW(), UNIQUE(session_id, member_no)
-  )`);
-
-  /* Feature 9: Alumni Network */
-  await q(`CREATE TABLE IF NOT EXISTS alumni (
-    id SERIAL PRIMARY KEY, full_name TEXT, batch_year TEXT, department TEXT,
-    current_role TEXT, employer TEXT, phone TEXT, email TEXT, linkedin TEXT, created_at TIMESTAMP DEFAULT NOW()
-  )`);
-
-  /* Feature 13: Anonymous Suggestion Box */
-  await q(`CREATE TABLE IF NOT EXISTS anonymous_suggestions (
-    id SERIAL PRIMARY KEY, campus TEXT DEFAULT 'all', category TEXT DEFAULT 'general',
-    message TEXT, reply TEXT, status TEXT DEFAULT 'open', created_at TIMESTAMP DEFAULT NOW()
-  )`);
-
-  /* Feature 14: Heritage & YouTube Media Hub */
-  await q(`CREATE TABLE IF NOT EXISTS media_hub (
-    id SERIAL PRIMARY KEY, title TEXT, youtube_url TEXT, description TEXT, campus TEXT DEFAULT 'all', created_at TIMESTAMP DEFAULT NOW()
-  )`);
-
-  /* Feature 15: Targeted Broadcasts */
-  await q(`CREATE TABLE IF NOT EXISTS targeted_broadcasts (
-    id SERIAL PRIMARY KEY, title TEXT, target_campus TEXT DEFAULT 'all', target_year TEXT DEFAULT 'all',
-    message TEXT, created_by TEXT, created_at TIMESTAMP DEFAULT NOW()
-  )`);
-
-
-  for (const sql of [
-    `ALTER TABLE files ADD COLUMN IF NOT EXISTS name TEXT`,
-    `ALTER TABLE members ADD COLUMN IF NOT EXISTS college TEXT`,
-    `ALTER TABLE members ADD COLUMN IF NOT EXISTS zone_woreda TEXT`,
-    `ALTER TABLE members ADD COLUMN IF NOT EXISTS telegram_handle TEXT`,
-    `ALTER TABLE members ADD COLUMN IF NOT EXISTS block_no TEXT`,
-    `ALTER TABLE members ADD COLUMN IF NOT EXISTS room_no TEXT`,
-    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS member_no TEXT`,
-    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS phone TEXT`,
-    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS department TEXT`,
-    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS year TEXT`,
-    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS block_no TEXT`,
-    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS room_no TEXT`,
-    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS ord INTEGER DEFAULT 0`,
-    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS level TEXT DEFAULT 'central'`,
-    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS role_key TEXT`,
-    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS position_om TEXT`,
-    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS position_am TEXT`,
-    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS responsibilities TEXT`,
-    `ALTER TABLE members ADD COLUMN IF NOT EXISTS renewal_date TIMESTAMP DEFAULT NOW()`,
-    `ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_emergency INTEGER DEFAULT 0`,
-    `ALTER TABLE posts ADD COLUMN IF NOT EXISTS title_am TEXT`,
-    `ALTER TABLE posts ADD COLUMN IF NOT EXISTS body_am TEXT`,
-    `ALTER TABLE finance_reports ADD COLUMN IF NOT EXISTS starting_balance NUMERIC DEFAULT 0`,
-    `ALTER TABLE polls ADD COLUMN IF NOT EXISTS candidate_nos TEXT`,
-    `ALTER TABLE polls ADD COLUMN IF NOT EXISTS max_choices INTEGER DEFAULT 5`,
-    `ALTER TABLE poll_votes DROP CONSTRAINT IF EXISTS poll_votes_poll_id_member_no_key`,
-    `CREATE UNIQUE INDEX IF NOT EXISTS poll_votes_multi_idx ON poll_votes(poll_id, member_no, choice)`
-  ]) { try { await q(sql); } catch (e) {} }
-  await q(`INSERT INTO site_settings (key, val) VALUES ('election_portal_on', '1') ON CONFLICT (key) DO NOTHING`);
-
-  // Clean any religious greetings from existing posts in DB to keep association strictly secular/neutral
+const dbReady = (async () => {
+  for (const sql of DB_STATEMENTS) {
+    try { await q(sql); } catch (e) { console.error('DB step warning:', e.message); }
+  }
   try {
     await q(`UPDATE posts SET
       body_en = TRIM(REGEXP_REPLACE(COALESCE(body_en,''), 'Assalaamu\s*Alaikum[^\n]*', '', 'gi')),
@@ -961,12 +880,18 @@ function staffRoleBanner(req) {
       title_am = TRIM(REGEXP_REPLACE(COALESCE(title_am,''), 'Assalaamu\s*Alaikum[^\n]*', '', 'gi'))
       WHERE COALESCE(body_en,'') ~* 'Assalaamu' OR COALESCE(body_om,'') ~* 'Assalaamu' OR COALESCE(body_am,'') ~* 'Assalaamu'`);
   } catch (e) {}
+  try {
+    const adminPass = bcrypt.hashSync(process.env.ADMIN_PASS || 'sikomando123', 10);
+    const adminUser = process.env.ADMIN_USER || 'admin';
+    await q(`INSERT INTO staff (username, name, role, campus, password, active) VALUES ($1, 'Central Admin', 'central_admin', NULL, $2, 1)
+             ON CONFLICT (username) DO UPDATE SET password = $2, role = 'central_admin', active = 1`, [adminUser, adminPass]);
+  } catch (e) { console.error('Admin seed warning:', e.message); }
+})();
 
-  const adminPass = bcrypt.hashSync(process.env.ADMIN_PASS || 'sikomando123', 10);
-  const adminUser = process.env.ADMIN_USER || 'admin';
-  await q(`INSERT INTO staff (username, name, role, campus, password, active) VALUES ($1, 'Central Admin', 'central_admin', NULL, $2, 1)
-           ON CONFLICT (username) DO UPDATE SET password = $2, role = 'central_admin', active = 1`, [adminUser, adminPass]);
-})().catch(e => console.error('DB init err:', e.message));
+app.use(async (req, res, next) => {
+  try { await dbReady; } catch (e) {}
+  next();
+});
 
 app.get('/lang/:l', (req, res) => {
   if (['om', 'am', 'en'].includes(req.params.l)) req.session.lang = req.params.l;
@@ -1320,14 +1245,18 @@ app.get('/student-dashboard', needMember, async (req, res) => {
         </div>
       </div>
 
-      <!-- Download Option Selector: One Side vs Both Sides -->
+      <!-- Download Option Selector: Pure ID Card Only (PNG or PDF) -->
       <div style="max-width:430px; margin:16px auto 0; background:var(--surface-soft); border:1.5px dashed var(--card-dash); border-radius:18px; padding:12px 14px; display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap;">
-        <select id="dlSideMode" style="width:auto; min-width:195px; padding:9px 12px; font-size:13px; font-weight:700; border-radius:999px;">
+        <select id="dlSideMode" style="width:auto; min-width:175px; padding:9px 12px; font-size:12.5px; font-weight:700; border-radius:999px;">
           <option value="both">🪪 Both Sides (Front & Back)</option>
-          <option value="front">📄 One Side Only (Front)</option>
-          <option value="back">📄 One Side Only (Back)</option>
+          <option value="front">📄 Front Side Only</option>
+          <option value="back">📄 Back Side Only</option>
         </select>
-        <button onclick="downloadID()" class="btn g" style="padding:10px 18px;">📥 Download ID (PNG)</button>
+        <select id="dlFileFmt" style="width:auto; min-width:110px; padding:9px 12px; font-size:12.5px; font-weight:700; border-radius:999px;">
+          <option value="png">🖼️ PNG</option>
+          <option value="pdf">📑 PDF</option>
+        </select>
+        <button onclick="downloadID()" class="btn g" style="padding:10px 18px;">📥 Download ID Only</button>
       </div>
 
       <div style="text-align:center; margin-top:12px; display:flex; justify-content:center; gap:9px; flex-wrap:wrap;">
@@ -1340,49 +1269,80 @@ app.get('/student-dashboard', needMember, async (req, res) => {
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
       new QRCode(document.getElementById('qrFront'),{text:${JSON.stringify(base)},width:56,height:56,colorDark:"#0f172a",colorLight:"#ffffff"});
       new QRCode(document.getElementById('qrBack'),{text:${JSON.stringify(base)},width:96,height:96,colorDark:"#4c1d95",colorLight:"#ffffff"});
-      async function renderCleanFace(el){
+
+      async function capturePureCard(el){
+        const stage = document.createElement('div');
+        stage.style.cssText = 'position:fixed;left:-10000px;top:0;width:430px;background:#ffffff;padding:0;margin:0;z-index:-1;';
         const clone = el.cloneNode(true);
-        clone.style.position = 'fixed';
-        clone.style.left = '-9999px';
-        clone.style.top = '0';
-        clone.style.width = '430px';
-        clone.style.transform = 'none';
-        clone.style.backfaceVisibility = 'visible';
-        document.body.appendChild(clone);
-        const canvas = await html2canvas(clone, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-        document.body.removeChild(clone);
+        clone.style.cssText = 'position:relative;width:430px;margin:0;transform:none;backface-visibility:visible;-webkit-backface-visibility:visible;box-shadow:none;border-radius:18px;overflow:hidden;border:2px solid #7c3aed;background:#ffffff;';
+        // Convert any QR canvas inside original into crisp dataURL img inside clone
+        const origCanvases = el.querySelectorAll('canvas');
+        const cloneQrDivs = clone.querySelectorAll('#qrFront, #qrBack');
+        origCanvases.forEach((cv, idx) => {
+          if (cloneQrDivs[idx]) {
+            cloneQrDivs[idx].innerHTML = '';
+            const im = document.createElement('img');
+            im.src = cv.toDataURL('image/png');
+            im.style.width = cv.width + 'px';
+            im.style.height = cv.height + 'px';
+            im.style.display = 'block';
+            cloneQrDivs[idx].appendChild(im);
+          }
+        });
+        stage.appendChild(clone);
+        document.body.appendChild(stage);
+        const canvas = await html2canvas(clone, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false });
+        document.body.removeChild(stage);
         return canvas;
       }
+
       async function downloadID(){
         const mode = document.getElementById('dlSideMode').value;
+        const fmt = document.getElementById('dlFileFmt').value;
         const memberNo = ${JSON.stringify(m.member_no)};
-        
-        // Hide shadows/transforms for clean crisp card export
-        const cardFront = document.getElementById('idCardFront');
-        const cardBack = document.getElementById('idCardBack');
-        
+
+        let finalCanvas;
+        let suffix = 'BOTH-SIDES';
+
         if (mode === 'front') {
-          const c = await html2canvas(cardFront, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-          const a = document.createElement('a'); a.download = memberNo + '-ID-FRONT.png'; a.href = c.toDataURL('image/png'); a.click();
+          finalCanvas = await capturePureCard(document.getElementById('idCardFront'));
+          suffix = 'FRONT';
         } else if (mode === 'back') {
-          const c = await html2canvas(cardBack, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-          const a = document.createElement('a'); a.download = memberNo + '-ID-BACK.png'; a.href = c.toDataURL('image/png'); a.click();
+          finalCanvas = await capturePureCard(document.getElementById('idCardBack'));
+          suffix = 'BACK';
         } else {
-          const cFront = await html2canvas(cardFront, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-          const cBack = await html2canvas(cardBack, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-          const gap = 20;
-          const out = document.createElement('canvas');
-          out.width = Math.max(cFront.width, cBack.width);
-          out.height = cFront.height + gap + cBack.height;
-          const ctx = out.getContext('2d');
+          const cFront = await capturePureCard(document.getElementById('idCardFront'));
+          const cBack = await capturePureCard(document.getElementById('idCardBack'));
+          const gap = 28;
+          finalCanvas = document.createElement('canvas');
+          finalCanvas.width = Math.max(cFront.width, cBack.width);
+          finalCanvas.height = cFront.height + gap + cBack.height;
+          const ctx = finalCanvas.getContext('2d');
           ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, out.width, out.height);
+          ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
           ctx.drawImage(cFront, 0, 0);
           ctx.drawImage(cBack, 0, cFront.height + gap);
-          const a = document.createElement('a'); a.download = memberNo + '-ID-BOTH-SIDES.png'; a.href = out.toDataURL('image/png'); a.click();
+        }
+
+        const imgData = finalCanvas.toDataURL('image/png');
+        if (fmt === 'pdf' && window.jspdf && window.jspdf.jsPDF) {
+          const { jsPDF } = window.jspdf;
+          const pxW = finalCanvas.width;
+          const pxH = finalCanvas.height;
+          const pdfW = 86; // standard ID width in mm
+          const pdfH = (pxH / pxW) * pdfW;
+          const doc = new jsPDF({ orientation: pdfH > pdfW ? 'p' : 'l', unit: 'mm', format: [pdfW, pdfH] });
+          doc.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
+          doc.save(memberNo + '-ID-' + suffix + '.pdf');
+        } else {
+          const a = document.createElement('a');
+          a.download = memberNo + '-ID-' + suffix + '.png';
+          a.href = imgData;
+          a.click();
         }
       }
       document.querySelectorAll('[data-countdown]').forEach(el=>{
@@ -1706,40 +1666,41 @@ app.get('/portal/meetings', needMember, async (req, res) => {
 
 app.get('/portal/leadership', needMember, async (req, res) => {
   const ls = await q(`SELECT * FROM leaders ORDER BY (level='central') DESC, ord, id`);
-  const membersAll = await q(`SELECT member_no, name, phone, campus, department, year, block_no, room_no, photo_id FROM members`);
+  const membersAll = await q(`SELECT member_no, name, phone, campus, college, department, year, block_no, room_no, photo_id FROM members`);
   const byNo = Object.fromEntries(membersAll.map(m => [m.member_no, m]));
-  const byName = Object.fromEntries(membersAll.map(m => [m.name.toLowerCase().trim(), m]));
+  const byName = Object.fromEntries(membersAll.map(m => [String(m.name || '').toLowerCase().trim(), m]));
 
   const renderLeaderCard = x => {
     const m = (x.member_no && byNo[x.member_no]) || byName[String(x.name || '').toLowerCase().trim()] || {};
     const photo = x.photo_id ? `/photo/${x.photo_id}` : (m.photo_id ? `/photo/${m.photo_id}` : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23ede9fe'/%3E%3Ctext x='50' y='62' font-size='44' text-anchor='middle'%3E👤%3C/text%3E%3C/svg%3E`);
     const phone = x.phone || m.phone || '-';
-    const dept = x.department || m.department || '';
-    const yr = x.year || m.year || '';
+    const dept = x.department || m.department || '-';
+    const yr = x.year || m.year || '-';
     const blk = x.block_no || m.block_no || '-';
     const rm = x.room_no || m.room_no || '-';
     const cmp = (x.campus && x.campus !== 'all') ? campusName(req, x.campus) : (m.campus ? campusName(req, m.campus) : 'All Campuses');
     return `
       <div class="form-section" style="margin:0; padding:16px; display:flex; flex-direction:column; justify-content:space-between; gap:10px;">
-        <div style="display:flex; gap:12px; align-items:center;">
-          <img style="width:74px; height:86px; border-radius:14px; object-fit:cover; border:2.5px solid #c084fc; flex-shrink:0;" src="${photo}" alt="">
+        <div style="display:flex; gap:13px; align-items:center;">
+          <img style="width:78px; height:92px; border-radius:14px; object-fit:cover; border:2.5px solid #c084fc; flex-shrink:0;" src="${photo}" alt="">
           <div style="font-size:12px; line-height:1.45;">
             <span class="badge official" style="margin-bottom:4px;">${h(x.position_en || x.position_om || x.position_am || 'Leader')}</span>
-            <h4 style="font-size:15px; font-weight:850; color:var(--text); margin:2px 0;">${h(x.name)}</h4>
+            <h4 style="font-size:15.5px; font-weight:850; color:var(--text); margin:2px 0;">${h(x.name)}</h4>
             <small style="color:var(--text-muted); font-weight:700;">Term: ${h(x.term || '2025-2026')}</small>
           </div>
         </div>
-        <div style="background:var(--surface-solid); border:1px solid var(--border); border-radius:12px; padding:10px 12px; font-size:12.5px; line-height:1.6;">
-          <div>🏛️ <b>Campus:</b> ${h(cmp)} ${dept ? `· ${h(dept)} (Y${h(yr)})` : ''}</div>
-          <div>📞 <b>Phone:</b> <a href="tel:${h(phone)}" style="font-weight:700;">${h(phone)}</a></div>
-          <div>🏠 <b>Dorm:</b> Block <b>${h(blk)}</b> · Room <b>${h(rm)}</b></div>
-          ${x.responsibilities ? `<div style="margin-top:4px; color:var(--text-2);">📋 ${h(x.responsibilities)}</div>` : ''}
+        <div style="background:var(--surface-solid); border:1px solid var(--border); border-radius:13px; padding:11px 13px; font-size:12.5px; line-height:1.65;">
+          <div>🏛️ <b>Campus:</b> ${h(cmp)}</div>
+          <div>🎓 <b>Department:</b> ${h(dept)} ${yr && yr !== '-' ? `(Year ${h(yr)})` : ''}</div>
+          <div>📞 <b>Phone:</b> <a href="tel:${h(phone)}" style="font-weight:800; color:var(--primary);">${h(phone)}</a></div>
+          <div>🏠 <b>Dormitory:</b> Block <b>${h(blk)}</b> · Room <b>${h(rm)}</b></div>
+          ${x.responsibilities ? `<div style="margin-top:5px; color:var(--text-2); border-top:1px dashed var(--border); padding-top:4px;">📋 ${h(x.responsibilities)}</div>` : ''}
         </div>
       </div>
     `;
   };
 
-  const grp = (t, list) => list.length ? `<div class="glass-card"><div class="hub-header">👥 <span>${h(t)}</span></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px">${list.map(renderLeaderCard).join('')}</div></div>` : '';
+  const grp = (t, list) => list.length ? `<div class="glass-card"><div class="hub-header">👥 <span>${h(t)}</span></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(275px,1fr));gap:14px">${list.map(renderLeaderCard).join('')}</div></div>` : '';
   const body = grp('Central Executive Leadership', ls.filter(x => x.level === 'central')) + Object.keys(CAMPUS).map(k => grp(campusName(req, k) + ' Representatives', ls.filter(x => x.level !== 'central' && x.campus === k))).join('');
   res.send(page(req, tr(req, 'leadership'), portalMenu('/portal/leadership') + (body || `<div class="glass-card" style="text-align:center;padding:42px">${h(tr(req, 'none'))}</div>`)));
 });
@@ -2463,13 +2424,15 @@ app.post('/admin/meetings/:id/delete', guard('meetings'), async (req, res) => { 
 app.get('/admin/leaders', guard('leaders'), async (req, res) => {
   const sc = scopeOf(req);
   const ls = await q(`SELECT * FROM leaders ${sc ? 'WHERE campus=$1' : ''} ORDER BY (level='central') DESC, ord, id`, sc ? [sc] : []);
-  const members = await q(`SELECT member_no, name, phone, campus, department, year, block_no, room_no FROM members ${sc ? 'WHERE campus=$1' : ''} ORDER BY name ASC LIMIT 500`, sc ? [sc] : []);
+  const members = await q(`SELECT member_no, name, phone, campus, department, year, block_no, room_no, photo_id FROM members ${sc ? 'WHERE campus=$1' : ''} ORDER BY name ASC LIMIT 500`, sc ? [sc] : []);
+  const mByNo = Object.fromEntries(members.map(m => [m.member_no, m]));
+  const mByName = Object.fromEntries(members.map(m => [String(m.name || '').toLowerCase().trim(), m]));
 
   res.send(A(req, 'Leaders', `
     <div class="glass-card">
       <div class="hub-header">🎖️ <span>Add Association Leader · አመራር መመዝገቢያ</span></div>
       <form method="POST" action="/admin/leaders" enctype="multipart/form-data">
-        <label>Select from Registered Members (Auto-fills phone, block & room)</label>
+        <label>Select from Registered Members (Auto-fills Name, Phone, Dept, Block & Room)</label>
         <select id="leaderMemberPick" name="member_no" onchange="fillLeaderFromMember(this)">
           <option value="">-- Or enter leader details manually below --</option>
           ${members.map(m => `<option value="${h(m.member_no)}" data-name="${h(m.name)}" data-phone="${h(m.phone || '')}" data-campus="${h(m.campus)}" data-dept="${h(m.department || '')}" data-year="${h(m.year || '')}" data-block="${h(m.block_no || '')}" data-room="${h(m.room_no || '')}">${h(m.name)} (${h(m.member_no)} · ${h(m.phone || '')})</option>`).join('')}
@@ -2481,7 +2444,7 @@ app.get('/admin/leaders', guard('leaders'), async (req, res) => {
           <div><label>Phone Number *</label><input id="ld_phone" name="phone" required placeholder="09..."></div>
           <div><label>Dorm Block *</label><input id="ld_block" name="block_no" required placeholder="e.g. BB-12"></div>
           <div><label>Dorm Room *</label><input id="ld_room" name="room_no" required placeholder="e.g. R-70"></div>
-          <div><label>Department</label><input id="ld_dept" name="department" placeholder="e.g. Statistics"></div>
+          <div><label>Department *</label><input id="ld_dept" name="department" required placeholder="e.g. Statistics"></div>
           <div><label>Year</label><input id="ld_year" name="year" placeholder="e.g. 4"></div>
           <div><label>Term</label><input name="term" value="2025-2026"></div>
           <div><label>Level</label>${sel('level', sc ? [['campus','Campus']] : [['central','Central'],['campus','Campus']])}</div>
@@ -2496,16 +2459,38 @@ app.get('/admin/leaders', guard('leaders'), async (req, res) => {
     </div>
 
     <div class="glass-card">
-      <div class="hub-header">👥 <span>Current Leaders (${ls.length})</span></div>
-      ${ls.map(x => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px;">
-          <div>
-            <b>${h(x.name)}</b> · <span class="badge official">${h(x.position_en)}</span><br>
-            <small style="color:var(--text-muted)">📞 ${h(x.phone || '-')} · 🏠 Block ${h(x.block_no || '-')} / Room ${h(x.room_no || '-')} · ${h(x.campus)}</small>
-          </div>
-          <form method="POST" action="/admin/leaders/${x.id}/delete"><button class="btn danger" style="padding:4px 10px;font-size:11.5px">Delete</button></form>
-        </div>
-      `).join('') || '<p>No leaders added yet.</p>'}
+      <div class="hub-header">👥 <span>Current Leaders Full Directory (${ls.length})</span></div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(275px, 1fr)); gap:12px;">
+        ${ls.map(x => {
+          const m = (x.member_no && mByNo[x.member_no]) || mByName[String(x.name || '').toLowerCase().trim()] || {};
+          const photo = x.photo_id ? `/photo/${x.photo_id}` : (m.photo_id ? `/photo/${m.photo_id}` : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23ede9fe'/%3E%3Ctext x='50' y='62' font-size='44' text-anchor='middle'%3E👤%3C/text%3E%3C/svg%3E`);
+          const phone = x.phone || m.phone || '-';
+          const dept = x.department || m.department || '-';
+          const yr = x.year || m.year || '-';
+          const blk = x.block_no || m.block_no || '-';
+          const rm = x.room_no || m.room_no || '-';
+          const cmp = (x.campus && x.campus !== 'all') ? campusName(req, x.campus) : (m.campus ? campusName(req, m.campus) : 'All Campuses');
+          return `
+            <div class="form-section" style="margin:0; display:flex; flex-direction:column; justify-content:space-between; gap:8px;">
+              <div style="display:flex; gap:10px; align-items:center;">
+                <img src="${photo}" style="width:64px; height:76px; border-radius:12px; object-fit:cover; border:2px solid #c084fc; flex-shrink:0;" alt="">
+                <div style="font-size:12px;">
+                  <span class="badge official">${h(x.position_en)}</span>
+                  <h4 style="font-size:14.5px; margin:3px 0 1px;">${h(x.name)}</h4>
+                  <small style="color:var(--text-muted)">${h(cmp)} · ${h(dept)} (Y${h(yr)})</small>
+                </div>
+              </div>
+              <div style="font-size:12px; background:var(--surface-solid); padding:8px 10px; border-radius:10px; border:1px solid var(--border);">
+                📞 <b>Phone:</b> ${h(phone)}<br>
+                🏠 <b>Dorm:</b> Block <b>${h(blk)}</b> · Room <b>${h(rm)}</b>
+              </div>
+              <form method="POST" action="/admin/leaders/${x.id}/delete" style="text-align:right;">
+                <button class="btn danger" style="padding:4px 10px;font-size:11.5px">Delete</button>
+              </form>
+            </div>
+          `;
+        }).join('') || '<p>No leaders added yet.</p>'}
+      </div>
     </div>
 
     <script>
@@ -2601,21 +2586,30 @@ app.post('/admin/payments/:id/:action', guard('finance'), async (req, res) => {
 });
 
 app.get('/admin/suggestions', guard('support'), async (req, res) => {
+  await q(`CREATE TABLE IF NOT EXISTS anonymous_suggestions (id SERIAL PRIMARY KEY, campus TEXT DEFAULT 'all', category TEXT DEFAULT 'general', message TEXT, reply TEXT, status TEXT DEFAULT 'open', created_at TIMESTAMP DEFAULT NOW())`);
   const suggestions = await q(`SELECT * FROM anonymous_suggestions ORDER BY id DESC LIMIT 100`);
   res.send(A(req, 'Anonymous Suggestions', suggestions.map(s => `
     <div class="glass-card">
-      <span class="badge registered">${h(s.category)} · ${h(s.campus)}</span> · <small>${new Date(s.created_at).toLocaleString()}</small>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+        <div><span class="badge registered">${h(s.category)} · ${h(s.campus)}</span> · <small>${new Date(s.created_at).toLocaleString()}</small></div>
+        <form method="POST" action="/admin/suggestions/${s.id}/delete"><button class="btn danger" style="padding:4px 9px; font-size:11px;">Delete</button></form>
+      </div>
       <p style="font-size:14px; margin:10px 0;">${h(s.message)}</p>
       <form method="POST" action="/admin/suggestions/${s.id}/reply">
         <textarea name="reply" rows="2" placeholder="Write administration response...">${h(s.reply || '')}</textarea>
         <p style="margin-top:8px;"><button class="btn">Publish Reply</button></p>
       </form>
     </div>
-  `).join('') || '<div class="glass-card">No suggestions.</div>'));
+  `).join('') || '<div class="glass-card">No suggestions submitted yet.</div>'));
 });
 
 app.post('/admin/suggestions/:id/reply', guard('support'), async (req, res) => {
   await q(`UPDATE anonymous_suggestions SET reply=$1 WHERE id=$2`, [String(req.body.reply || '').slice(0, 2000), parseInt(req.params.id, 10) || 0]);
+  res.redirect('/admin/suggestions?ok=1');
+});
+
+app.post('/admin/suggestions/:id/delete', guard('support'), async (req, res) => {
+  await q(`DELETE FROM anonymous_suggestions WHERE id=$1`, [parseInt(req.params.id, 10) || 0]);
   res.redirect('/admin/suggestions?ok=1');
 });
 
@@ -2675,4 +2669,4 @@ process.on('unhandledRejection', err => console.error('Unhandled Rejection:', er
 process.on('uncaughtException', err => console.error('Uncaught Exception:', err && err.message));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v7.7 running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v7.8 running on port ${PORT}`));
