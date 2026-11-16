@@ -749,6 +749,19 @@ async function isElectionOn() {
     return !r || r.val !== '0';
   } catch (e) { return true; }
 }
+async function getPaymentAccounts() {
+  try {
+    const rows = await q(`SELECT key, val FROM site_settings WHERE key IN ('pay_cbe_account','pay_telebirr','pay_other')`);
+    const map = Object.fromEntries(rows.map(r => [r.key, r.val]));
+    return {
+      cbe: map.pay_cbe_account !== undefined ? map.pay_cbe_account : '1000000000000 (Siikkoo-Mandoo MWU)',
+      telebirr: map.pay_telebirr !== undefined ? map.pay_telebirr : '0900000000',
+      other: map.pay_other || ''
+    };
+  } catch (e) {
+    return { cbe: '1000000000000 (Siikkoo-Mandoo MWU)', telebirr: '0900000000', other: '' };
+  }
+}
 const ROLE_LABELS = {
   central_admin: 'CENTRAL ADMIN',
   president: 'PRESIDENT',
@@ -863,7 +876,10 @@ const DB_STATEMENTS = [
   `ALTER TABLE polls ADD COLUMN IF NOT EXISTS max_choices INTEGER DEFAULT 5`,
   `ALTER TABLE poll_votes DROP CONSTRAINT IF EXISTS poll_votes_poll_id_member_no_key`,
   `CREATE UNIQUE INDEX IF NOT EXISTS poll_votes_multi_idx ON poll_votes(poll_id, member_no, choice)`,
-  `INSERT INTO site_settings (key, val) VALUES ('election_portal_on', '1') ON CONFLICT (key) DO NOTHING`
+  `INSERT INTO site_settings (key, val) VALUES ('election_portal_on', '1') ON CONFLICT (key) DO NOTHING`,
+  `INSERT INTO site_settings (key, val) VALUES ('pay_cbe_account', '1000000000000 (Siikkoo-Mandoo MWU)') ON CONFLICT (key) DO NOTHING`,
+  `INSERT INTO site_settings (key, val) VALUES ('pay_telebirr', '0900000000') ON CONFLICT (key) DO NOTHING`,
+  `INSERT INTO site_settings (key, val) VALUES ('pay_other', '') ON CONFLICT (key) DO NOTHING`
 ];
 
 const dbReady = (async () => {
@@ -1729,14 +1745,16 @@ app.post('/portal/support', needMember, async (req, res) => {
 /* Feature 3: Payment & Receipt Upload */
 app.get('/portal/payments', needMember, async (req, res) => {
   const payments = await q(`SELECT * FROM member_payments WHERE member_no=$1 ORDER BY id DESC`, [req.session.mid]);
-  res.send(page(req, 'Payment & Receipt', portalMenu('/portal/payments') + `
+  const acc = await getPaymentAccounts();
+  res.set('Cache-Control', 'no-store').send(page(req, 'Payment & Receipt', portalMenu('/portal/payments') + `
     <div class="top-pill-banner">💳 Membership Contribution & Payment Portal</div>
     <div class="glass-card">
       <h3>Submit Contribution Payment</h3>
-      <p style="font-size:13px; color:var(--text-muted);">Transfer via Telebirr (*127#) or CBE Birr and upload your receipt screenshot/reference below.</p>
-      <div style="background:var(--surface-soft); padding:14px; border-radius:14px; margin:10px 0; font-size:13.5px;">
-        <b>🏦 CBE Account:</b> 1000000000000 (Siikkoo-Mandoo MWU)<br>
-        <b>📱 Telebirr Merchant/Num:</b> 0900000000
+      <p style="font-size:13px; color:var(--text-muted);">Transfer via Telebirr (*127#) or Bank Account and upload your receipt screenshot/reference below.</p>
+      <div style="background:var(--surface-soft); border:1.5px dashed var(--card-dash); padding:14px; border-radius:14px; margin:10px 0; font-size:13.5px; line-height:1.7;">
+        ${acc.cbe ? `<div><b>🏦 Bank / CBE Account:</b> <span style="color:var(--primary); font-weight:800;">${h(acc.cbe)}</span></div>` : ''}
+        ${acc.telebirr ? `<div><b>📱 Telebirr Number / Merchant:</b> <span style="color:#0d9488; font-weight:800;">${h(acc.telebirr)}</span></div>` : ''}
+        ${acc.other ? `<div><b>💳 Additional Account / Note:</b> ${h(acc.other)}</div>` : ''}
       </div>
       <form method="POST" action="/portal/payments" enctype="multipart/form-data">
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px;">
@@ -2523,10 +2541,52 @@ app.post('/admin/leaders', guard('leaders'), files6([{ name: 'photo', maxCount: 
 });
 app.post('/admin/leaders/:id/delete', guard('leaders'), async (req, res) => { await q(`DELETE FROM leaders WHERE id=$1`, [parseInt(req.params.id, 10) || 0]); res.redirect('/admin/leaders?ok=1'); });
 
+function paymentAccountFormHtml(acc, returnTo) {
+  return `
+    <div class="glass-card" style="border-left:5px solid #10b981;">
+      <div class="hub-header">🏦 <span>Payment Account & Telebirr Settings · የመክፈያ አካውንት እና ቴሌብር ማስተካከያ</span></div>
+      <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:10px;">Set the Bank Account Number and Telebirr Number that members will see when paying contributions.</p>
+      <form method="POST" action="/admin/finance/payment-accounts">
+        <input type="hidden" name="return_to" value="${h(returnTo)}">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:10px;">
+          <div>
+            <label>🏦 Bank / CBE Account Number & Name *</label>
+            <input name="pay_cbe_account" required value="${h(acc.cbe)}" placeholder="e.g. 1000123456789 (Siikkoo-Mandoo MWU)">
+          </div>
+          <div>
+            <label>📱 Telebirr Number / Merchant ID *</label>
+            <input name="pay_telebirr" required value="${h(acc.telebirr)}" placeholder="e.g. 0916529382">
+          </div>
+          <div>
+            <label>💳 Other Bank / Payment Instructions (Optional)</label>
+            <input name="pay_other" value="${h(acc.other)}" placeholder="e.g. Awash / Coop Bank or Min Amount">
+          </div>
+        </div>
+        <p style="margin-top:12px;"><button class="btn g">💾 Save Payment Accounts (ለአባላት አሳይ)</button></p>
+      </form>
+    </div>
+  `;
+}
 const KINDS = [['contribution', 'Contribution'], ['donation', 'Donation'], ['fundraising', 'Fundraising'], ['income', 'Other Income'], ['expense', 'Expense']];
+app.post('/admin/finance/payment-accounts', guard('finance'), async (req, res) => {
+  const b = req.body;
+  const pairs = [
+    ['pay_cbe_account', String(b.pay_cbe_account || '').trim().slice(0, 200)],
+    ['pay_telebirr', String(b.pay_telebirr || '').trim().slice(0, 200)],
+    ['pay_other', String(b.pay_other || '').trim().slice(0, 300)]
+  ];
+  for (const [k, v] of pairs) {
+    await q(`INSERT INTO site_settings (key, val) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET val = EXCLUDED.val`, [k, v]);
+  }
+  await logAudit(req, 'PAYMENT_ACCOUNTS_UPDATE', 'site_settings', `CBE: ${pairs[0][1]}, Telebirr: ${pairs[1][1]}`);
+  const dest = (b.return_to === '/admin/payments') ? '/admin/payments?saved=1' : '/admin/finance?saved=1';
+  res.redirect(dest);
+});
+
 app.get('/admin/finance', guard('finance'), async (req, res) => {
   const sc = scopeOf(req), rp = await q(`SELECT * FROM finance_reports ${sc ? 'WHERE campus=$1' : ''} ORDER BY id DESC LIMIT 20`, sc ? [sc] : []);
-  res.send(A(req, 'Finance', `<div class="glass-card"><h3>Record Transaction</h3><form method="POST" action="/admin/finance/tx"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px"><div><label>Type</label>${sel('kind', KINDS)}</div><div><label>Amount (ETB)</label><input name="amount" type="number" required></div><div><label>Date</label><input name="tdate" type="date" required></div><div><label>Campus</label>${sel('campus', campusOpts(sc, true))}</div></div><label>Note</label><input name="note"><p style="margin-top:12px"><button class="btn">Record</button></p></form></div><div class="glass-card"><h3>Generate Report</h3><form method="POST" action="/admin/finance/report" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end"><div><label>Period (YYYY-MM)</label><input name="period" placeholder="2026-11" required></div><div><label>Start Balance</label><input name="starting_balance" type="number" value="0"></div><div><label>Campus</label>${sel('campus', campusOpts(sc, true))}</div><button class="btn secondary">Generate</button></form><div class="tw" style="margin-top:12px"><table><tr><th>Period</th><th>Income</th><th>Expense</th><th>Status</th><th>Action</th></tr>${rp.map(r => `<tr><td>${h(r.period)}</td><td style="color:#10b981">${Number(r.income).toLocaleString()}</td><td style="color:#ef4444">${Number(r.expense).toLocaleString()}</td><td>${r.approved ? 'Published' : 'Draft'}</td><td>${can(req, 'approve') ? `<form method="POST" action="/admin/finance/report/${r.id}/${r.approved ? 'hide' : 'approve'}"><button class="btn g" style="padding:4px 9px;font-size:11px">${r.approved ? 'Hide' : 'Publish'}</button></form>` : ''}</td></tr>`).join('')}</table></div></div>`));
+  const acc = await getPaymentAccounts();
+  res.send(A(req, 'Finance', paymentAccountFormHtml(acc, '/admin/finance') + `<div class="glass-card"><h3>Record Transaction</h3><form method="POST" action="/admin/finance/tx"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px"><div><label>Type</label>${sel('kind', KINDS)}</div><div><label>Amount (ETB)</label><input name="amount" type="number" required></div><div><label>Date</label><input name="tdate" type="date" required></div><div><label>Campus</label>${sel('campus', campusOpts(sc, true))}</div></div><label>Note</label><input name="note"><p style="margin-top:12px"><button class="btn">Record</button></p></form></div><div class="glass-card"><h3>Generate Report</h3><form method="POST" action="/admin/finance/report" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end"><div><label>Period (YYYY-MM)</label><input name="period" placeholder="2026-11" required></div><div><label>Start Balance</label><input name="starting_balance" type="number" value="0"></div><div><label>Campus</label>${sel('campus', campusOpts(sc, true))}</div><button class="btn secondary">Generate</button></form><div class="tw" style="margin-top:12px"><table><tr><th>Period</th><th>Income</th><th>Expense</th><th>Status</th><th>Action</th></tr>${rp.map(r => `<tr><td>${h(r.period)}</td><td style="color:#10b981">${Number(r.income).toLocaleString()}</td><td style="color:#ef4444">${Number(r.expense).toLocaleString()}</td><td>${r.approved ? 'Published' : 'Draft'}</td><td>${can(req, 'approve') ? `<form method="POST" action="/admin/finance/report/${r.id}/${r.approved ? 'hide' : 'approve'}"><button class="btn g" style="padding:4px 9px;font-size:11px">${r.approved ? 'Hide' : 'Publish'}</button></form>` : ''}</td></tr>`).join('')}</table></div></div>`));
 });
 app.post('/admin/finance/tx', guard('finance'), async (req, res) => { const b = req.body; if (num(b.amount) > 0 && b.tdate) await q(`INSERT INTO transactions (kind,amount,tdate,note,campus,created_by) VALUES ($1,$2,$3,$4,$5,$6)`, [b.kind, num(b.amount), b.tdate, b.note || '', scopeOf(req) || b.campus || 'all', req.session.sname || '']); res.redirect('/admin/finance?ok=1'); });
 app.post('/admin/finance/report', guard('finance'), async (req, res) => {
@@ -2560,7 +2620,8 @@ app.get('/admin/audit-logs', guard('audit'), async (req, res) => {
 /* Admin Management Routes for Features 3, 6, 13 */
 app.get('/admin/payments', guard('finance'), async (req, res) => {
   const payments = await q(`SELECT * FROM member_payments ORDER BY id DESC LIMIT 100`);
-  res.send(A(req, 'Payment Approvals', `
+  const acc = await getPaymentAccounts();
+  res.send(A(req, 'Payment Approvals', paymentAccountFormHtml(acc, '/admin/payments') + `
     <div class="glass-card"><div class="tw"><table>
       <tr><th>Ref / ID</th><th>Member</th><th>Campus</th><th>Amount</th><th>Status</th><th>Action</th></tr>
       ${payments.map(p => `<tr>
@@ -2669,4 +2730,4 @@ process.on('unhandledRejection', err => console.error('Unhandled Rejection:', er
 process.on('uncaughtException', err => console.error('Uncaught Exception:', err && err.message));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v7.8 running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v7.9 running on port ${PORT}`));
