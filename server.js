@@ -799,7 +799,44 @@ function staffRoleBanner(req) {
 
 // ---------- DATABASE SCHEMA ----------
 (async () => {
+  // Ensure all tables exist immediately
+  await q(`CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY, val TEXT)`);
   await q(`CREATE TABLE IF NOT EXISTS files (id SERIAL PRIMARY KEY, mime TEXT, data BYTEA, name TEXT)`);
+  await q(`CREATE TABLE IF NOT EXISTS members (
+    id SERIAL PRIMARY KEY, member_no TEXT UNIQUE, name TEXT, gender TEXT, phone TEXT, email TEXT,
+    campus TEXT, college TEXT, department TEXT, year TEXT, block_no TEXT, room_no TEXT, zone_woreda TEXT, telegram_handle TEXT,
+    student_id TEXT UNIQUE, photo_id INTEGER, password TEXT,
+    status TEXT DEFAULT 'registered', role TEXT DEFAULT 'student',
+    renewal_date TIMESTAMP DEFAULT NOW(), created_at TIMESTAMP DEFAULT NOW()
+  )`);
+  await q(`CREATE TABLE IF NOT EXISTS posts (
+    id SERIAL PRIMARY KEY, type TEXT, subcategory TEXT DEFAULT 'general', campus TEXT DEFAULT 'all',
+    title_om TEXT, title_en TEXT, title_am TEXT, body_om TEXT, body_en TEXT, body_am TEXT,
+    event_date TEXT, image_id INTEGER, file_id INTEGER, is_emergency INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW()
+  )`);
+  await q(`CREATE TABLE IF NOT EXISTS event_rsvps (id SERIAL PRIMARY KEY, post_id INTEGER, member_no TEXT, created_at TIMESTAMP DEFAULT NOW(), UNIQUE(post_id, member_no))`);
+  await q(`CREATE TABLE IF NOT EXISTS polls (id SERIAL PRIMARY KEY, title TEXT, description TEXT, options TEXT, candidate_nos TEXT, max_choices INTEGER DEFAULT 5, campus TEXT DEFAULT 'all', status TEXT DEFAULT 'open', created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS poll_votes (id SERIAL PRIMARY KEY, poll_id INTEGER, member_no TEXT, choice TEXT, created_at TIMESTAMP DEFAULT NOW(), UNIQUE(poll_id, member_no, choice))`);
+  await q(`CREATE TABLE IF NOT EXISTS certificates (id SERIAL PRIMARY KEY, cert_code TEXT UNIQUE, member_no TEXT, member_name TEXT, title TEXT, role_award TEXT, issue_date TEXT, created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS forum_posts (id SERIAL PRIMARY KEY, member_no TEXT, author_name TEXT, campus TEXT, category TEXT DEFAULT 'general', title TEXT, body TEXT, created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS forum_replies (id SERIAL PRIMARY KEY, post_id INTEGER, member_no TEXT, author_name TEXT, body TEXT, created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS staff (id SERIAL PRIMARY KEY, username TEXT UNIQUE, name TEXT, role TEXT, campus TEXT, password TEXT, active INTEGER DEFAULT 1, created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS leaders (id SERIAL PRIMARY KEY, member_no TEXT, name TEXT, phone TEXT, department TEXT, year TEXT, block_no TEXT, room_no TEXT, role_key TEXT, position_om TEXT, position_en TEXT, position_am TEXT, term TEXT DEFAULT '2025-2026', responsibilities TEXT, level TEXT DEFAULT 'central', campus TEXT DEFAULT 'all', photo_id INTEGER, ord INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS meetings (id SERIAL PRIMARY KEY, campus TEXT DEFAULT 'all', title TEXT, meeting_date TEXT, agenda TEXT, minutes TEXT, resolutions TEXT, attendance_count INTEGER DEFAULT 0, file_id INTEGER, created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS support_requests (id SERIAL PRIMARY KEY, member_no TEXT, name TEXT, campus TEXT, subject TEXT, category TEXT DEFAULT 'general', message TEXT, status TEXT DEFAULT 'open', reply TEXT, created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS transactions (id SERIAL PRIMARY KEY, kind TEXT, amount NUMERIC, tdate TEXT, note TEXT, campus TEXT DEFAULT 'all', created_by TEXT, created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS finance_reports (id SERIAL PRIMARY KEY, period TEXT, campus TEXT, income NUMERIC, expense NUMERIC, starting_balance NUMERIC DEFAULT 0, detail TEXT, approved INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS audit_logs (id SERIAL PRIMARY KEY, actor TEXT, action TEXT, target TEXT, details TEXT, ip TEXT, created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS password_resets (id SERIAL PRIMARY KEY, student_id TEXT, phone TEXT, reason TEXT, status TEXT DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS member_payments (id SERIAL PRIMARY KEY, member_no TEXT, name TEXT, campus TEXT, amount NUMERIC, payment_method TEXT, transaction_ref TEXT UNIQUE, receipt_file_id INTEGER, status TEXT DEFAULT 'pending', admin_remark TEXT, created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS lost_found (id SERIAL PRIMARY KEY, member_no TEXT, author_name TEXT, campus TEXT, category TEXT DEFAULT 'lost', title TEXT, description TEXT, phone TEXT, image_id INTEGER, status TEXT DEFAULT 'open', created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS mentor_requests (id SERIAL PRIMARY KEY, freshman_no TEXT, freshman_name TEXT, campus TEXT, department TEXT, senior_mentor TEXT, status TEXT DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS attendance_sessions (id SERIAL PRIMARY KEY, title TEXT, campus TEXT DEFAULT 'all', event_date TEXT, code TEXT UNIQUE, created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS attendance_logs (id SERIAL PRIMARY KEY, session_id INTEGER, member_no TEXT, member_name TEXT, scanned_at TIMESTAMP DEFAULT NOW(), UNIQUE(session_id, member_no))`);
+  await q(`CREATE TABLE IF NOT EXISTS alumni (id SERIAL PRIMARY KEY, full_name TEXT, batch_year TEXT, department TEXT, current_role TEXT, employer TEXT, phone TEXT, email TEXT, linkedin TEXT, created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS anonymous_suggestions (id SERIAL PRIMARY KEY, campus TEXT DEFAULT 'all', category TEXT DEFAULT 'general', message TEXT, reply TEXT, status TEXT DEFAULT 'open', created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS media_hub (id SERIAL PRIMARY KEY, title TEXT, youtube_url TEXT, description TEXT, campus TEXT DEFAULT 'all', created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS targeted_broadcasts (id SERIAL PRIMARY KEY, title TEXT, target_campus TEXT DEFAULT 'all', target_year TEXT DEFAULT 'all', message TEXT, created_by TEXT, created_at TIMESTAMP DEFAULT NOW())`);
   await q(`CREATE TABLE IF NOT EXISTS members (
     id SERIAL PRIMARY KEY, member_no TEXT UNIQUE, name TEXT, gender TEXT, phone TEXT, email TEXT,
     campus TEXT, college TEXT, department TEXT, year TEXT, block_no TEXT, room_no TEXT, zone_woreda TEXT, telegram_handle TEXT,
@@ -1322,25 +1359,30 @@ app.get('/student-dashboard', needMember, async (req, res) => {
       async function downloadID(){
         const mode = document.getElementById('dlSideMode').value;
         const memberNo = ${JSON.stringify(m.member_no)};
+        
+        // Hide shadows/transforms for clean crisp card export
+        const cardFront = document.getElementById('idCardFront');
+        const cardBack = document.getElementById('idCardBack');
+        
         if (mode === 'front') {
-          const c = await renderCleanFace(document.getElementById('idCardFront'));
-          const a = document.createElement('a'); a.download = memberNo + '-FRONT.png'; a.href = c.toDataURL('image/png'); a.click();
+          const c = await html2canvas(cardFront, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+          const a = document.createElement('a'); a.download = memberNo + '-ID-FRONT.png'; a.href = c.toDataURL('image/png'); a.click();
         } else if (mode === 'back') {
-          const c = await renderCleanFace(document.getElementById('idCardBack'));
-          const a = document.createElement('a'); a.download = memberNo + '-BACK.png'; a.href = c.toDataURL('image/png'); a.click();
+          const c = await html2canvas(cardBack, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+          const a = document.createElement('a'); a.download = memberNo + '-ID-BACK.png'; a.href = c.toDataURL('image/png'); a.click();
         } else {
-          const cFront = await renderCleanFace(document.getElementById('idCardFront'));
-          const cBack = await renderCleanFace(document.getElementById('idCardBack'));
-          const gap = 24;
+          const cFront = await html2canvas(cardFront, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+          const cBack = await html2canvas(cardBack, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+          const gap = 20;
           const out = document.createElement('canvas');
           out.width = Math.max(cFront.width, cBack.width);
           out.height = cFront.height + gap + cBack.height;
           const ctx = out.getContext('2d');
-          ctx.fillStyle = '#f8fafc';
+          ctx.fillStyle = '#ffffff';
           ctx.fillRect(0, 0, out.width, out.height);
           ctx.drawImage(cFront, 0, 0);
           ctx.drawImage(cBack, 0, cFront.height + gap);
-          const a = document.createElement('a'); a.download = memberNo + '-BOTH-SIDES.png'; a.href = out.toDataURL('image/png'); a.click();
+          const a = document.createElement('a'); a.download = memberNo + '-ID-BOTH-SIDES.png'; a.href = out.toDataURL('image/png'); a.click();
         }
       }
       document.querySelectorAll('[data-countdown]').forEach(el=>{
@@ -2633,4 +2675,4 @@ process.on('unhandledRejection', err => console.error('Unhandled Rejection:', er
 process.on('uncaughtException', err => console.error('Uncaught Exception:', err && err.message));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v7.6 running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v7.7 running on port ${PORT}`));
