@@ -722,6 +722,59 @@ function postCard(req, p, extraHtml = '') {
 }
 
 const scopeOf = req => (CENTRAL.includes(req.session.sr) ? null : (req.session.campus || '-'));
+async function isElectionOn() {
+  try {
+    const [r] = await q(`SELECT val FROM site_settings WHERE key='election_portal_on'`);
+    return !r || r.val !== '0';
+  } catch (e) { return true; }
+}
+const ROLE_LABELS = {
+  central_admin: 'CENTRAL ADMIN',
+  president: 'PRESIDENT',
+  vice_president: 'VICE PRESIDENT',
+  general_secretary: 'GENERAL SECRETARY',
+  finance_secretary: 'FINANCE SECRETARY',
+  academic_secretary: 'ACADEMIC SECRETARY',
+  social_secretary: 'SOCIAL SECRETARY',
+  communication_secretary: 'COMMUNICATION SECRETARY',
+  media_secretary: 'MEDIA SECRETARY',
+  info_secretary: 'INFO SECRETARY',
+  dev_secretary: 'DEVELOPMENT SECRETARY',
+  campus_rep: 'CAMPUS REPRESENTATIVE',
+  campus_coordinator: 'CAMPUS COORDINATOR',
+  committee_member: 'COMMITTEE MEMBER',
+  member: 'MEMBER'
+};
+function staffRoleBanner(req) {
+  const sr = req.session.sr || 'member';
+  const label = ROLE_LABELS[sr] || sr.replace(/_/g, ' ').toUpperCase();
+  const cmp = req.session.campus ? campusName(req, req.session.campus) : 'Central Executive · All Campuses';
+  const themes = {
+    central_admin: 'linear-gradient(125deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%)',
+    president: 'linear-gradient(125deg, #b45309 0%, #d97706 45%, #f59e0b 100%)',
+    vice_president: 'linear-gradient(125deg, #6d28d9 0%, #9333ea 55%, #c026d3 100%)',
+    finance_secretary: 'linear-gradient(125deg, #047857 0%, #059669 50%, #10b981 100%)',
+    campus_rep: 'linear-gradient(125deg, #1d4ed8 0%, #2563eb 50%, #0ea5e9 100%)',
+    committee_member: 'linear-gradient(125deg, #0f766e 0%, #0d9488 50%, #14b8a6 100%)'
+  };
+  const bg = themes[sr] || 'linear-gradient(125deg, #5b21b6 0%, #7c3aed 55%, #db2777 100%)';
+  const ico = sr === 'president' ? '👑' : (sr === 'central_admin' ? '🛡️' : (sr === 'committee_member' ? '👥' : '🎖️'));
+  return `
+    <div style="background:${bg}; color:#fff; border-radius:26px; padding:22px 20px; margin-bottom:16px; border:3px solid rgba(254,240,138,0.85); box-shadow:0 16px 34px rgba(76,29,149,0.35); position:relative; overflow:hidden;">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div style="width:62px; height:62px; border-radius:20px; background:rgba(255,255,255,0.2); backdrop-filter:blur(8px); border:2px solid rgba(255,255,255,0.5); display:grid; place-items:center; font-size:32px; flex-shrink:0;">${ico}</div>
+          <div>
+            <div style="font-size:11px; font-weight:800; letter-spacing:1.4px; opacity:0.9; text-transform:uppercase;">OFFICIAL PORTAL ROLE · የኃላፊነት ድርሻ</div>
+            <div style="font-size:1.65rem; font-weight:900; letter-spacing:0.6px; line-height:1.15; text-shadow:0 2px 6px rgba(0,0,0,0.22); margin:3px 0;">${h(label)}</div>
+            <div style="font-size:13px; font-weight:650; opacity:0.95;">👤 ${h(req.session.sname || 'Officer')} · 📍 ${h(cmp)}</div>
+          </div>
+        </div>
+        <span style="background:rgba(255,255,255,0.22); border:1.5px solid rgba(255,255,255,0.55); padding:6px 14px; border-radius:999px; font-size:11.5px; font-weight:800;">📅 ${h(toEthiopianDate(new Date(), L(req)))}</span>
+      </div>
+    </div>
+  `;
+}
 
 // ---------- DATABASE SCHEMA ----------
 (async () => {
@@ -739,8 +792,9 @@ const scopeOf = req => (CENTRAL.includes(req.session.sr) ? null : (req.session.c
     event_date TEXT, image_id INTEGER, file_id INTEGER, is_emergency INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW()
   )`);
   await q(`CREATE TABLE IF NOT EXISTS event_rsvps (id SERIAL PRIMARY KEY, post_id INTEGER, member_no TEXT, created_at TIMESTAMP DEFAULT NOW(), UNIQUE(post_id, member_no))`);
-  await q(`CREATE TABLE IF NOT EXISTS polls (id SERIAL PRIMARY KEY, title TEXT, description TEXT, options TEXT, campus TEXT DEFAULT 'all', status TEXT DEFAULT 'open', created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS poll_votes (id SERIAL PRIMARY KEY, poll_id INTEGER, member_no TEXT, choice TEXT, created_at TIMESTAMP DEFAULT NOW(), UNIQUE(poll_id, member_no))`);
+  await q(`CREATE TABLE IF NOT EXISTS polls (id SERIAL PRIMARY KEY, title TEXT, description TEXT, options TEXT, candidate_nos TEXT, max_choices INTEGER DEFAULT 5, campus TEXT DEFAULT 'all', status TEXT DEFAULT 'open', created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS poll_votes (id SERIAL PRIMARY KEY, poll_id INTEGER, member_no TEXT, choice TEXT, created_at TIMESTAMP DEFAULT NOW(), UNIQUE(poll_id, member_no, choice))`);
+  await q(`CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY, val TEXT)`);
   await q(`CREATE TABLE IF NOT EXISTS certificates (id SERIAL PRIMARY KEY, cert_code TEXT UNIQUE, member_no TEXT, member_name TEXT, title TEXT, role_award TEXT, issue_date TEXT, created_at TIMESTAMP DEFAULT NOW())`);
   await q(`CREATE TABLE IF NOT EXISTS forum_posts (id SERIAL PRIMARY KEY, member_no TEXT, author_name TEXT, campus TEXT, category TEXT DEFAULT 'general', title TEXT, body TEXT, created_at TIMESTAMP DEFAULT NOW())`);
   await q(`CREATE TABLE IF NOT EXISTS forum_replies (id SERIAL PRIMARY KEY, post_id INTEGER, member_no TEXT, author_name TEXT, body TEXT, created_at TIMESTAMP DEFAULT NOW())`);
@@ -816,8 +870,13 @@ const scopeOf = req => (CENTRAL.includes(req.session.sr) ? null : (req.session.c
     `ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_emergency INTEGER DEFAULT 0`,
     `ALTER TABLE posts ADD COLUMN IF NOT EXISTS title_am TEXT`,
     `ALTER TABLE posts ADD COLUMN IF NOT EXISTS body_am TEXT`,
-    `ALTER TABLE finance_reports ADD COLUMN IF NOT EXISTS starting_balance NUMERIC DEFAULT 0`
+    `ALTER TABLE finance_reports ADD COLUMN IF NOT EXISTS starting_balance NUMERIC DEFAULT 0`,
+    `ALTER TABLE polls ADD COLUMN IF NOT EXISTS candidate_nos TEXT`,
+    `ALTER TABLE polls ADD COLUMN IF NOT EXISTS max_choices INTEGER DEFAULT 5`,
+    `ALTER TABLE poll_votes DROP CONSTRAINT IF EXISTS poll_votes_poll_id_member_no_key`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS poll_votes_multi_idx ON poll_votes(poll_id, member_no, choice)`
   ]) { try { await q(sql); } catch (e) {} }
+  await q(`INSERT INTO site_settings (key, val) VALUES ('election_portal_on', '1') ON CONFLICT (key) DO NOTHING`);
 
   const adminPass = bcrypt.hashSync(process.env.ADMIN_PASS || 'sikomando123', 10);
   const adminUser = process.env.ADMIN_USER || 'admin';
@@ -1027,7 +1086,8 @@ app.get('/student-dashboard', needMember, async (req, res) => {
   const [nextEv] = await q(`SELECT * FROM posts WHERE type='event' AND (campus='all' OR campus=$1) ORDER BY id DESC LIMIT 1`, [m.campus]);
   const [annCnt] = await q(`SELECT COUNT(*)::int c FROM posts WHERE type='announcement'`);
   const [evCnt] = await q(`SELECT COUNT(*)::int c FROM posts WHERE type='event'`);
-  const [pollCnt] = await q(`SELECT COUNT(*)::int c FROM polls WHERE status='open' AND (campus='all' OR campus=$1)`, [m.campus]);
+  const electionActive = await isElectionOn();
+  const [pollCnt] = electionActive ? await q(`SELECT COUNT(*)::int c FROM polls WHERE status='open' AND (campus='all' OR campus=$1)`, [m.campus]) : [{ c: 0 }];
   const [certCnt] = await q(`SELECT COUNT(*)::int c FROM certificates WHERE member_no=$1`, [m.member_no]);
   const [forumCnt] = await q(`SELECT COUNT(*)::int c FROM forum_posts`);
 
@@ -1059,7 +1119,7 @@ app.get('/student-dashboard', needMember, async (req, res) => {
     { href: '/portal/suggestions', cls: 'teal', ico: '📮', t: 'Suggestion Box', sub: 'ምስጢር ሳጥን', n: 0 },
     { href: '/portal/media-hub', cls: 'red', ico: '📺', t: 'Heritage Media', sub: 'ባህልና ሚዲያ', n: 0 },
     { href: '/portal/events', cls: 'orange', ico: '📅', t: 'Events', sub: 'ፕሮግራሞች', n: evCnt.c },
-    { href: '/portal/polls', cls: 'pink', ico: '🗳️', t: 'Polls & Vote', sub: 'ምርጫ / ድምጽ', n: pollCnt.c },
+    ...(electionActive ? [{ href: '/portal/polls', cls: 'pink', ico: '🗳️', t: 'Polls & Vote', sub: 'ምርጫ / ድምጽ', n: pollCnt.c }] : []),
     { href: '/portal/certificates', cls: 'green', ico: '🏅', t: 'Certificates', sub: 'ሰርተፍኬት', n: certCnt.c },
     { href: '/portal/forum', cls: 'blue', ico: '💡', t: 'Q&A Forum', sub: 'መወያያ', n: forumCnt.c }
   ];
@@ -1259,27 +1319,179 @@ app.post('/portal/profile/password', needMember, async (req, res) => {
 });
 
 app.get('/portal/polls', needMember, async (req, res) => {
+  const electionActive = await isElectionOn();
+  if (!electionActive) {
+    return res.send(page(req, 'Elections & Polls', portalMenu('/portal/polls') + `
+      <div class="glass-card" style="text-align:center; padding:46px 22px;">
+        <div style="font-size:48px; margin-bottom:10px;">🔒</div>
+        <h3 style="margin-bottom:6px;">Election Portal is Currently OFF</h3>
+        <p style="color:var(--text-muted); font-size:13.5px;">የምርጫ ፖርታሉ በአሁኑ ሰዓት በአስተዳደሩ ተዘግቷል። ምርጫ ሲጀመር እዚህ ይከፈታል።</p>
+      </div>
+    `));
+  }
+
   const polls = await q(`SELECT * FROM polls WHERE campus='all' OR campus=$1 ORDER BY (status='open') DESC, id DESC LIMIT 20`, [req.session.campus || 'robe']);
   const votes = await q(`SELECT poll_id, choice, COUNT(*)::int c FROM poll_votes GROUP BY poll_id, choice`);
-  const myMap = Object.fromEntries((await q(`SELECT poll_id, choice FROM poll_votes WHERE member_no=$1`, [req.session.mid])).map(r => [r.poll_id, r.choice]));
+  const myRows = await q(`SELECT poll_id, choice FROM poll_votes WHERE member_no=$1`, [req.session.mid]);
+  const myVotesMap = {};
+  myRows.forEach(r => { if (!myVotesMap[r.poll_id]) myVotesMap[r.poll_id] = []; myVotesMap[r.poll_id].push(r.choice); });
+
+  // Load all candidate member details referenced across polls
+  const allCandNos = [...new Set(polls.flatMap(p => String(p.candidate_nos || '').split(',').map(x => x.trim()).filter(Boolean)))];
+  const candMembers = allCandNos.length ? await q(`SELECT member_no, name, campus, college, department, year, zone_woreda, photo_id FROM members WHERE member_no = ANY($1)`, [allCandNos]) : [];
+  const candMap = Object.fromEntries(candMembers.map(m => [m.member_no, m]));
+
   res.send(page(req, 'Elections & Polls', portalMenu('/portal/polls') + `
-    <div class="top-pill-banner">🗳️ Online Elections & Member Polls · የኦንላይን ምርጫ</div>
+    <div class="top-pill-banner">🗳️ Online Elections & Candidate Voting · የኦንላይን ምርጫ</div>
     ${polls.map(p => {
-      const opts = String(p.options || '').split(/\r?\n|,/).map(x => x.trim()).filter(Boolean);
-      const pVotes = votes.filter(v => v.poll_id === p.id), total = pVotes.reduce((s, v) => s + v.c, 0), myChoice = myMap[p.id];
+      const cNos = String(p.candidate_nos || '').split(',').map(x => x.trim()).filter(Boolean);
+      const legacyOpts = String(p.options || '').split(/\r?\n|,/).map(x => x.trim()).filter(Boolean);
+      const maxC = Math.max(1, parseInt(p.max_choices, 10) || 5);
+      const pVotes = votes.filter(v => v.poll_id === p.id);
+      const totalVotes = pVotes.reduce((s, v) => s + v.c, 0);
+      const myChoices = myVotesMap[p.id] || [];
+      const hasVoted = myChoices.length > 0;
+
+      // Build unified candidate items (either registered member candidates or legacy text options)
+      const candidates = cNos.length
+        ? cNos.map(no => {
+            const cm = candMap[no];
+            return cm ? { key: no, member: cm, label: cm.name } : { key: no, member: null, label: no };
+          })
+        : legacyOpts.map(o => ({ key: o, member: null, label: o }));
+
       return `<div class="glass-card">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;"><h4>${h(p.title)}</h4><span class="badge ${p.status === 'open' ? 'official' : 'rejected'}">${p.status === 'open' ? '🟢 Open' : '🔒 Closed'}</span></div>
-        ${p.description ? `<p style="font-size:13px; color:var(--text-2); margin:6px 0 10px;">${h(p.description)}</p>` : ''}
-        ${(!myChoice && p.status === 'open') ? `<form method="POST" action="/portal/polls/${p.id}/vote">${opts.map(o => `<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface-soft);border:1px solid var(--border);border-radius:12px;margin:7px 0;cursor:pointer;"><input type="radio" name="choice" value="${h(o)}" required style="width:17px;height:17px;"><span>${h(o)}</span></label>`).join('')}<button class="btn" style="margin-top:10px;">🗳️ Cast My Vote</button></form>`
-        : `<div style="margin-top:10px;">${opts.map(o => { const cnt = (pVotes.find(v => v.choice === o) || { c: 0 }).c, pct = total ? Math.round((cnt / total) * 100) : 0; return `<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;"><span>${h(o)} ${myChoice === o ? '<span class="badge official">✔ Voted</span>' : ''}</span><span>${cnt} (${pct}%)</span></div><div class="poll-bar-bg"><div class="poll-bar-fill" style="width:${pct}%"></div></div></div>`; }).join('')}<small style="color:var(--text-muted);">Total Votes: ${total}</small></div>`}
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
+          <h3 style="font-size:1.15rem; font-weight:850;">${h(p.title)}</h3>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <span class="badge registered">Max ${maxC} ${maxC === 1 ? 'Choice' : 'Choices'}</span>
+            <span class="badge ${p.status === 'open' ? 'official' : 'rejected'}">${p.status === 'open' ? '🟢 Election Open' : '🔒 Election Closed'}</span>
+          </div>
+        </div>
+        ${p.description ? `<p style="font-size:13.5px; color:var(--text-2); margin-bottom:14px;">${h(p.description)}</p>` : ''}
+
+        ${(!hasVoted && p.status === 'open') ? `
+          <div style="background:rgba(124,58,237,0.08); border:1.5px dashed var(--card-dash); padding:10px 14px; border-radius:14px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <span style="font-size:13px; font-weight:700; color:var(--primary);">👆 Select up to <b>${maxC}</b> candidates (እስከ ${maxC} ተወዳዳሪዎችን ይምረጡ)</span>
+            <span id="cnt_badge_${p.id}" class="badge pending">Selected: 0 / ${maxC}</span>
+          </div>
+
+          <form method="POST" action="/portal/polls/${p.id}/vote" onsubmit="return checkPollSubmit(${p.id})">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:12px;">
+              ${candidates.map(c => {
+                const cm = c.member;
+                const photo = cm && cm.photo_id ? `/photo/${cm.photo_id}` : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23ede9fe'/%3E%3Ctext x='50' y='62' font-size='44' text-anchor='middle'%3E👤%3C/text%3E%3C/svg%3E`;
+                return `
+                  <div class="cand-card" id="cc_${p.id}_${h(c.key)}" style="background:var(--surface-solid); border:2px solid var(--border); border-radius:18px; padding:14px; display:flex; flex-direction:column; justify-content:space-between; gap:10px; transition:0.2s;">
+                    <div style="display:flex; gap:12px; align-items:center;">
+                      <img src="${photo}" style="width:68px; height:82px; border-radius:12px; object-fit:cover; border:2px solid #c084fc; flex-shrink:0;" alt="">
+                      <div style="font-size:12px; line-height:1.45;">
+                        <b style="font-size:14.5px; color:var(--text); display:block; margin-bottom:2px;">${h(c.label)}</b>
+                        ${cm ? `
+                          <span style="color:var(--primary); font-weight:700;">🪪 ${h(cm.member_no)}</span><br>
+                          <span>🏛️ ${h(campusName(req, cm.campus))}</span><br>
+                          <span>🎓 ${h(cm.college || '')} · ${h(cm.department)} (Y${h(cm.year)})</span><br>
+                          <span>📍 ${h(cm.zone_woreda || '-')}</span>
+                        ` : `<span style="color:var(--text-muted);">Official Candidate</span>`}
+                      </div>
+                    </div>
+                    <input type="checkbox" name="choices" value="${h(c.key)}" class="chk_${p.id}" style="display:none;">
+                    <button type="button" onclick="toggleCand(this, ${p.id}, ${maxC})" class="btn secondary" style="width:100%; padding:9px 14px; font-size:13px;">
+                      ⬜ Choose Candidate
+                    </button>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+            <p style="margin-top:16px; text-align:center;">
+              <button type="submit" class="btn g" style="padding:13px 28px; font-size:15px;">🗳️ Submit My Votes (ድምፄን አረጋግጥ)</button>
+            </p>
+          </form>
+        ` : `
+          <div style="margin-top:10px;">
+            ${p.status === 'closed' ? `<div class="err" style="margin-bottom:12px;">🔒 Voting for this election has ended (ምርጫው ተጠናቋል).</div>` : `<div class="msgok" style="margin-bottom:12px;">✅ You have already cast your vote in this election!</div>`}
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px;">
+              ${candidates.map(c => {
+                const cm = c.member;
+                const cnt = (pVotes.find(v => v.choice === c.key) || { c: 0 }).c;
+                const pct = totalVotes ? Math.round((cnt / totalVotes) * 100) : 0;
+                const isMine = myChoices.includes(c.key);
+                const photo = cm && cm.photo_id ? `/photo/${cm.photo_id}` : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23ede9fe'/%3E%3Ctext x='50' y='62' font-size='44' text-anchor='middle'%3E👤%3C/text%3E%3C/svg%3E`;
+                return `
+                  <div style="background:var(--surface-soft); border:${isMine ? '2px solid #10b981' : '1.5px solid var(--border)'}; border-radius:16px; padding:12px;">
+                    <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
+                      <img src="${photo}" style="width:52px; height:62px; border-radius:10px; object-fit:cover; border:1.5px solid #c084fc;" alt="">
+                      <div style="font-size:12px; flex:1;">
+                        <b style="font-size:14px;">${h(c.label)}</b> ${isMine ? '<span class="badge official">✅ Your Choice</span>' : ''}<br>
+                        ${cm ? `<small style="color:var(--text-muted)">${h(campusName(req, cm.campus))} · ${h(cm.department)} · Y${h(cm.year)}</small>` : ''}
+                      </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:12.5px; font-weight:750;">
+                      <span>Votes: ${cnt}</span><span>${pct}%</span>
+                    </div>
+                    <div class="poll-bar-bg"><div class="poll-bar-fill" style="width:${pct}%"></div></div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+            <p style="margin-top:10px; font-size:12.5px; color:var(--text-muted); font-weight:700;">Total Votes Cast: ${totalVotes}</p>
+          </div>
+        `}
       </div>`;
-    }).join('') || `<div class="glass-card" style="text-align:center; padding:40px;">No active polls yet.</div>`}`));
+    }).join('') || `<div class="glass-card" style="text-align:center; padding:40px;">No active elections yet.</div>`}
+    <script>
+      function toggleCand(btn, pollId, maxC){
+        const card = btn.closest('.cand-card');
+        const chk = card.querySelector('input[type="checkbox"]');
+        const allChecked = document.querySelectorAll('.chk_' + pollId + ':checked').length;
+        if (!chk.checked) {
+          if (allChecked >= maxC) {
+            alert('You can select a maximum of ' + maxC + ' candidates! (እስከ ' + maxC + ' ሰው ብቻ መምረጥ ይችላሉ)');
+            return;
+          }
+          chk.checked = true;
+          card.style.borderColor = '#10b981';
+          card.style.background = 'rgba(16,185,129,0.08)';
+          btn.className = 'btn g';
+          btn.innerHTML = '✅ Chosen (ተመርጧል)';
+        } else {
+          chk.checked = false;
+          card.style.borderColor = 'var(--border)';
+          card.style.background = 'var(--surface-solid)';
+          btn.className = 'btn secondary';
+          btn.innerHTML = '⬜ Choose Candidate';
+        }
+        const nowCnt = document.querySelectorAll('.chk_' + pollId + ':checked').length;
+        const badge = document.getElementById('cnt_badge_' + pollId);
+        if (badge) badge.textContent = 'Selected: ' + nowCnt + ' / ' + maxC;
+      }
+      function checkPollSubmit(pollId){
+        const cnt = document.querySelectorAll('.chk_' + pollId + ':checked').length;
+        if (cnt < 1) { alert('Please choose at least 1 candidate first.'); return false; }
+        return true;
+      }
+    </script>
+  `));
 });
 
 app.post('/portal/polls/:id/vote', needMember, async (req, res) => {
-  const pid = parseInt(req.params.id, 10) || 0, choice = String(req.body.choice || '').trim();
-  if ((await q(`SELECT 1 FROM polls WHERE id=$1 AND status='open'`, [pid])).length && choice) {
-    try { await q(`INSERT INTO poll_votes (poll_id, member_no, choice) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING`, [pid, req.session.mid, choice]); } catch (e) {}
+  if (!(await isElectionOn())) return res.redirect('/portal/polls');
+  const pid = parseInt(req.params.id, 10) || 0;
+  const [p] = await q(`SELECT * FROM polls WHERE id=$1 AND status='open'`, [pid]);
+  if (!p) return res.redirect('/portal/polls');
+
+  const maxC = Math.max(1, parseInt(p.max_choices, 10) || 5);
+  let rawChoices = req.body.choices || req.body.choice || [];
+  if (!Array.isArray(rawChoices)) rawChoices = [rawChoices];
+  const uniqueChoices = [...new Set(rawChoices.map(x => String(x || '').trim()).filter(Boolean))].slice(0, maxC);
+
+  const already = await q(`SELECT 1 FROM poll_votes WHERE poll_id=$1 AND member_no=$2`, [pid, req.session.mid]);
+  if (!already.length && uniqueChoices.length) {
+    for (const ch of uniqueChoices) {
+      try {
+        await q(`INSERT INTO poll_votes (poll_id, member_no, choice) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING`, [pid, req.session.mid, ch]);
+      } catch (e) {}
+    }
   }
   res.redirect('/portal/polls?voted=1');
 });
@@ -1774,6 +1986,7 @@ const A = (req, title, body) => {
 
   const isOverview = req.path === '/admin' || req.path === '/admin/';
   return page(req, title, `
+    ${staffRoleBanner(req)}
     ${isOverview ? `<div class="glass-card"><div class="hub-header">🛡️ <span>Admin Control Hub · የአስተዳደር ማዕከል</span></div><div class="hub-grid">${links.map(x => `<a href="${x[0]}" class="hub-tile ${x[5]}"><div class="hub-ico-circle">${x[1]}</div><div class="t-main">${x[2]}</div><div class="t-sub">${x[3]}</div></a>`).join('')}</div></div>`
     : `<div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
          <a href="/admin" class="btn secondary" style="padding:8px 16px; font-size:13px;">← Back to Admin Hub · ወደ ዋናው ሜኑ</a>
@@ -1795,7 +2008,6 @@ app.get('/admin', needStaff, async (req, res) => {
   const sc = scopeOf(req), w = sc ? ' WHERE campus=$1' : '', pr = sc ? [sc] : [];
   const [m] = await q(`SELECT COUNT(*)::int n, SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END)::int p, SUM(CASE WHEN status='official' THEN 1 ELSE 0 END)::int o, SUM(CASE WHEN status='rejected' THEN 1 ELSE 0 END)::int r, SUM(CASE WHEN campus='robe' THEN 1 ELSE 0 END)::int robe, SUM(CASE WHEN campus='goba' THEN 1 ELSE 0 END)::int goba, SUM(CASE WHEN campus='shashamane' THEN 1 ELSE 0 END)::int sha FROM members${w}`, pr);
   res.send(A(req, 'Admin Dashboard', `
-    <div class="welcome-hero"><div class="welcome-info"><h2>Welcome, ${h(req.session.sname || 'Admin')} 🛡️</h2><p>Live Analytics & Control Center · 📅 ${toEthiopianDate(new Date(), L(req))}</p></div></div>
     <div class="stat-grid">
       <div class="stat-card"><div class="num" style="color:#7c3aed">${m.n || 0}</div><div class="label">Total</div></div>
       <div class="stat-card"><div class="num" style="color:#10b981">${m.o || 0}</div><div class="label">Official</div></div>
@@ -1815,12 +2027,154 @@ app.get('/admin', needStaff, async (req, res) => {
 });
 
 app.get('/admin/polls', guard('polls'), async (req, res) => {
+  const sc = scopeOf(req);
   const polls = await q(`SELECT * FROM polls ORDER BY id DESC LIMIT 30`);
-  res.send(A(req, 'Polls', `<div class="glass-card"><h3>🗳️ Create Election / Poll</h3><form method="POST" action="/admin/polls"><div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;"><div><label>Title</label><input name="title" required></div><div><label>Campus</label>${sel('campus', campusOpts(scopeOf(req), true))}</div></div><label>Description</label><input name="description"><label>Options (One per line or comma)</label><textarea name="options" required></textarea><p style="margin-top:12px;"><button class="btn">Launch Poll</button></p></form></div><div class="glass-card">${polls.map(p => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px;"><div><b>${h(p.title)}</b> <span class="badge ${p.status==='open'?'official':'rejected'}">${h(p.status)}</span></div><div style="display:flex;gap:6px;"><form method="POST" action="/admin/polls/${p.id}/toggle"><button class="btn secondary" style="padding:4px 10px;font-size:11.5px;">${p.status==='open'?'Close':'Reopen'}</button></form><form method="POST" action="/admin/polls/${p.id}/delete"><button class="btn danger" style="padding:4px 10px;font-size:11.5px;">Delete</button></form></div></div>`).join('') || '<p>No polls yet.</p>'}</div>`));
+  const members = await q(`SELECT member_no, name, student_id, campus, college, department, year, zone_woreda, status, photo_id FROM members ${sc ? 'WHERE campus=$1' : ''} ORDER BY name ASC LIMIT 500`, sc ? [sc] : []);
+  const electionActive = await isElectionOn();
+  const voteCounts = await q(`SELECT poll_id, choice, COUNT(*)::int c FROM poll_votes GROUP BY poll_id, choice`);
+  const mByNo = Object.fromEntries(members.map(m => [m.member_no, m]));
+
+  res.send(A(req, 'Elections & Polls', `
+    <!-- Master Election Portal ON / OFF Switch -->
+    <div class="glass-card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; border-left:5px solid ${electionActive ? '#10b981' : '#ef4444'};">
+      <div>
+        <h3 style="font-size:1.1rem; font-weight:850;">🌐 Student Election Portal Visibility (የምርጫ ፖርታል መቆጣጠሪያ)</h3>
+        <p style="font-size:13px; color:var(--text-muted);">Turn ON when election day starts so students can vote, and turn OFF anytime after election ends.</p>
+      </div>
+      <form method="POST" action="/admin/polls/portal-switch">
+        <button class="btn ${electionActive ? 'g' : 'danger'}" style="padding:11px 20px; font-size:13.5px;">
+          ${electionActive ? '🟢 Election Portal: ON (Click to Turn OFF)' : '🔴 Election Portal: OFF (Click to Turn ON)'}
+        </button>
+      </form>
+    </div>
+
+    <!-- Create Election by Selecting Registered Members as Candidates -->
+    <div class="glass-card">
+      <div class="hub-header">🗳️ <span>Create Election & Select Candidates · ከተመዘገቡ አባላት ተወዳዳሪዎችን ይምረጡ</span></div>
+      <form method="POST" action="/admin/polls" onsubmit="return validateAdminPoll()">
+        <div style="display:grid; grid-template-columns:2fr 1fr 1fr; gap:10px;">
+          <div><label>Election Title *</label><input name="title" required placeholder="e.g. 2026 Executive Committee Election"></div>
+          <div><label>Campus</label>${sel('campus', campusOpts(sc, true))}</div>
+          <div><label>Max Votes Per Student</label><input name="max_choices" type="number" min="1" max="20" value="5" required></div>
+        </div>
+        <label>Description / Instructions</label>
+        <input name="description" placeholder="Select up to 5 candidates for the executive committee...">
+
+        <label style="margin-top:14px;">Select Candidates from Registered Members (ተወዳዳሪዎችን ይምረጡ):</label>
+        <input type="text" id="candSearchBox" onkeyup="filterAdminCands()" placeholder="🔍 Search member by name, ID, campus, or department..." style="margin-bottom:10px;">
+
+        <div id="adminCandList" style="max-height:360px; overflow-y:auto; display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:10px; padding:6px; background:var(--surface-soft); border-radius:16px; border:1.5px dashed var(--card-dash);">
+          ${members.map(m => {
+            const photo = m.photo_id ? `/photo/${m.photo_id}` : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23ede9fe'/%3E%3Ctext x='50' y='62' font-size='44' text-anchor='middle'%3E👤%3C/text%3E%3C/svg%3E`;
+            return `
+              <label class="admin-cand-item" data-search="${h((m.name + ' ' + m.member_no + ' ' + m.student_id + ' ' + m.campus + ' ' + m.department).toLowerCase())}" style="display:flex; gap:10px; align-items:center; background:var(--surface-solid); padding:10px; border-radius:14px; border:1.5px solid var(--border); cursor:pointer; margin:0;">
+                <input type="checkbox" name="candidate_nos" value="${h(m.member_no)}" style="width:19px; height:19px; flex-shrink:0; accent-color:#7c3aed;">
+                <img src="${photo}" style="width:46px; height:56px; border-radius:9px; object-fit:cover; border:1.5px solid #c084fc; flex-shrink:0;" alt="">
+                <div style="font-size:11.5px; line-height:1.35;">
+                  <b style="font-size:13px; color:var(--text);">${h(m.name)}</b><br>
+                  <span style="color:var(--primary); font-weight:700;">${h(m.member_no)}</span><br>
+                  <span style="color:var(--text-muted);">${h(campusName(req, m.campus))} · ${h(m.department)} (Y${h(m.year)})</span>
+                </div>
+              </label>
+            `;
+          }).join('') || '<p style="padding:14px;">No registered members found yet.</p>'}
+        </div>
+
+        <p style="margin-top:14px;"><button class="btn">🚀 Launch Election</button></p>
+      </form>
+    </div>
+
+    <!-- Active & Closed Elections List with Live Results -->
+    <div class="glass-card">
+      <div class="hub-header">📊 <span>Elections & Live Results · የምርጫ ውጤቶች</span></div>
+      ${polls.map(p => {
+        const cNos = String(p.candidate_nos || '').split(',').map(x => x.trim()).filter(Boolean);
+        const pVotes = voteCounts.filter(v => v.poll_id === p.id);
+        const total = pVotes.reduce((s, v) => s + v.c, 0);
+        return `
+          <div class="form-section">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <div>
+                <b style="font-size:1.05rem;">${h(p.title)}</b>
+                <span class="badge ${p.status === 'open' ? 'official' : 'rejected'}" style="margin-left:6px;">${p.status === 'open' ? '🟢 Open' : '🔒 Closed'}</span>
+                <span class="badge registered" style="margin-left:4px;">Max ${p.max_choices || 5} choices · ${total} total votes</span>
+              </div>
+              <div style="display:flex; gap:6px;">
+                <form method="POST" action="/admin/polls/${p.id}/toggle">
+                  <button class="btn ${p.status === 'open' ? 'secondary' : 'g'}" style="padding:5px 12px; font-size:12px;">
+                    ${p.status === 'open' ? '🔒 Close Election (ምርጫውን ዝጋ)' : '🟢 Reopen Election'}
+                  </button>
+                </form>
+                <form method="POST" action="/admin/polls/${p.id}/delete">
+                  <button class="btn danger" style="padding:5px 11px; font-size:12px;">Delete</button>
+                </form>
+              </div>
+            </div>
+            ${cNos.length ? `
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:8px; margin-top:10px;">
+                ${cNos.map(no => {
+                  const cm = mByNo[no];
+                  const cnt = (pVotes.find(v => v.choice === no) || { c: 0 }).c;
+                  const pct = total ? Math.round((cnt / total) * 100) : 0;
+                  return `<div style="background:var(--surface-solid); padding:8px 10px; border-radius:11px; border:1px solid var(--border); font-size:12px;">
+                    <b>${h(cm ? cm.name : no)}</b> (${cnt} votes · ${pct}%)
+                    <div class="poll-bar-bg"><div class="poll-bar-fill" style="width:${pct}%"></div></div>
+                  </div>`;
+                }).join('')}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('') || '<p>No elections created yet.</p>'}
+    </div>
+
+    <script>
+      function filterAdminCands(){
+        const q = document.getElementById('candSearchBox').value.toLowerCase().trim();
+        document.querySelectorAll('.admin-cand-item').forEach(el => {
+          el.style.display = el.getAttribute('data-search').includes(q) ? 'flex' : 'none';
+        });
+      }
+      function validateAdminPoll(){
+        const checked = document.querySelectorAll('input[name="candidate_nos"]:checked').length;
+        if (checked < 2) { alert('Please select at least 2 candidates from registered members.'); return false; }
+        return true;
+      }
+    </script>
+  `));
 });
-app.post('/admin/polls', guard('polls'), async (req, res) => { if (req.body.title && req.body.options) await q(`INSERT INTO polls (title, description, options, campus) VALUES ($1,$2,$3,$4)`, [req.body.title.slice(0,200), (req.body.description||'').slice(0,500), req.body.options.slice(0,1500), req.body.campus||'all']); res.redirect('/admin/polls?ok=1'); });
-app.post('/admin/polls/:id/toggle', guard('polls'), async (req, res) => { await q(`UPDATE polls SET status=CASE WHEN status='open' THEN 'closed' ELSE 'open' END WHERE id=$1`, [parseInt(req.params.id,10)||0]); res.redirect('/admin/polls?ok=1'); });
-app.post('/admin/polls/:id/delete', guard('polls'), async (req, res) => { await q(`DELETE FROM polls WHERE id=$1`, [parseInt(req.params.id,10)||0]); res.redirect('/admin/polls?ok=1'); });
+
+app.post('/admin/polls/portal-switch', guard('polls'), async (req, res) => {
+  const cur = await isElectionOn();
+  await q(`INSERT INTO site_settings (key, val) VALUES ('election_portal_on', $1) ON CONFLICT (key) DO UPDATE SET val = $1`, [cur ? '0' : '1']);
+  await logAudit(req, 'ELECTION_PORTAL_SWITCH', 'election_portal_on', cur ? 'Turned OFF' : 'Turned ON');
+  res.redirect('/admin/polls?ok=1');
+});
+
+app.post('/admin/polls', guard('polls'), async (req, res) => {
+  const b = req.body;
+  let cNos = b.candidate_nos || [];
+  if (!Array.isArray(cNos)) cNos = [cNos];
+  const cleanNos = [...new Set(cNos.map(x => String(x || '').trim()).filter(Boolean))];
+  const maxC = Math.min(20, Math.max(1, parseInt(b.max_choices, 10) || 5));
+
+  if (b.title && cleanNos.length >= 2) {
+    await q(`INSERT INTO polls (title, description, options, candidate_nos, max_choices, campus) VALUES ($1,$2,$3,$4,$5,$6)`,
+      [b.title.slice(0, 200), (b.description || '').slice(0, 500), cleanNos.join(','), cleanNos.join(','), maxC, b.campus || 'all']);
+    await logAudit(req, 'ELECTION_CREATE', b.title, `Candidates: ${cleanNos.length}, MaxChoices: ${maxC}`);
+  }
+  res.redirect('/admin/polls?ok=1');
+});
+
+app.post('/admin/polls/:id/toggle', guard('polls'), async (req, res) => {
+  await q(`UPDATE polls SET status=CASE WHEN status='open' THEN 'closed' ELSE 'open' END WHERE id=$1`, [parseInt(req.params.id, 10) || 0]);
+  res.redirect('/admin/polls?ok=1');
+});
+
+app.post('/admin/polls/:id/delete', guard('polls'), async (req, res) => {
+  await q(`DELETE FROM polls WHERE id=$1`, [parseInt(req.params.id, 10) || 0]);
+  res.redirect('/admin/polls?ok=1');
+});
 
 app.get('/admin/certificates', guard('certificates'), async (req, res) => {
   const certs = await q(`SELECT * FROM certificates ORDER BY id DESC LIMIT 40`);
@@ -2026,4 +2380,4 @@ app.get('/admin/backup', guard('backup'), async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v5.0 running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v6.0 running on port ${PORT}`));
