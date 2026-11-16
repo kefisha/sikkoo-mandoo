@@ -856,18 +856,18 @@ function staffRoleBanner(req) {
     current_role TEXT, employer TEXT, phone TEXT, email TEXT, linkedin TEXT, created_at TIMESTAMP DEFAULT NOW()
   )`);
 
-  -- Feature 13: Anonymous Suggestion Box
+  /* Feature 13: Anonymous Suggestion Box */
   await q(`CREATE TABLE IF NOT EXISTS anonymous_suggestions (
     id SERIAL PRIMARY KEY, campus TEXT DEFAULT 'all', category TEXT DEFAULT 'general',
     message TEXT, reply TEXT, status TEXT DEFAULT 'open', created_at TIMESTAMP DEFAULT NOW()
   )`);
 
-  -- Feature 14: Heritage & YouTube Media Hub
+  /* Feature 14: Heritage & YouTube Media Hub */
   await q(`CREATE TABLE IF NOT EXISTS media_hub (
     id SERIAL PRIMARY KEY, title TEXT, youtube_url TEXT, description TEXT, campus TEXT DEFAULT 'all', created_at TIMESTAMP DEFAULT NOW()
   )`);
 
-  -- Feature 15: Targeted Broadcasts
+  /* Feature 15: Targeted Broadcasts */
   await q(`CREATE TABLE IF NOT EXISTS targeted_broadcasts (
     id SERIAL PRIMARY KEY, title TEXT, target_campus TEXT DEFAULT 'all', target_year TEXT DEFAULT 'all',
     message TEXT, created_by TEXT, created_at TIMESTAMP DEFAULT NOW()
@@ -1709,7 +1709,7 @@ app.post('/portal/support', needMember, async (req, res) => {
    FEATURE ROUTES (3, 4, 5, 6, 9, 13, 14, 15)
    ========================================================== */
 
--- Feature 3: Payment & Receipt Upload
+/* Feature 3: Payment & Receipt Upload */
 app.get('/portal/payments', needMember, async (req, res) => {
   const payments = await q(`SELECT * FROM member_payments WHERE member_no=$1 ORDER BY id DESC`, [req.session.mid]);
   res.send(page(req, 'Payment & Receipt', portalMenu('/portal/payments') + `
@@ -1761,7 +1761,7 @@ app.post('/portal/payments', needMember, upload.single('receipt'), async (req, r
   res.redirect('/portal/payments?ok=1');
 });
 
--- Feature 4: Lost & Found Board
+/* Feature 4: Lost & Found Board */
 app.get('/portal/lost-found', needMember, async (req, res) => {
   const items = await q(`SELECT * FROM lost_found ORDER BY id DESC LIMIT 40`);
   res.send(page(req, 'Lost & Found', portalMenu('/portal/lost-found') + `
@@ -1804,7 +1804,7 @@ app.post('/portal/lost-found', needMember, upload.single('image'), async (req, r
   res.redirect('/portal/lost-found?ok=1');
 });
 
--- Feature 5: Freshman Guide & Mentor Match
+/* Feature 5: Freshman Guide & Mentor Match */
 app.get('/portal/freshman-guide', needMember, async (req, res) => {
   const [m] = await q(`SELECT * FROM members WHERE member_no=$1`, [req.session.mid]);
   const [existingMentor] = await q(`SELECT * FROM mentor_requests WHERE freshman_no=$1`, [req.session.mid]);
@@ -1852,7 +1852,7 @@ app.post('/portal/mentor-request', needMember, async (req, res) => {
   res.redirect('/portal/freshman-guide?ok=1');
 });
 
--- Feature 6: QR Attendance Scanner
+/* Feature 6: QR Attendance Scanner */
 app.get('/portal/attendance', needMember, async (req, res) => {
   const sessions = await q(`SELECT * FROM attendance_sessions WHERE campus='all' OR campus=$1 ORDER BY id DESC LIMIT 20`, [req.session.campus || 'robe']);
   const myLogs = await q(`SELECT session_id FROM attendance_logs WHERE member_no=$1`, [req.session.mid]);
@@ -1900,7 +1900,7 @@ app.post('/portal/attendance/scan', needMember, async (req, res) => {
   res.redirect('/portal/attendance?ok=1');
 });
 
--- Feature 9: Alumni Network Directory
+/* Feature 9: Alumni Network Directory */
 app.get('/portal/alumni', needMember, async (req, res) => {
   const alumni = await q(`SELECT * FROM alumni ORDER BY id DESC LIMIT 50`);
   res.send(page(req, 'Alumni Network', portalMenu('/portal/alumni') + `
@@ -1948,7 +1948,7 @@ app.post('/portal/alumni', needMember, async (req, res) => {
   res.redirect('/portal/alumni?ok=1');
 });
 
--- Feature 13: Anonymous Suggestion Box
+/* Feature 13: Anonymous Suggestion Box */
 app.get('/portal/suggestions', needMember, async (req, res) => {
   const suggestions = await q(`SELECT * FROM anonymous_suggestions ORDER BY id DESC LIMIT 25`);
   res.send(page(req, 'Suggestion Box', portalMenu('/portal/suggestions') + `
@@ -1993,7 +1993,7 @@ app.post('/portal/suggestions', needMember, async (req, res) => {
   res.redirect('/portal/suggestions?ok=1');
 });
 
--- Feature 14: Heritage & YouTube Media Hub
+/* Feature 14: Heritage & YouTube Media Hub */
 app.get('/portal/media-hub', needMember, async (req, res) => {
   const media = await q(`SELECT * FROM media_hub ORDER BY id DESC LIMIT 30`);
   res.send(page(req, 'Heritage Media', portalMenu('/portal/media-hub') + `
@@ -2015,7 +2015,7 @@ app.get('/portal/media-hub', needMember, async (req, res) => {
   `));
 });
 
--- Feature 15: Targeted Broadcasts & Admin Tools
+/* Feature 15: Targeted Broadcasts */ & Admin Tools
 app.get('/admin/broadcast', guard('content'), async (req, res) => {
   const broadcasts = await q(`SELECT * FROM targeted_broadcasts ORDER BY id DESC LIMIT 30`);
   res.send(A(req, 'Targeted Broadcast', `
@@ -2606,4 +2606,4 @@ app.get('/admin/backup', guard('backup'), async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v7.3 running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v7.4 running on port ${PORT}`));
