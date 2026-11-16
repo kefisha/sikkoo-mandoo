@@ -820,27 +820,27 @@ function staffRoleBanner(req) {
   await q(`CREATE TABLE IF NOT EXISTS audit_logs (id SERIAL PRIMARY KEY, actor TEXT, action TEXT, target TEXT, details TEXT, ip TEXT, created_at TIMESTAMP DEFAULT NOW())`);
   await q(`CREATE TABLE IF NOT EXISTS password_resets (id SERIAL PRIMARY KEY, student_id TEXT, phone TEXT, reason TEXT, status TEXT DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW())`);
   
-  -- Feature 3: Payments & Receipts
+  /* Feature 3: Payments & Receipts */
   await q(`CREATE TABLE IF NOT EXISTS member_payments (
     id SERIAL PRIMARY KEY, member_no TEXT, name TEXT, campus TEXT, amount NUMERIC,
     payment_method TEXT, transaction_ref TEXT UNIQUE, receipt_file_id INTEGER,
     status TEXT DEFAULT 'pending', admin_remark TEXT, created_at TIMESTAMP DEFAULT NOW()
   )`);
 
-  -- Feature 4: Lost & Found
+  /* Feature 4: Lost & Found */
   await q(`CREATE TABLE IF NOT EXISTS lost_found (
     id SERIAL PRIMARY KEY, member_no TEXT, author_name TEXT, campus TEXT,
     category TEXT DEFAULT 'lost', title TEXT, description TEXT, phone TEXT,
     image_id INTEGER, status TEXT DEFAULT 'open', created_at TIMESTAMP DEFAULT NOW()
   )`);
 
-  -- Feature 5: Mentorship Requests
+  /* Feature 5: Mentorship Requests */
   await q(`CREATE TABLE IF NOT EXISTS mentor_requests (
     id SERIAL PRIMARY KEY, freshman_no TEXT, freshman_name TEXT, campus TEXT,
     department TEXT, senior_mentor TEXT, status TEXT DEFAULT 'pending', created_at TIMESTAMP DEFAULT NOW()
   )`);
 
-  -- Feature 6: QR Attendance
+  /* Feature 6: QR Attendance */
   await q(`CREATE TABLE IF NOT EXISTS attendance_sessions (
     id SERIAL PRIMARY KEY, title TEXT, campus TEXT DEFAULT 'all', event_date TEXT,
     code TEXT UNIQUE, created_at TIMESTAMP DEFAULT NOW()
@@ -850,7 +850,7 @@ function staffRoleBanner(req) {
     scanned_at TIMESTAMP DEFAULT NOW(), UNIQUE(session_id, member_no)
   )`);
 
-  -- Feature 9: Alumni Network
+  /* Feature 9: Alumni Network */
   await q(`CREATE TABLE IF NOT EXISTS alumni (
     id SERIAL PRIMARY KEY, full_name TEXT, batch_year TEXT, department TEXT,
     current_role TEXT, employer TEXT, phone TEXT, email TEXT, linkedin TEXT, created_at TIMESTAMP DEFAULT NOW()
@@ -2015,7 +2015,7 @@ app.get('/portal/media-hub', needMember, async (req, res) => {
   `));
 });
 
-/* Feature 15: Targeted Broadcasts */ & Admin Tools
+/* Feature 15: Targeted Broadcasts & Admin Tools */
 app.get('/admin/broadcast', guard('content'), async (req, res) => {
   const broadcasts = await q(`SELECT * FROM targeted_broadcasts ORDER BY id DESC LIMIT 30`);
   res.send(A(req, 'Targeted Broadcast', `
@@ -2606,4 +2606,4 @@ app.get('/admin/backup', guard('backup'), async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v7.4 running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v7.5 running on port ${PORT}`));
