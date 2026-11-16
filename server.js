@@ -144,7 +144,7 @@ const T = {
     members: 'Miseensota', official: 'Miseensa Idilee', registered: "Galmaa'e", pending: 'Eeggataa', rejected: 'Kuufame', none: 'Ammaaf homtu hin jiru',
     name: 'Maqaa Guutuu', gender: 'Saala', male: 'Dhiira', female: 'Dubartii', phone: 'Bilbila', email: 'Imeelii',
     college: 'Koolleejjii', dept: 'Muummee', year: 'Waggaa Barnootaa', sid: 'ID Barattootaa',
-    zone_woreda: 'Godina fi Aanaa', telegram: 'Telegram Username', pass: 'Jecha Darbii', photo: 'Suuraa',
+    block_no: 'Lakk. Bilookii (Block)', room_no: 'Lakk. Kutaa (Room)', zone_woreda: 'Godina fi Aanaa', telegram: 'Telegram Username', pass: 'Jecha Darbii', photo: 'Suuraa',
     want: "Miseensa idilee ta'uu barbaadaa?", send: 'Ergi', card: 'Kaardii Miseensummaa', no: 'Lakk. Miseensaa', verify: 'Mirkaneessi',
     valid: "Kaardiin kun dhugaa dha ✔", invalid: 'Kaardiin kun hin argamne ✘', upgrade: "Gaaffii miseensa idilee ergi",
     renew: "Miseensummaa Haaressi", print: 'Maxxansi', leadership: 'Geggeessitoota', education: 'Barnoota',
@@ -159,7 +159,7 @@ const T = {
     members: 'አባላት', official: 'ቋሚ አባል', registered: 'የተመዘገበ', pending: 'በመጠባበቅ ላይ', rejected: 'ውድቅ የተደረገ', none: 'ምንም መረጃ የለም',
     name: 'ሙሉ ስም', gender: 'ጾታ', male: 'ወንድ', female: 'ሴት', phone: 'ስልክ', email: 'ኢሜይል',
     college: 'ኮሌጅ', dept: 'ትምህርት ክፍል', year: 'ዓመት', sid: 'የተማሪ መታወቂያ (ID)',
-    zone_woreda: 'ዞን እና ወረዳ', telegram: 'የቴሌግራም መለያ', pass: 'የይለፍ ቃል', photo: 'ፎቶ',
+    block_no: 'ብሎክ ቁጥር (Block)', room_no: 'ሩም / ክፍል ቁጥር (Room)', zone_woreda: 'ዞን እና ወረዳ', telegram: 'የቴሌግራም መለያ', pass: 'የይለፍ ቃል', photo: 'ፎቶ',
     want: 'ቋሚ አባል መሆን ይፈልጋሉ?', send: 'ላክ', card: 'የአባልነት ካርድ', no: 'የአባልነት ቁጥር', verify: 'አረጋግጥ',
     valid: 'ካርዱ ትክክለኛ ነው ✔', invalid: 'ካርዱ አልተገኘም ✘', upgrade: 'የቋሚ አባልነት ጥያቄ ላክ',
     renew: 'አባልነት አድስ', print: 'አትም', leadership: 'አመራሮች', education: 'ትምህርትና እድሎች',
@@ -174,7 +174,7 @@ const T = {
     members: 'Members', official: 'Official Member', registered: 'Registered', pending: 'Pending', rejected: 'Rejected', none: 'Nothing yet',
     name: 'Full Name', gender: 'Gender', male: 'Male', female: 'Female', phone: 'Phone', email: 'Email',
     college: 'College', dept: 'Department', year: 'Year', sid: 'Student ID',
-    zone_woreda: 'Zone and Woreda', telegram: 'Telegram Username', pass: 'Password', photo: 'Photo',
+    block_no: 'Dorm Block No.', room_no: 'Dorm Room No.', zone_woreda: 'Zone and Woreda', telegram: 'Telegram Username', pass: 'Password', photo: 'Photo',
     want: 'Become an official member?', send: 'Submit', card: 'Membership Card', no: 'Membership No.', verify: 'Verify',
     valid: 'This card is valid ✔', invalid: 'Card not found ✘', upgrade: 'Request official membership',
     renew: 'Renew Membership', print: 'Print', leadership: 'Leadership', education: 'Education',
@@ -678,7 +678,7 @@ function portalMenu(activePath) {
     { p: '/portal/attendance', i: '📱', t: 'Attendance' },
     { p: '/portal/alumni', i: '🌟', t: 'Alumni' },
     { p: '/portal/suggestions', i: '📮', t: 'Suggestions' },
-    { p: '/portal/media-hub', i: '📺', t: 'Media Hub' },
+    { p: '/portal/leadership', i: '👥', t: 'Leadership' },
     { p: '/portal/polls', i: '🗳️', t: 'Polls' },
     { p: '/portal/certificates', i: '🏅', t: 'Certificates' },
     { p: '/portal/forum', i: '💡', t: 'Forum' }
@@ -781,7 +781,7 @@ function staffRoleBanner(req) {
   await q(`CREATE TABLE IF NOT EXISTS files (id SERIAL PRIMARY KEY, mime TEXT, data BYTEA, name TEXT)`);
   await q(`CREATE TABLE IF NOT EXISTS members (
     id SERIAL PRIMARY KEY, member_no TEXT UNIQUE, name TEXT, gender TEXT, phone TEXT, email TEXT,
-    campus TEXT, college TEXT, department TEXT, year TEXT, zone_woreda TEXT, telegram_handle TEXT,
+    campus TEXT, college TEXT, department TEXT, year TEXT, block_no TEXT, room_no TEXT, zone_woreda TEXT, telegram_handle TEXT,
     student_id TEXT UNIQUE, photo_id INTEGER, password TEXT,
     status TEXT DEFAULT 'registered', role TEXT DEFAULT 'student',
     renewal_date TIMESTAMP DEFAULT NOW(), created_at TIMESTAMP DEFAULT NOW()
@@ -799,7 +799,7 @@ function staffRoleBanner(req) {
   await q(`CREATE TABLE IF NOT EXISTS forum_posts (id SERIAL PRIMARY KEY, member_no TEXT, author_name TEXT, campus TEXT, category TEXT DEFAULT 'general', title TEXT, body TEXT, created_at TIMESTAMP DEFAULT NOW())`);
   await q(`CREATE TABLE IF NOT EXISTS forum_replies (id SERIAL PRIMARY KEY, post_id INTEGER, member_no TEXT, author_name TEXT, body TEXT, created_at TIMESTAMP DEFAULT NOW())`);
   await q(`CREATE TABLE IF NOT EXISTS staff (id SERIAL PRIMARY KEY, username TEXT UNIQUE, name TEXT, role TEXT, campus TEXT, password TEXT, active INTEGER DEFAULT 1, created_at TIMESTAMP DEFAULT NOW())`);
-  await q(`CREATE TABLE IF NOT EXISTS leaders (id SERIAL PRIMARY KEY, name TEXT, role_key TEXT, position_om TEXT, position_en TEXT, position_am TEXT, term TEXT DEFAULT '2025-2026', responsibilities TEXT, level TEXT DEFAULT 'central', campus TEXT DEFAULT 'all', photo_id INTEGER, ord INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW())`);
+  await q(`CREATE TABLE IF NOT EXISTS leaders (id SERIAL PRIMARY KEY, member_no TEXT, name TEXT, phone TEXT, department TEXT, year TEXT, block_no TEXT, room_no TEXT, role_key TEXT, position_om TEXT, position_en TEXT, position_am TEXT, term TEXT DEFAULT '2025-2026', responsibilities TEXT, level TEXT DEFAULT 'central', campus TEXT DEFAULT 'all', photo_id INTEGER, ord INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW())`);
   await q(`CREATE TABLE IF NOT EXISTS meetings (id SERIAL PRIMARY KEY, campus TEXT DEFAULT 'all', title TEXT, meeting_date TEXT, agenda TEXT, minutes TEXT, resolutions TEXT, attendance_count INTEGER DEFAULT 0, file_id INTEGER, created_at TIMESTAMP DEFAULT NOW())`);
   await q(`CREATE TABLE IF NOT EXISTS support_requests (id SERIAL PRIMARY KEY, member_no TEXT, name TEXT, campus TEXT, subject TEXT, category TEXT DEFAULT 'general', message TEXT, status TEXT DEFAULT 'open', reply TEXT, created_at TIMESTAMP DEFAULT NOW())`);
   await q(`CREATE TABLE IF NOT EXISTS transactions (id SERIAL PRIMARY KEY, kind TEXT, amount NUMERIC, tdate TEXT, note TEXT, campus TEXT DEFAULT 'all', created_by TEXT, created_at TIMESTAMP DEFAULT NOW())`);
@@ -866,6 +866,14 @@ function staffRoleBanner(req) {
     `ALTER TABLE members ADD COLUMN IF NOT EXISTS college TEXT`,
     `ALTER TABLE members ADD COLUMN IF NOT EXISTS zone_woreda TEXT`,
     `ALTER TABLE members ADD COLUMN IF NOT EXISTS telegram_handle TEXT`,
+    `ALTER TABLE members ADD COLUMN IF NOT EXISTS block_no TEXT`,
+    `ALTER TABLE members ADD COLUMN IF NOT EXISTS room_no TEXT`,
+    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS member_no TEXT`,
+    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS phone TEXT`,
+    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS department TEXT`,
+    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS year TEXT`,
+    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS block_no TEXT`,
+    `ALTER TABLE leaders ADD COLUMN IF NOT EXISTS room_no TEXT`,
     `ALTER TABLE members ADD COLUMN IF NOT EXISTS renewal_date TIMESTAMP DEFAULT NOW()`,
     `ALTER TABLE posts ADD COLUMN IF NOT EXISTS is_emergency INTEGER DEFAULT 0`,
     `ALTER TABLE posts ADD COLUMN IF NOT EXISTS title_am TEXT`,
@@ -1013,6 +1021,8 @@ function regForm(req, err, v) {
             <div><label>${h(tr(req, 'college'))} *</label><input name="college" required value="${h(v.college)}"></div>
             <div><label>${h(tr(req, 'dept'))} *</label><input name="department" required value="${h(v.department)}"></div>
             <div><label>${h(tr(req, 'year'))} *</label><select name="year">${s('year', [1,2,3,4,5,6].map(x => [String(x), 'Year ' + x]))}</select></div>
+            <div><label>${h(tr(req, 'block_no'))} *</label><input name="block_no" required value="${h(v.block_no)}" placeholder="e.g. BB-12 or Block 5"></div>
+            <div><label>${h(tr(req, 'room_no'))} *</label><input name="room_no" required value="${h(v.room_no)}" placeholder="e.g. R-70 or 204"></div>
             <div><label>${h(tr(req, 'zone_woreda'))} *</label><input name="zone_woreda" required value="${h(v.zone_woreda)}"></div>
             <div><label>${h(tr(req, 'phone'))} *</label><input name="phone" required type="tel" value="${h(v.phone)}"></div>
             <div><label>${h(tr(req, 'telegram'))}</label><input name="telegram_handle" value="${h(v.telegram_handle)}" placeholder="@username"></div>
@@ -1035,7 +1045,7 @@ function regForm(req, err, v) {
 app.get('/sikkoo-mandoo-register', (req, res) => res.send(regForm(req)));
 app.post('/sikkoo-mandoo-register', upload.single('photo'), async (req, res) => {
   const b = req.body, c = CAMPUS[b.campus];
-  if (!c || !b.name || !b.student_id || !b.phone || !b.department || !b.college || !b.zone_woreda || String(b.password || '').length < 6) return res.send(regForm(req, tr(req, 'bad'), b));
+  if (!c || !b.name || !b.student_id || !b.phone || !b.department || !b.college || !b.block_no || !b.room_no || !b.zone_woreda || String(b.password || '').length < 6) return res.send(regForm(req, tr(req, 'bad'), b));
   try {
     if ((await q(`SELECT 1 FROM members WHERE UPPER(student_id)=UPPER($1)`, [b.student_id.trim()])).length) return res.send(regForm(req, tr(req, 'exists'), b));
     let pid = null;
@@ -1045,8 +1055,8 @@ app.post('/sikkoo-mandoo-register', upload.single('photo'), async (req, res) => 
       const [{ n }] = await q(`SELECT COUNT(*)::int AS n FROM members WHERE campus=$1`, [b.campus]);
       const no = `SM-${c.c}-${yr}-${String(n + 1 + i).padStart(4, '0')}`;
       try {
-        await q(`INSERT INTO members (member_no, name, gender, phone, email, campus, college, department, year, zone_woreda, telegram_handle, student_id, photo_id, password, status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
-          [no, b.name.trim().slice(0, 80), b.gender === 'F' ? 'F' : 'M', b.phone.trim().slice(0, 30), (b.email || '').slice(0, 80), b.campus, b.college.trim().slice(0, 80), b.department.trim().slice(0, 80), String(b.year || '1'), b.zone_woreda.trim().slice(0, 100), (b.telegram_handle || '').slice(0, 50), b.student_id.trim().slice(0, 40), pid, hash, b.want ? 'pending' : 'registered']);
+        await q(`INSERT INTO members (member_no, name, gender, phone, email, campus, college, department, year, block_no, room_no, zone_woreda, telegram_handle, student_id, photo_id, password, status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
+          [no, b.name.trim().slice(0, 80), b.gender === 'F' ? 'F' : 'M', b.phone.trim().slice(0, 30), (b.email || '').slice(0, 80), b.campus, b.college.trim().slice(0, 80), b.department.trim().slice(0, 80), String(b.year || '1'), b.block_no.trim().slice(0, 40), b.room_no.trim().slice(0, 40), b.zone_woreda.trim().slice(0, 100), (b.telegram_handle || '').slice(0, 50), b.student_id.trim().slice(0, 40), pid, hash, b.want ? 'pending' : 'registered']);
         req.session.mid = no; req.session.campus = b.campus;
         return res.redirect('/student-dashboard?ok=1');
       } catch (e) { if (!/duplicate|unique/i.test(e.message)) throw e; }
@@ -1117,7 +1127,7 @@ app.get('/student-dashboard', needMember, async (req, res) => {
     { href: '/portal/attendance', cls: 'pink', ico: '📱', t: 'QR Attendance', sub: 'ስብሰባ ቅኝት', n: 0 },
     { href: '/portal/alumni', cls: 'indigo', ico: '🌟', t: 'Alumni Network', sub: 'ምሩቃን መረብ', n: 0 },
     { href: '/portal/suggestions', cls: 'teal', ico: '📮', t: 'Suggestion Box', sub: 'ምስጢር ሳጥን', n: 0 },
-    { href: '/portal/media-hub', cls: 'red', ico: '📺', t: 'Heritage Media', sub: 'ባህልና ሚዲያ', n: 0 },
+    { href: '/portal/leadership', cls: 'yellow', ico: '👥', t: 'Leadership', sub: 'አመራሮች', n: 0 },
     { href: '/portal/events', cls: 'orange', ico: '📅', t: 'Events', sub: 'ፕሮግራሞች', n: evCnt.c },
     ...(electionActive ? [{ href: '/portal/polls', cls: 'pink', ico: '🗳️', t: 'Polls & Vote', sub: 'ምርጫ / ድምጽ', n: pollCnt.c }] : []),
     { href: '/portal/certificates', cls: 'green', ico: '🏅', t: 'Certificates', sub: 'ሰርተፍኬት', n: certCnt.c },
@@ -1186,7 +1196,7 @@ app.get('/student-dashboard', needMember, async (req, res) => {
       <div id="flipCard" class="flip-wrap" onclick="this.classList.toggle('flipped')">
         <div class="flip-inner">
           <!-- FRONT -->
-          <div id="idCardBox" class="flip-face">
+          <div id="idCardFront" class="flip-face">
             <div class="id-hd">
               <span>🌳 ${h(tr(req, 'site'))}</span>
               <span class="badge ${m.status}">${h(tr(req, m.status))}</span>
@@ -1199,7 +1209,7 @@ app.get('/student-dashboard', needMember, async (req, res) => {
                 <small style="color:#64748b; font-size:11px">${h(tr(req, 'no'))}</small><br>
                 <b style="color:#7c3aed; font-size:14.5px;">${h(m.member_no)}</b><br>
                 <small style="color:#475569; font-weight:650; font-size:11.5px">${h(campusName(req, m.campus))} · ${h(m.department)} · Y${h(m.year)}</small><br>
-                <small style="color:#64748b; font-size:11px">📍 ${h(m.zone_woreda || 'Bale')}</small>
+                <small style="color:#64748b; font-size:11px">🏠 ${h(m.block_no || '-')} / ${h(m.room_no || '-')} · 📍 ${h(m.zone_woreda || 'Bale')}</small>
               </div>
             </div>
             <div style="padding:10px 16px 14px; display:flex; justify-content:space-between; align-items:flex-end; border-top:1px solid #f1f5f9;">
@@ -1212,7 +1222,7 @@ app.get('/student-dashboard', needMember, async (req, res) => {
           </div>
 
           <!-- BACK -->
-          <div class="flip-face flip-back">
+          <div id="idCardBack" class="flip-face flip-back">
             <div class="id-hd" style="background:linear-gradient(90deg, #1e293b 0%, #4c1d95 100%);">
               <span>MWU · SIIKKOO-MANDOO</span>
               <span>BACK SIDE</span>
@@ -1222,8 +1232,8 @@ app.get('/student-dashboard', needMember, async (req, res) => {
                 <b style="color:#6d28d9; font-size:13px;">"Tokkummaa, Barnoota fi Aadaa"</b><br>
                 <span>"አንድነት፣ ትምህርት እና ባህል"</span><br><br>
                 <span>✔ Scan QR to verify official membership.</span><br>
-                <span>📞 MWU Main Campus (Robe)</span><br>
-                <span>✈️ @siikkoomandoomwu</span>
+                <span>📞 Phone: ${h(m.phone || '-')}</span><br>
+                <span>🏠 Dorm: ${h(m.block_no || '-')} · Room ${h(m.room_no || '-')}</span>
               </div>
               <div id="qrBack" style="background:#fff; padding:6px; border-radius:10px; border:2px solid #c084fc; flex-shrink:0;"></div>
             </div>
@@ -1234,8 +1244,17 @@ app.get('/student-dashboard', needMember, async (req, res) => {
         </div>
       </div>
 
-      <div style="text-align:center; margin-top:16px; display:flex; justify-content:center; gap:9px; flex-wrap:wrap;">
-        <button onclick="downloadID()" class="btn g">📥 Download ID (PNG)</button>
+      <!-- Download Option Selector: One Side vs Both Sides -->
+      <div style="max-width:430px; margin:16px auto 0; background:var(--surface-soft); border:1.5px dashed var(--card-dash); border-radius:18px; padding:12px 14px; display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap;">
+        <select id="dlSideMode" style="width:auto; min-width:195px; padding:9px 12px; font-size:13px; font-weight:700; border-radius:999px;">
+          <option value="both">🪪 Both Sides (Front & Back)</option>
+          <option value="front">📄 One Side Only (Front)</option>
+          <option value="back">📄 One Side Only (Back)</option>
+        </select>
+        <button onclick="downloadID()" class="btn g" style="padding:10px 18px;">📥 Download ID (PNG)</button>
+      </div>
+
+      <div style="text-align:center; margin-top:12px; display:flex; justify-content:center; gap:9px; flex-wrap:wrap;">
         <button onclick="document.getElementById('flipCard').classList.toggle('flipped')" class="btn secondary">🔄 Flip Card</button>
         <button onclick="print()" class="btn secondary">🖨️ ${h(tr(req, 'print'))}</button>
         ${m.status === 'registered' ? `<form method="POST" action="/student/upgrade" style="display:inline"><button class="btn">${h(tr(req, 'upgrade'))}</button></form>` : ''}
@@ -1248,14 +1267,42 @@ app.get('/student-dashboard', needMember, async (req, res) => {
     <script>
       new QRCode(document.getElementById('qrFront'),{text:${JSON.stringify(base)},width:56,height:56,colorDark:"#0f172a",colorLight:"#ffffff"});
       new QRCode(document.getElementById('qrBack'),{text:${JSON.stringify(base)},width:96,height:96,colorDark:"#4c1d95",colorLight:"#ffffff"});
-      function downloadID(){
-        const fc = document.getElementById('flipCard');
-        fc.classList.remove('flipped');
-        setTimeout(()=>{
-          html2canvas(document.getElementById('idCardBox'), { scale: 2, useCORS: true }).then(c => {
-            const a = document.createElement('a'); a.download = ${JSON.stringify(m.member_no + '-ID.png')}; a.href = c.toDataURL('image/png'); a.click();
-          });
-        }, 120);
+      async function renderCleanFace(el){
+        const clone = el.cloneNode(true);
+        clone.style.position = 'fixed';
+        clone.style.left = '-9999px';
+        clone.style.top = '0';
+        clone.style.width = '430px';
+        clone.style.transform = 'none';
+        clone.style.backfaceVisibility = 'visible';
+        document.body.appendChild(clone);
+        const canvas = await html2canvas(clone, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+        document.body.removeChild(clone);
+        return canvas;
+      }
+      async function downloadID(){
+        const mode = document.getElementById('dlSideMode').value;
+        const memberNo = ${JSON.stringify(m.member_no)};
+        if (mode === 'front') {
+          const c = await renderCleanFace(document.getElementById('idCardFront'));
+          const a = document.createElement('a'); a.download = memberNo + '-FRONT.png'; a.href = c.toDataURL('image/png'); a.click();
+        } else if (mode === 'back') {
+          const c = await renderCleanFace(document.getElementById('idCardBack'));
+          const a = document.createElement('a'); a.download = memberNo + '-BACK.png'; a.href = c.toDataURL('image/png'); a.click();
+        } else {
+          const cFront = await renderCleanFace(document.getElementById('idCardFront'));
+          const cBack = await renderCleanFace(document.getElementById('idCardBack'));
+          const gap = 24;
+          const out = document.createElement('canvas');
+          out.width = Math.max(cFront.width, cBack.width);
+          out.height = cFront.height + gap + cBack.height;
+          const ctx = out.getContext('2d');
+          ctx.fillStyle = '#f8fafc';
+          ctx.fillRect(0, 0, out.width, out.height);
+          ctx.drawImage(cFront, 0, 0);
+          ctx.drawImage(cBack, 0, cFront.height + gap);
+          const a = document.createElement('a'); a.download = memberNo + '-BOTH-SIDES.png'; a.href = out.toDataURL('image/png'); a.click();
+        }
       }
       document.querySelectorAll('[data-countdown]').forEach(el=>{
         const d=new Date(el.getAttribute('data-countdown'));
@@ -1285,6 +1332,8 @@ app.get('/portal/profile', needMember, async (req, res) => {
         <div><label>Email</label><input name="email" type="email" value="${h(m.email || '')}"></div>
         <div><label>Telegram Username</label><input name="telegram_handle" value="${h(m.telegram_handle || '')}"></div>
         <div><label>Academic Year</label><select name="year">${[1,2,3,4,5,6].map(y => `<option value="${y}"${String(m.year)===String(y)?' selected':''}>Year ${y}</option>`).join('')}</select></div>
+        <div><label>Dorm Block *</label><input name="block_no" required value="${h(m.block_no || '')}"></div>
+        <div><label>Dorm Room *</label><input name="room_no" required value="${h(m.room_no || '')}"></div>
         <div><label>Zone / Woreda</label><input name="zone_woreda" value="${h(m.zone_woreda || '')}"></div>
         <div><label>Update Photo</label><input name="photo" type="file" accept="image/jpeg,image/png,image/webp"></div>
       </div>
@@ -1307,7 +1356,7 @@ app.post('/portal/profile', needMember, upload.single('photo'), async (req, res)
   let pid = m.photo_id;
   if (req.file && /^image\/(jpeg|png|webp)$/.test(req.file.mimetype)) pid = (await q(`INSERT INTO files (mime,data,name) VALUES ($1,$2,$3) RETURNING id`, [req.file.mimetype, req.file.buffer, 'profile-photo']))[0].id;
   const b = req.body;
-  await q(`UPDATE members SET phone=$1, email=$2, telegram_handle=$3, year=$4, zone_woreda=$5, photo_id=$6 WHERE member_no=$7`, [String(b.phone || m.phone).slice(0, 30), String(b.email || '').slice(0, 80), String(b.telegram_handle || '').slice(0, 50), String(b.year || m.year), String(b.zone_woreda || '').slice(0, 100), pid, req.session.mid]);
+  await q(`UPDATE members SET phone=$1, email=$2, telegram_handle=$3, year=$4, block_no=$5, room_no=$6, zone_woreda=$7, photo_id=$8 WHERE member_no=$9`, [String(b.phone || m.phone).slice(0, 30), String(b.email || '').slice(0, 80), String(b.telegram_handle || '').slice(0, 50), String(b.year || m.year), String(b.block_no || m.block_no || '').slice(0, 40), String(b.room_no || m.room_no || '').slice(0, 40), String(b.zone_woreda || '').slice(0, 100), pid, req.session.mid]);
   res.redirect('/portal/profile?saved=1');
 });
 
@@ -1576,8 +1625,42 @@ app.get('/portal/meetings', needMember, async (req, res) => {
 
 app.get('/portal/leadership', needMember, async (req, res) => {
   const ls = await q(`SELECT * FROM leaders ORDER BY (level='central') DESC, ord, id`);
-  const grp = (t, list) => list.length ? `<div class="glass-card"><div class="hub-header">👥 <span>${h(t)}</span></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">${list.map(x => `<div class="form-section" style="text-align:center;margin:0"><img style="width:82px;height:82px;border-radius:50%;object-fit:cover;border:3px solid #c084fc;" src="${x.photo_id ? '/photo/' + x.photo_id : ''}"><h4 style="margin:8px 0 2px">${h(x.name)}</h4><p style="color:var(--primary);font-size:12px;font-weight:700">${h(x.position_en || x.position_om)}</p><small>${h(x.term)}</small></div>`).join('')}</div></div>` : '';
-  res.send(page(req, tr(req, 'leadership'), portalMenu('/portal/leadership') + grp('Central Executive', ls.filter(x => x.level === 'central')) + Object.keys(CAMPUS).map(k => grp(campusName(req, k), ls.filter(x => x.level !== 'central' && x.campus === k))).join('')));
+  const membersAll = await q(`SELECT member_no, name, phone, campus, department, year, block_no, room_no, photo_id FROM members`);
+  const byNo = Object.fromEntries(membersAll.map(m => [m.member_no, m]));
+  const byName = Object.fromEntries(membersAll.map(m => [m.name.toLowerCase().trim(), m]));
+
+  const renderLeaderCard = x => {
+    const m = (x.member_no && byNo[x.member_no]) || byName[String(x.name || '').toLowerCase().trim()] || {};
+    const photo = x.photo_id ? `/photo/${x.photo_id}` : (m.photo_id ? `/photo/${m.photo_id}` : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23ede9fe'/%3E%3Ctext x='50' y='62' font-size='44' text-anchor='middle'%3E👤%3C/text%3E%3C/svg%3E`);
+    const phone = x.phone || m.phone || '-';
+    const dept = x.department || m.department || '';
+    const yr = x.year || m.year || '';
+    const blk = x.block_no || m.block_no || '-';
+    const rm = x.room_no || m.room_no || '-';
+    const cmp = (x.campus && x.campus !== 'all') ? campusName(req, x.campus) : (m.campus ? campusName(req, m.campus) : 'All Campuses');
+    return `
+      <div class="form-section" style="margin:0; padding:16px; display:flex; flex-direction:column; justify-content:space-between; gap:10px;">
+        <div style="display:flex; gap:12px; align-items:center;">
+          <img style="width:74px; height:86px; border-radius:14px; object-fit:cover; border:2.5px solid #c084fc; flex-shrink:0;" src="${photo}" alt="">
+          <div style="font-size:12px; line-height:1.45;">
+            <span class="badge official" style="margin-bottom:4px;">${h(x.position_en || x.position_om || x.position_am || 'Leader')}</span>
+            <h4 style="font-size:15px; font-weight:850; color:var(--text); margin:2px 0;">${h(x.name)}</h4>
+            <small style="color:var(--text-muted); font-weight:700;">Term: ${h(x.term || '2025-2026')}</small>
+          </div>
+        </div>
+        <div style="background:var(--surface-solid); border:1px solid var(--border); border-radius:12px; padding:10px 12px; font-size:12.5px; line-height:1.6;">
+          <div>🏛️ <b>Campus:</b> ${h(cmp)} ${dept ? `· ${h(dept)} (Y${h(yr)})` : ''}</div>
+          <div>📞 <b>Phone:</b> <a href="tel:${h(phone)}" style="font-weight:700;">${h(phone)}</a></div>
+          <div>🏠 <b>Dorm:</b> Block <b>${h(blk)}</b> · Room <b>${h(rm)}</b></div>
+          ${x.responsibilities ? `<div style="margin-top:4px; color:var(--text-2);">📋 ${h(x.responsibilities)}</div>` : ''}
+        </div>
+      </div>
+    `;
+  };
+
+  const grp = (t, list) => list.length ? `<div class="glass-card"><div class="hub-header">👥 <span>${h(t)}</span></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px">${list.map(renderLeaderCard).join('')}</div></div>` : '';
+  const body = grp('Central Executive Leadership', ls.filter(x => x.level === 'central')) + Object.keys(CAMPUS).map(k => grp(campusName(req, k) + ' Representatives', ls.filter(x => x.level !== 'central' && x.campus === k))).join('');
+  res.send(page(req, tr(req, 'leadership'), portalMenu('/portal/leadership') + (body || `<div class="glass-card" style="text-align:center;padding:42px">${h(tr(req, 'none'))}</div>`)));
 });
 
 app.get('/portal/finance', needMember, async (req, res) => {
@@ -2206,7 +2289,7 @@ app.get('/admin/members/export', guard('members'), async (req, res) => {
   if (cf) { pr.push(cf); c.push(`campus=$${pr.length}`); } if (sf) { pr.push(sf); c.push(`status=$${pr.length}`); }
   if (qs) { pr.push('%' + qs + '%'); c.push(`(name ILIKE $${pr.length} OR member_no ILIKE $${pr.length})`); }
   const rows = await q(`SELECT * FROM members ${c.length ? 'WHERE ' + c.join(' AND ') : ''} ORDER BY id DESC LIMIT 5000`, pr);
-  const headers = ['member_no','name','gender','student_id','campus','college','department','year','zone_woreda','phone','email','status','created_at'];
+  const headers = ['member_no','name','gender','student_id','campus','college','department','year','block_no','room_no','zone_woreda','phone','email','status','created_at'];
   const lines = [headers.join(',')].concat(rows.map(r => headers.map(k => csvEsc(r[k])).join(',')));
   res.set('Content-Type', 'text/csv; charset=utf-8').set('Content-Disposition', 'attachment; filename="sikkoo-members.csv"').send('\uFEFF' + lines.join('\n'));
 });
@@ -2214,11 +2297,11 @@ app.get('/admin/members/export', guard('members'), async (req, res) => {
 app.get('/admin/members/:id/edit', guard('members'), async (req, res) => {
   const [m] = await q(`SELECT * FROM members WHERE id=$1`, [parseInt(req.params.id, 10) || 0]); if (!m) return res.redirect('/admin/members');
   const s = (k, opts) => opts.map(x => `<option value="${h(x[0])}"${String(m[k]) === String(x[0]) ? ' selected' : ''}>${h(x[1])}</option>`).join('');
-  res.send(A(req, 'Edit Member', `<div class="glass-card" style="max-width:780px;margin:0 auto"><h3>✏️ Edit ${h(m.name)}</h3><form method="POST" action="/admin/members/${m.id}/edit" enctype="multipart/form-data"><div class="form-section" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px 12px"><div><label>Name</label><input name="name" required value="${h(m.name)}"></div><div><label>Student ID</label><input name="student_id" required value="${h(m.student_id)}"></div><div><label>Phone</label><input name="phone" required value="${h(m.phone)}"></div><div><label>Campus</label><select name="campus">${s('campus', Object.keys(CAMPUS).map(k => [k, CAMPUS[k].n]))}</select></div><div><label>Department</label><input name="department" value="${h(m.department || '')}"></div><div><label>Year</label><select name="year">${s('year', [1,2,3,4,5,6].map(x => [String(x), 'Year '+x]))}</select></div><div><label>Status</label><select name="status">${s('status', [['registered','Registered'],['pending','Pending'],['official','Official'],['rejected','Rejected']])}</select></div><div><label>New Password</label><input name="password" type="password" minlength="6"></div></div><button class="btn">💾 Save</button> <a class="btn secondary" href="/admin/members">Back</a></form></div>`));
+  res.send(A(req, 'Edit Member', `<div class="glass-card" style="max-width:780px;margin:0 auto"><h3>✏️ Edit ${h(m.name)}</h3><form method="POST" action="/admin/members/${m.id}/edit" enctype="multipart/form-data"><div class="form-section" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px 12px"><div><label>Name</label><input name="name" required value="${h(m.name)}"></div><div><label>Student ID</label><input name="student_id" required value="${h(m.student_id)}"></div><div><label>Phone</label><input name="phone" required value="${h(m.phone)}"></div><div><label>Campus</label><select name="campus">${s('campus', Object.keys(CAMPUS).map(k => [k, CAMPUS[k].n]))}</select></div><div><label>Department</label><input name="department" value="${h(m.department || '')}"></div><div><label>Year</label><select name="year">${s('year', [1,2,3,4,5,6].map(x => [String(x), 'Year '+x]))}</select></div><div><label>Block</label><input name="block_no" value="${h(m.block_no || '')}"></div><div><label>Room</label><input name="room_no" value="${h(m.room_no || '')}"></div><div><label>Status</label><select name="status">${s('status', [['registered','Registered'],['pending','Pending'],['official','Official'],['rejected','Rejected']])}</select></div><div><label>New Password</label><input name="password" type="password" minlength="6"></div></div><button class="btn">💾 Save</button> <a class="btn secondary" href="/admin/members">Back</a></form></div>`));
 });
 app.post('/admin/members/:id/edit', guard('members'), files6([{ name: 'photo', maxCount: 1 }]), async (req, res) => {
   const id = parseInt(req.params.id, 10) || 0, b = req.body;
-  await q(`UPDATE members SET name=$1, student_id=$2, phone=$3, campus=$4, department=$5, year=$6, status=$7 WHERE id=$8`, [b.name, b.student_id, b.phone, b.campus, b.department, b.year, b.status, id]);
+  await q(`UPDATE members SET name=$1, student_id=$2, phone=$3, campus=$4, department=$5, year=$6, block_no=$7, room_no=$8, status=$9 WHERE id=$10`, [b.name, b.student_id, b.phone, b.campus, b.department, b.year, b.block_no || '', b.room_no || '', b.status, id]);
   if (b.password && String(b.password).length >= 6) await q(`UPDATE members SET password=$1 WHERE id=$2`, [bcrypt.hashSync(String(b.password), 10), id]);
   res.redirect('/admin/members/' + id + '/edit?saved=1');
 });
@@ -2250,10 +2333,81 @@ app.post('/admin/meetings', guard('meetings'), files6([{ name: 'file', maxCount:
 app.post('/admin/meetings/:id/delete', guard('meetings'), async (req, res) => { await q(`DELETE FROM meetings WHERE id=$1`, [parseInt(req.params.id, 10) || 0]); res.redirect('/admin/meetings?ok=1'); });
 
 app.get('/admin/leaders', guard('leaders'), async (req, res) => {
-  const sc = scopeOf(req), ls = await q(`SELECT * FROM leaders ${sc ? 'WHERE campus=$1' : ''} ORDER BY id DESC`, sc ? [sc] : []);
-  res.send(A(req, 'Leaders', `<div class="glass-card"><h3>Add Leader</h3><form method="POST" action="/admin/leaders" enctype="multipart/form-data"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px"><div><label>Name</label><input name="name" required></div><div><label>Term</label><input name="term" value="2025-2026"></div><div><label>Level</label>${sel('level', sc ? [['campus','Campus']] : [['central','Central'],['campus','Campus']])}</div><div><label>Campus</label>${sel('campus', campusOpts(sc, false))}</div></div><label>Position</label><input name="position_en" required><label>Photo</label><input name="photo" type="file" accept="image/*"><p style="margin-top:12px"><button class="btn">Save</button></p></form></div><div class="glass-card">${ls.map(x => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><span><b>${h(x.name)}</b> · ${h(x.position_en)}</span><form method="POST" action="/admin/leaders/${x.id}/delete"><button class="btn danger" style="padding:4px 9px;font-size:11px">Delete</button></form></div>`).join('')}</div>`));
+  const sc = scopeOf(req);
+  const ls = await q(`SELECT * FROM leaders ${sc ? 'WHERE campus=$1' : ''} ORDER BY (level='central') DESC, ord, id`, sc ? [sc] : []);
+  const members = await q(`SELECT member_no, name, phone, campus, department, year, block_no, room_no FROM members ${sc ? 'WHERE campus=$1' : ''} ORDER BY name ASC LIMIT 500`, sc ? [sc] : []);
+
+  res.send(A(req, 'Leaders', `
+    <div class="glass-card">
+      <div class="hub-header">🎖️ <span>Add Association Leader · አመራር መመዝገቢያ</span></div>
+      <form method="POST" action="/admin/leaders" enctype="multipart/form-data">
+        <label>Select from Registered Members (Auto-fills phone, block & room)</label>
+        <select id="leaderMemberPick" name="member_no" onchange="fillLeaderFromMember(this)">
+          <option value="">-- Or enter leader details manually below --</option>
+          ${members.map(m => `<option value="${h(m.member_no)}" data-name="${h(m.name)}" data-phone="${h(m.phone || '')}" data-campus="${h(m.campus)}" data-dept="${h(m.department || '')}" data-year="${h(m.year || '')}" data-block="${h(m.block_no || '')}" data-room="${h(m.room_no || '')}">${h(m.name)} (${h(m.member_no)} · ${h(m.phone || '')})</option>`).join('')}
+        </select>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px; margin-top:6px;">
+          <div><label>Full Name *</label><input id="ld_name" name="name" required></div>
+          <div><label>Position / Role Title *</label><input name="position_en" required placeholder="e.g. President, Vice President"></div>
+          <div><label>Phone Number *</label><input id="ld_phone" name="phone" required placeholder="09..."></div>
+          <div><label>Dorm Block *</label><input id="ld_block" name="block_no" required placeholder="e.g. BB-12"></div>
+          <div><label>Dorm Room *</label><input id="ld_room" name="room_no" required placeholder="e.g. R-70"></div>
+          <div><label>Department</label><input id="ld_dept" name="department" placeholder="e.g. Statistics"></div>
+          <div><label>Year</label><input id="ld_year" name="year" placeholder="e.g. 4"></div>
+          <div><label>Term</label><input name="term" value="2025-2026"></div>
+          <div><label>Level</label>${sel('level', sc ? [['campus','Campus']] : [['central','Central'],['campus','Campus']])}</div>
+          <div><label>Campus</label>${sel('campus', campusOpts(sc, false))}</div>
+        </div>
+        <label>Responsibilities / Mandate (Optional)</label>
+        <input name="responsibilities" placeholder="Brief summary of duties...">
+        <label>Leader Photo (Optional if already registered with photo)</label>
+        <input name="photo" type="file" accept="image/*">
+        <p style="margin-top:14px"><button class="btn">💾 Save Leader</button></p>
+      </form>
+    </div>
+
+    <div class="glass-card">
+      <div class="hub-header">👥 <span>Current Leaders (${ls.length})</span></div>
+      ${ls.map(x => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px;">
+          <div>
+            <b>${h(x.name)}</b> · <span class="badge official">${h(x.position_en)}</span><br>
+            <small style="color:var(--text-muted)">📞 ${h(x.phone || '-')} · 🏠 Block ${h(x.block_no || '-')} / Room ${h(x.room_no || '-')} · ${h(x.campus)}</small>
+          </div>
+          <form method="POST" action="/admin/leaders/${x.id}/delete"><button class="btn danger" style="padding:4px 10px;font-size:11.5px">Delete</button></form>
+        </div>
+      `).join('') || '<p>No leaders added yet.</p>'}
+    </div>
+
+    <script>
+      function fillLeaderFromMember(selEl){
+        const opt = selEl.options[selEl.selectedIndex];
+        if (!opt || !opt.value) return;
+        document.getElementById('ld_name').value = opt.getAttribute('data-name') || '';
+        document.getElementById('ld_phone').value = opt.getAttribute('data-phone') || '';
+        document.getElementById('ld_block').value = opt.getAttribute('data-block') || '';
+        document.getElementById('ld_room').value = opt.getAttribute('data-room') || '';
+        document.getElementById('ld_dept').value = opt.getAttribute('data-dept') || '';
+        document.getElementById('ld_year').value = opt.getAttribute('data-year') || '';
+      }
+    </script>
+  `));
 });
-app.post('/admin/leaders', guard('leaders'), files6([{ name: 'photo', maxCount: 1 }]), async (req, res) => { const b = req.body, sc = scopeOf(req), pid = await saveFile(((req.files || {}).photo || [])[0]); if (b.name) await q(`INSERT INTO leaders (name, position_en, term, level, campus, photo_id) VALUES ($1,$2,$3,$4,$5,$6)`, [b.name, b.position_en || '', b.term || '2025-2026', sc ? 'campus' : b.level, sc || b.campus || 'all', pid]); res.redirect('/admin/leaders?ok=1'); });
+
+app.post('/admin/leaders', guard('leaders'), files6([{ name: 'photo', maxCount: 1 }]), async (req, res) => {
+  const b = req.body, sc = scopeOf(req);
+  let pid = await saveFile(((req.files || {}).photo || [])[0]);
+  if (!pid && b.member_no) {
+    const [m] = await q(`SELECT photo_id FROM members WHERE member_no=$1`, [b.member_no]);
+    if (m && m.photo_id) pid = m.photo_id;
+  }
+  if (b.name) {
+    await q(`INSERT INTO leaders (member_no, name, phone, department, year, block_no, room_no, position_en, term, responsibilities, level, campus, photo_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+      [(b.member_no || '').slice(0, 40), b.name.slice(0, 80), (b.phone || '').slice(0, 30), (b.department || '').slice(0, 80), (b.year || '').slice(0, 10), (b.block_no || '').slice(0, 40), (b.room_no || '').slice(0, 40), (b.position_en || '').slice(0, 100), (b.term || '2025-2026').slice(0, 30), (b.responsibilities || '').slice(0, 400), sc ? 'campus' : (b.level === 'campus' ? 'campus' : 'central'), sc || b.campus || 'all', pid]);
+  }
+  res.redirect('/admin/leaders?ok=1');
+});
 app.post('/admin/leaders/:id/delete', guard('leaders'), async (req, res) => { await q(`DELETE FROM leaders WHERE id=$1`, [parseInt(req.params.id, 10) || 0]); res.redirect('/admin/leaders?ok=1'); });
 
 const KINDS = [['contribution', 'Contribution'], ['donation', 'Donation'], ['fundraising', 'Fundraising'], ['income', 'Other Income'], ['expense', 'Expense']];
@@ -2380,4 +2534,4 @@ app.get('/admin/backup', guard('backup'), async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v6.0 running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v7.0 running on port ${PORT}`));
