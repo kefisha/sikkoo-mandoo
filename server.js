@@ -17,15 +17,14 @@ app.use(session({
   cookie: { maxAge: 7 * 864e5, sameSite: 'lax', secure: 'auto' }
 }));
 
-// CSRF Guard
+// CSRF Guard (handles mobile in-app browsers sending Origin: null)
 app.use((req, res, next) => {
   if (req.method !== 'POST') return next();
   const o = req.headers.origin || req.headers.referer;
+  if (!o || o === 'null') return next();
   try {
-    if (o && new URL(o).host !== req.headers.host) return res.status(403).send('Forbidden');
-  } catch (e) {
-    return res.status(403).send('Forbidden');
-  }
+    if (new URL(o).host !== req.headers.host) return res.status(403).send('Forbidden');
+  } catch (e) {}
   next();
 });
 
@@ -574,6 +573,7 @@ function page(req, title, body, opts = {}) {
   const isMember = !!req.session.mid;
   const isStaff = !!req.session.sr;
   const ethToday = toEthiopianDate(new Date(), l);
+  const showPollsNav = opts.electionOn !== false;
 
   const langSwitcher = `
     <div class="lang-box">
@@ -602,7 +602,7 @@ function page(req, title, body, opts = {}) {
       <div class="floating-nav-wrap"><nav class="floating-nav">
         <a href="/student-dashboard" class="${req.path === '/student-dashboard' ? 'active' : ''}"><span class="ico">🏠</span>Home</a>
         <a href="/portal/announcements" class="${req.path.includes('announcements') ? 'active' : ''}"><span class="ico">📢</span>News</a>
-        <a href="/portal/polls" class="${req.path.includes('polls') ? 'active' : ''}"><span class="ico">🗳️</span>Polls</a>
+        ${showPollsNav ? `<a href="/portal/polls" class="${req.path.includes('polls') ? 'active' : ''}"><span class="ico">🗳️</span>Polls</a>` : `<a href="/portal/leadership" class="${req.path.includes('leadership') ? 'active' : ''}"><span class="ico">👥</span>Leaders</a>`}
         <a href="/portal/events" class="${req.path.includes('events') ? 'active' : ''}"><span class="ico">📅</span>Events</a>
         <a href="/portal/profile" class="${req.path.includes('profile') ? 'active' : ''}"><span class="ico">🪪</span>My Profile</a>
       </nav></div>
@@ -668,7 +668,7 @@ ${CLIENT_JS}
 }
 
 // Clean Sub-page Top Bar (No Pill Menu - Navigation uses the 3D Hub Grid only)
-function portalMenu(activePath) {
+function portalMenu(activePath, electionOn = true) {
   const items = [
     { p: '/student-dashboard', i: '🏠', t: 'Hub' },
     { p: '/portal/announcements', i: '📢', t: 'News' },
@@ -679,7 +679,7 @@ function portalMenu(activePath) {
     { p: '/portal/alumni', i: '🌟', t: 'Alumni' },
     { p: '/portal/suggestions', i: '📮', t: 'Suggestions' },
     { p: '/portal/leadership', i: '👥', t: 'Leadership' },
-    { p: '/portal/polls', i: '🗳️', t: 'Polls' },
+    ...(electionOn ? [{ p: '/portal/polls', i: '🗳️', t: 'Polls' }] : []),
     { p: '/portal/certificates', i: '🏅', t: 'Certificates' },
     { p: '/portal/forum', i: '💡', t: 'Forum' }
   ];
@@ -724,6 +724,7 @@ function postCard(req, p, extraHtml = '') {
 const scopeOf = req => (CENTRAL.includes(req.session.sr) ? null : (req.session.campus || '-'));
 async function isElectionOn() {
   try {
+    await q(`CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY, val TEXT)`);
     const [r] = await q(`SELECT val FROM site_settings WHERE key='election_portal_on'`);
     return !r || r.val !== '0';
   } catch (e) { return true; }
@@ -1313,7 +1314,7 @@ app.get('/student-dashboard', needMember, async (req, res) => {
       });
     </script>
   `;
-  res.send(page(req, tr(req, 'dash'), html));
+  res.set('Cache-Control', 'no-store').send(page(req, tr(req, 'dash'), html, { electionOn: electionActive }));
 });
 
 app.post('/student/upgrade', needMember, async (req, res) => { await q(`UPDATE members SET status='pending' WHERE member_no=$1 AND status='registered'`, [req.session.mid]); res.redirect('/student-dashboard?ok=1'); });
@@ -1370,7 +1371,7 @@ app.post('/portal/profile/password', needMember, async (req, res) => {
 app.get('/portal/polls', needMember, async (req, res) => {
   const electionActive = await isElectionOn();
   if (!electionActive) {
-    return res.send(page(req, 'Elections & Polls', portalMenu('/portal/polls') + `
+    return res.set('Cache-Control', 'no-store').send(page(req, 'Elections & Polls', portalMenu('/portal/polls', false) + `
       <div class="glass-card" style="text-align:center; padding:46px 22px;">
         <div style="font-size:48px; margin-bottom:10px;">🔒</div>
         <h3 style="margin-bottom:6px;">Election Portal is Currently OFF</h3>
@@ -2090,7 +2091,20 @@ const campusOpts = (sc, all) => (sc ? [[sc, CAMPUS[sc].n]] : (all ? [['all', 'Al
 app.get('/admin', needStaff, async (req, res) => {
   const sc = scopeOf(req), w = sc ? ' WHERE campus=$1' : '', pr = sc ? [sc] : [];
   const [m] = await q(`SELECT COUNT(*)::int n, SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END)::int p, SUM(CASE WHEN status='official' THEN 1 ELSE 0 END)::int o, SUM(CASE WHEN status='rejected' THEN 1 ELSE 0 END)::int r, SUM(CASE WHEN campus='robe' THEN 1 ELSE 0 END)::int robe, SUM(CASE WHEN campus='goba' THEN 1 ELSE 0 END)::int goba, SUM(CASE WHEN campus='shashamane' THEN 1 ELSE 0 END)::int sha FROM members${w}`, pr);
-  res.send(A(req, 'Admin Dashboard', `
+  const electionActive = await isElectionOn();
+  res.set('Cache-Control', 'no-store').send(A(req, 'Admin Dashboard', `
+    <div class="glass-card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border-left:5px solid ${electionActive ? '#10b981' : '#ef4444'}; margin-top:0;">
+      <div>
+        <b style="font-size:14.5px;">🗳️ Election Portal Status: ${electionActive ? '<span style="color:#10b981">ON (Students Can Vote)</span>' : '<span style="color:#ef4444">OFF (Hidden from Students)</span>'}</b><br>
+        <small style="color:var(--text-muted);">ምርጫ ሲኖር ON ያድርጉ፤ ሲያልቅ OFF ያድርጉ</small>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <a href="/admin/polls/portal-switch" class="btn ${electionActive ? 'danger' : 'g'}" style="padding:8px 16px; font-size:12.5px;">
+          ${electionActive ? '🔴 Turn Election Portal OFF' : '🟢 Turn Election Portal ON'}
+        </a>
+        <a href="/admin/polls" class="btn secondary" style="padding:8px 14px; font-size:12.5px;">Manage Elections →</a>
+      </div>
+    </div>
     <div class="stat-grid">
       <div class="stat-card"><div class="num" style="color:#7c3aed">${m.n || 0}</div><div class="label">Total</div></div>
       <div class="stat-card"><div class="num" style="color:#10b981">${m.o || 0}</div><div class="label">Official</div></div>
@@ -2121,14 +2135,12 @@ app.get('/admin/polls', guard('polls'), async (req, res) => {
     <!-- Master Election Portal ON / OFF Switch -->
     <div class="glass-card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; border-left:5px solid ${electionActive ? '#10b981' : '#ef4444'};">
       <div>
-        <h3 style="font-size:1.1rem; font-weight:850;">🌐 Student Election Portal Visibility (የምርጫ ፖርታል መቆጣጠሪያ)</h3>
-        <p style="font-size:13px; color:var(--text-muted);">Turn ON when election day starts so students can vote, and turn OFF anytime after election ends.</p>
+        <h3 style="font-size:1.1rem; font-weight:850;">🌐 Election Portal: ${electionActive ? '<span style="color:#10b981">ON (ክፍት ነው)</span>' : '<span style="color:#ef4444">OFF (ተዘግቷል)</span>'}</h3>
+        <p style="font-size:13px; color:var(--text-muted);">ምርጫ በሚደረግበት ቀን ON ያድርጉ፤ ምርጫው ሲያልቅ OFF ሲያደርጉ ከተማሪዎች ፖርታል ላይ ይዘጋል።</p>
       </div>
-      <form method="POST" action="/admin/polls/portal-switch">
-        <button class="btn ${electionActive ? 'g' : 'danger'}" style="padding:11px 20px; font-size:13.5px;">
-          ${electionActive ? '🟢 Election Portal: ON (Click to Turn OFF)' : '🔴 Election Portal: OFF (Click to Turn ON)'}
-        </button>
-      </form>
+      <a href="/admin/polls/portal-switch" class="btn ${electionActive ? 'danger' : 'g'}" style="padding:11px 20px; font-size:13.5px;">
+        ${electionActive ? '🔴 Turn OFF Election Portal (ዝጋ)' : '🟢 Turn ON Election Portal (ክፈት)'}
+      </a>
     </div>
 
     <!-- Create Election by Selecting Registered Members as Candidates -->
@@ -2183,11 +2195,9 @@ app.get('/admin/polls', guard('polls'), async (req, res) => {
                 <span class="badge registered" style="margin-left:4px;">Max ${p.max_choices || 5} choices · ${total} total votes</span>
               </div>
               <div style="display:flex; gap:6px;">
-                <form method="POST" action="/admin/polls/${p.id}/toggle">
-                  <button class="btn ${p.status === 'open' ? 'secondary' : 'g'}" style="padding:5px 12px; font-size:12px;">
-                    ${p.status === 'open' ? '🔒 Close Election (ምርጫውን ዝጋ)' : '🟢 Reopen Election'}
-                  </button>
-                </form>
+                <a href="/admin/polls/${p.id}/toggle" class="btn ${p.status === 'open' ? 'danger' : 'g'}" style="padding:6px 14px; font-size:12px;">
+                  ${p.status === 'open' ? '🔒 Close Election (ምርጫውን ዝጋ)' : '🟢 Reopen Election (ክፈት)'}
+                </a>
                 <form method="POST" action="/admin/polls/${p.id}/delete">
                   <button class="btn danger" style="padding:5px 11px; font-size:12px;">Delete</button>
                 </form>
@@ -2227,12 +2237,16 @@ app.get('/admin/polls', guard('polls'), async (req, res) => {
   `));
 });
 
-app.post('/admin/polls/portal-switch', guard('polls'), async (req, res) => {
+async function toggleElectionPortalHandler(req, res) {
+  await q(`CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY, val TEXT)`);
   const cur = await isElectionOn();
-  await q(`INSERT INTO site_settings (key, val) VALUES ('election_portal_on', $1) ON CONFLICT (key) DO UPDATE SET val = $1`, [cur ? '0' : '1']);
-  await logAudit(req, 'ELECTION_PORTAL_SWITCH', 'election_portal_on', cur ? 'Turned OFF' : 'Turned ON');
+  const nextVal = cur ? '0' : '1';
+  await q(`INSERT INTO site_settings (key, val) VALUES ('election_portal_on', $1) ON CONFLICT (key) DO UPDATE SET val = EXCLUDED.val`, [nextVal]);
+  await logAudit(req, 'ELECTION_PORTAL_SWITCH', 'election_portal_on', nextVal === '1' ? 'Turned ON' : 'Turned OFF');
   res.redirect('/admin/polls?ok=1');
-});
+}
+app.post('/admin/polls/portal-switch', guard('polls'), toggleElectionPortalHandler);
+app.get('/admin/polls/portal-switch', guard('polls'), toggleElectionPortalHandler);
 
 app.post('/admin/polls', guard('polls'), async (req, res) => {
   const b = req.body;
@@ -2249,10 +2263,14 @@ app.post('/admin/polls', guard('polls'), async (req, res) => {
   res.redirect('/admin/polls?ok=1');
 });
 
-app.post('/admin/polls/:id/toggle', guard('polls'), async (req, res) => {
-  await q(`UPDATE polls SET status=CASE WHEN status='open' THEN 'closed' ELSE 'open' END WHERE id=$1`, [parseInt(req.params.id, 10) || 0]);
+async function toggleSinglePollHandler(req, res) {
+  const pid = parseInt(req.params.id, 10) || 0;
+  await q(`UPDATE polls SET status = CASE WHEN LOWER(COALESCE(status,'open'))='open' THEN 'closed' ELSE 'open' END WHERE id=$1`, [pid]);
+  await logAudit(req, 'ELECTION_STATUS_TOGGLE', String(pid), 'Toggled open/closed');
   res.redirect('/admin/polls?ok=1');
-});
+}
+app.post('/admin/polls/:id/toggle', guard('polls'), toggleSinglePollHandler);
+app.get('/admin/polls/:id/toggle', guard('polls'), toggleSinglePollHandler);
 
 app.post('/admin/polls/:id/delete', guard('polls'), async (req, res) => {
   await q(`DELETE FROM polls WHERE id=$1`, [parseInt(req.params.id, 10) || 0]);
@@ -2534,4 +2552,4 @@ app.get('/admin/backup', guard('backup'), async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v7.0 running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Siikkoo-Mandoo MWU Platform v7.1 running on port ${PORT}`));
